@@ -11,6 +11,14 @@ College life exposes students to intense examination anxiety, placement uncertai
 
 ---
 
+## 🚀 24/7 Permanent Cloud Deployment
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Swar132/mindbridge-campus)
+
+Click the button above to deploy MindBridge Campus to **Render.com** in 1 click with a managed PostgreSQL database and 24/7 uptime!
+
+---
+
 ## 1. Technologies Used
 
 ### Frontend
