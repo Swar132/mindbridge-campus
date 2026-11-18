@@ -12,7 +12,8 @@ import {
   Edit,
   Save,
   X,
-  Sparkles
+  Sparkles,
+  MapPin
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -59,7 +60,7 @@ export default function CounsellorPortal() {
   const openNotesModal = (apt) => {
     setSelectedAptForNotes(apt);
     setPrivateNotes(apt.counsellor_private_notes || '');
-    setMeetingRoom(apt.meeting_room || 'Student Wellness Centre, Room 204');
+    setMeetingRoom(apt.meeting_room || 'Counselling Room, SAC I, First Floor');
     setMeetingLink(apt.meeting_link || '');
   };
 
@@ -71,28 +72,28 @@ export default function CounsellorPortal() {
   });
 
   return (
-    <div className="space-y-7 animate-fade-in pb-10">
+    <div className="space-y-7 animate-fade-in pb-10 transition-colors duration-300">
       {/* Header Banner */}
-      <div className="rounded-4xl bg-gradient-to-r from-teal-100/90 via-emerald-50 to-sky-100/80 border border-teal-200/80 p-6 sm:p-8 shadow-wellness relative overflow-hidden">
+      <div className="rounded-4xl bg-gradient-to-r from-teal-100/90 via-sky-50 to-purple-100/80 dark:from-teal-950/40 dark:via-slate-900 dark:to-purple-950/40 border border-teal-200/80 dark:border-teal-900/60 p-6 sm:p-8 shadow-xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 bg-teal-100 px-3 py-1 rounded-full border border-teal-200 flex items-center gap-1.5">
-                <Stethoscope className="w-3.5 h-3.5 text-teal-700" />
-                Counsellor Clinical Workspace
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-900 dark:text-teal-300 bg-teal-100/80 dark:bg-teal-950/80 px-3 py-1 rounded-full border border-teal-200 dark:border-teal-800 flex items-center gap-1.5">
+                <Stethoscope className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                Counsellor Care Workspace
               </span>
-              <span className="text-xs text-charcoal-400 font-medium">Strictly Isolated Notes</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Nitu Singh Bhadouria • SAC I</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-charcoal-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Case Care Management
             </h1>
-            <p className="text-xs sm:text-sm text-charcoal-600 mt-1 max-w-xl leading-relaxed">
-              Review student consultation requests, configure meeting rooms, and maintain private clinical notes.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-xl leading-relaxed">
+              Review student consultation requests, confirm Counselling Room (SAC I, First Floor) sessions, and maintain private notes.
             </p>
           </div>
 
           {/* Segmented Tab Controls */}
-          <div className="inline-flex p-1 bg-white/80 rounded-2xl border border-cream-200 shadow-wellness-sm self-start sm:self-auto">
+          <div className="inline-flex p-1 bg-white/90 dark:bg-slate-800/90 rounded-2xl border border-sky-100 dark:border-slate-700 shadow-xs self-start sm:self-auto">
             {['pending', 'approved', 'completed'].map((tab) => {
               const count = appointments.filter((a) =>
                 tab === 'pending'
@@ -101,22 +102,27 @@ export default function CounsellorPortal() {
                   ? a.status === 'confirmed'
                   : a.status === 'completed'
               ).length;
+
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 capitalize ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 capitalize ${
                     activeTab === tab
-                      ? 'bg-teal-600 text-white shadow-wellness-sm'
-                      : 'text-charcoal-600 hover:text-charcoal-900'
+                      ? 'bg-sky-500 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <span>{tab === 'approved' ? 'Confirmed Sessions' : `${tab} Requests`}</span>
-                  <span className={`text-[10px] px-2 py-0.2 rounded-full font-extrabold ${
-                    activeTab === tab ? 'bg-white/20 text-white' : 'bg-cream-200 text-charcoal-800'
-                  }`}>
-                    {count}
-                  </span>
+                  <span>{tab}</span>
+                  {count > 0 && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                        activeTab === tab ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -124,69 +130,69 @@ export default function CounsellorPortal() {
         </div>
       </div>
 
-      {/* Appointment Cards */}
+      {/* Appointment Cards List */}
       <div className="space-y-4">
-        {filtered.length === 0 ? (
-          <div className="rounded-4xl bg-white/90 border border-cream-200 p-12 text-center text-charcoal-400 text-xs shadow-wellness">
-            No {activeTab} consultation requests in this view.
+        {loading ? (
+          <div className="py-12 text-center text-xs text-slate-400">Loading student requests...</div>
+        ) : filtered.length === 0 ? (
+          <div className="liquid-glass-apple rounded-4xl p-12 text-center">
+            <Calendar className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              No {activeTab} student appointments right now.
+            </p>
           </div>
         ) : (
           filtered.map((apt) => (
             <div
               key={apt.id}
-              className="rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 hover:border-teal-300 p-6 shadow-wellness hover:shadow-wellness-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-5"
+              className="liquid-glass-interactive rounded-4xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-5"
             >
-              <div className="space-y-2 max-w-xl">
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-extrabold text-charcoal-900">
-                    {apt.student?.full_name || 'Student Client'}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="font-extrabold text-base text-slate-900 dark:text-white">
+                    {apt.student?.full_name || 'Anonymous Student'}
                   </span>
-                  <span className="text-xs text-charcoal-500">
-                    ({apt.student?.department || 'Student'})
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full capitalize ${
-                      apt.status === 'confirmed'
-                        ? 'bg-mint-100 text-mint-900 border border-mint-200'
-                        : apt.status === 'pending'
-                        ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                        : 'bg-cream-200 text-charcoal-600'
-                    }`}
-                  >
-                    {apt.status}
+                  <span className="text-xs text-slate-500 dark:text-slate-400">•</span>
+                  <span className="text-xs font-semibold text-sky-600 dark:text-sky-400">
+                    {apt.student?.department || 'Undergraduate'} ({apt.student?.year_of_study || 'Student'})
                   </span>
                 </div>
 
-                <p className="text-xs text-charcoal-500 flex flex-wrap items-center gap-3">
-                  <span>📅 {apt.appointment_date}</span>
-                  <span>⏰ {apt.time_slot}</span>
-                  <span>📍 {apt.meeting_room || 'Room 204'}</span>
-                </p>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-sky-500" /> {apt.appointment_date}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-sky-500" /> {apt.time_slot}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-sky-500" /> Counselling Room, SAC I, First Floor
+                  </span>
+                </div>
 
-                <p className="text-xs text-charcoal-700">
-                  <span className="text-charcoal-400">Discussion Focus:</span> <strong>{apt.reason}</strong>
-                </p>
-
-                {apt.student_notes && (
-                  <p className="text-xs text-charcoal-600 bg-cream-50 p-3 rounded-2xl border border-cream-200 font-sans italic">
-                    "{apt.student_notes}"
-                  </p>
-                )}
+                <div className="p-3 rounded-2xl bg-sky-50/70 dark:bg-slate-800/70 border border-sky-100 dark:border-slate-700/80 text-xs">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Discussion Focus: </span>
+                  <span className="text-slate-600 dark:text-slate-300">{apt.reason}</span>
+                  {apt.student_notes && (
+                    <p className="mt-1 text-slate-500 dark:text-slate-400 italic">"{apt.student_notes}"</p>
+                  )}
+                </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
+              {/* Status Action Buttons */}
+              <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
                 {apt.status === 'pending' && (
                   <>
                     <button
-                      onClick={() => handleUpdateStatus(apt.id, 'confirmed')}
-                      className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shadow-wellness-sm flex items-center gap-1.5"
+                      onClick={() => handleUpdateStatus(apt.id, 'confirmed', { meeting_room: 'Counselling Room, SAC I, First Floor' })}
+                      className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Accept Session
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Approve</span>
                     </button>
                     <button
-                      onClick={() => handleUpdateStatus(apt.id, 'cancelled', { cancellation_reason: 'Counsellor unavailable' })}
-                      className="px-4 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs transition"
+                      onClick={() => handleUpdateStatus(apt.id, 'cancelled')}
+                      className="px-3.5 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition"
                     >
                       Decline
                     </button>
@@ -196,16 +202,17 @@ export default function CounsellorPortal() {
                 {apt.status === 'confirmed' && (
                   <>
                     <button
-                      onClick={() => handleUpdateStatus(apt.id, 'completed')}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition shadow-glow-lavender"
+                      onClick={() => openNotesModal(apt)}
+                      className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
                     >
-                      Mark Completed
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Clinical Notes</span>
                     </button>
                     <button
-                      onClick={() => openNotesModal(apt)}
-                      className="px-4 py-2 rounded-xl bg-cream-100 hover:bg-cream-200 text-charcoal-800 font-bold text-xs transition flex items-center gap-1.5 border border-cream-200"
+                      onClick={() => handleUpdateStatus(apt.id, 'completed')}
+                      className="px-3 py-2 rounded-xl border border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-xs font-bold transition"
                     >
-                      <Edit className="w-3.5 h-3.5 text-teal-600" /> Private Notes
+                      Mark Completed
                     </button>
                   </>
                 )}
@@ -213,9 +220,10 @@ export default function CounsellorPortal() {
                 {apt.status === 'completed' && (
                   <button
                     onClick={() => openNotesModal(apt)}
-                    className="px-4 py-2 rounded-xl bg-cream-100 hover:bg-cream-200 text-charcoal-800 font-bold text-xs transition flex items-center gap-1.5 border border-cream-200"
+                    className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition flex items-center gap-1.5"
                   >
-                    <FileText className="w-3.5 h-3.5 text-teal-600" /> View Notes
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>View Notes</span>
                   </button>
                 )}
               </div>
@@ -224,79 +232,73 @@ export default function CounsellorPortal() {
         )}
       </div>
 
-      {/* Private Notes & Session Management Modal */}
+      {/* Clinical Notes Modal */}
       {selectedAptForNotes && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#FFFDF9] rounded-4xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-cream-200 relative animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="liquid-glass-apple dark:bg-slate-900 rounded-4xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-sky-100 dark:border-slate-800 relative animate-scale-up">
             <button
               onClick={() => setSelectedAptForNotes(null)}
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-cream-100 text-charcoal-400 hover:text-charcoal-700 transition"
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <span className="text-[10px] font-bold text-teal-800 bg-teal-100 px-2.5 py-0.5 rounded-full border border-teal-200 inline-block mb-1">
-              Confidential Case File
+            <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-full border border-teal-200 dark:border-teal-800 inline-block mb-1">
+              Confidential Clinical Record
             </span>
-            <h2 className="text-xl font-serif font-bold text-charcoal-900">
-              Session with {selectedAptForNotes.student?.full_name}
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Session Documentation
             </h2>
-            <p className="text-xs text-charcoal-500 mt-1 mb-4">
-              Restricted to licensed campus staff. Inaccessible to students or administrators.
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
+              Private notes for {selectedAptForNotes.student?.full_name}. Location: Counselling Room, SAC I, First Floor.
             </p>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleUpdateStatus(selectedAptForNotes.id, selectedAptForNotes.status, {
-                  counsellor_private_notes: privateNotes,
-                  meeting_room: meetingRoom,
-                  meeting_link: meetingLink,
-                });
-              }}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">
-                  Confidential Clinical Observations
-                </label>
-                <textarea
-                  rows="5"
-                  placeholder="Clinical observations, coping techniques recommended, follow-up goals..."
-                  value={privateNotes}
-                  onChange={(e) => setPrivateNotes(e.target.value)}
-                  className="w-full text-xs p-3.5 rounded-2xl bg-white border border-cream-200 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">
-                  Meeting Location / Room
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  Location / Room
                 </label>
                 <input
                   type="text"
                   value={meetingRoom}
                   onChange={(e) => setMeetingRoom(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-cream-200 text-charcoal-900"
+                  className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  Private Session Notes
+                </label>
+                <textarea
+                  rows="4"
+                  placeholder="Record therapeutic observations, grounding techniques recommended, or follow-up plan..."
+                  value={privateNotes}
+                  onChange={(e) => setPrivateNotes(e.target.value)}
+                  className="w-full text-xs p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white resize-none"
                 />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
-                  type="button"
                   onClick={() => setSelectedAptForNotes(null)}
-                  className="px-4 py-2.5 text-xs font-bold text-charcoal-500 hover:text-charcoal-800"
+                  className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs shadow-wellness-sm transition"
+                  onClick={() =>
+                    handleUpdateStatus(selectedAptForNotes.id, selectedAptForNotes.status, {
+                      counsellor_private_notes: privateNotes,
+                      meeting_room: meetingRoom,
+                    })
+                  }
+                  className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-sky-600 text-white font-extrabold text-xs shadow-xs transition"
                 >
-                  Save Case Notes
+                  Save Notes
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

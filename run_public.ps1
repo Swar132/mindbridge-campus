@@ -72,10 +72,14 @@ if ($tunnelUrl) {
     if (Test-Path $tunnelLog) { Get-Content $tunnelLog -Tail 20 }
 }
 
-# Keep running and monitor tunnel process
+# Keep running and monitor both backend server and tunnel process
 while ($true) {
     Start-Sleep -Seconds 5
-    if ($tunnelProcess.HasExited) {
+    if ($serverProcess -ne $null -and $serverProcess.HasExited) {
+        Write-Host "Backend server exited with code $($serverProcess.ExitCode). Restarting backend server..."
+        $serverProcess = Start-Process -FilePath $pythonExe -ArgumentList "-m uvicorn app.main:app --host 0.0.0.0 --port 8000" -WorkingDirectory $backendDir -RedirectStandardOutput $serverOutLog -RedirectStandardError $serverErrLog -PassThru
+    }
+    if ($tunnelProcess -ne $null -and $tunnelProcess.HasExited) {
         Write-Host "Tunnel process exited with code $($tunnelProcess.ExitCode). Restarting tunnel..."
         $tunnelProcess = Start-Process -FilePath $cloudflared -ArgumentList "tunnel --url http://127.0.0.1:8000 --logfile `"$tunnelLog`"" -WorkingDirectory $projectRoot -PassThru
     }

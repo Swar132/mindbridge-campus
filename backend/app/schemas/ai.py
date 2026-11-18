@@ -14,6 +14,7 @@ class AIMessageResponse(BaseModel):
     conversation_id: int
     sender: str
     content: str
+    reply: Optional[str] = None
     message_type: Optional[str] = "text"
     audio_url: Optional[str] = None
     safety_flagged: bool = False
@@ -38,3 +39,18 @@ class SuggestedPrompt(BaseModel):
     title: str
     prompt: str
     category: str
+
+class AIConfigResponse(BaseModel):
+    provider: str
+    model: str
+    is_live_llm: bool
+    groq_configured: bool
+    gemini_configured: bool
+    openai_configured: bool
+    masked_key: Optional[str] = None
+
+class AIConfigUpdateRequest(BaseModel):
+    groq_api_key: Optional[str] = None
+    groq_model: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+    openai_api_key: Optional[str] = None

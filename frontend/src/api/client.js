@@ -91,6 +91,8 @@ export const api = {
 
   // AI Assistant
   getSuggestedPrompts: () => request('/ai/suggested-prompts'),
+  getAIConfig: () => request('/ai/config'),
+  updateAIConfig: (configData) => request('/ai/config', { method: 'POST', body: JSON.stringify(configData) }),
   sendMessage: (message, conversation_id = null, consent_share_context = true, message_type = 'text', audio_url = null) =>
     request('/ai/chat', {
       method: 'POST',

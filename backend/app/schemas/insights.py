@@ -11,14 +11,15 @@ class TrendInsight(BaseModel):
     observed_metric: str
 
 class MetricSummary(BaseModel):
-    current_mood: Optional[str] = "Neutral"
-    current_mood_intensity: Optional[int] = 6
-    today_stress_level: Optional[int] = 4
-    last_night_sleep_hours: Optional[float] = 7.5
-    energy_level: Optional[int] = 6
-    weekly_wellbeing_score: int = 78
-    total_checkins_this_month: int = 24
-    sleep_consistency_score: int = 82  # %
+    has_data: bool = True
+    current_mood: Optional[str] = None
+    current_mood_intensity: Optional[int] = None
+    today_stress_level: Optional[int] = None
+    last_night_sleep_hours: Optional[float] = None
+    energy_level: Optional[int] = None
+    weekly_wellbeing_score: Optional[int] = None
+    total_checkins_this_month: int = 0
+    sleep_consistency_score: Optional[int] = None
 
 class InsightsSummaryResponse(BaseModel):
     metrics: MetricSummary

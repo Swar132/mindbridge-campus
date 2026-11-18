@@ -10,39 +10,47 @@ export default function ThemeToggle({ className = '', showLabel = false }) {
       onClick={toggleTheme}
       type="button"
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      className={`relative inline-flex items-center gap-1.5 p-1 rounded-full transition-all duration-300 focus:outline-hidden ${
+      className={`relative inline-flex items-center h-8 w-[58px] p-[2px] rounded-full transition-all duration-300 focus:outline-none cursor-pointer select-none shrink-0 ${
         isDark
-          ? 'bg-slate-900/90 border border-slate-700/90 text-slate-300 shadow-inner'
-          : 'bg-sky-50/90 border border-sky-200/90 text-sky-800 shadow-inner'
+          ? 'bg-slate-900/90 border border-slate-700/80 shadow-inner'
+          : 'bg-sky-100/90 border border-sky-200/90 shadow-inner'
       } ${className}`}
-      title={`Toggle theme (currently ${theme})`}
+      title={`Switch to ${isDark ? 'light' : 'dark'} mode (currently ${theme})`}
     >
-      {/* Sliding liquid capsule */}
+      {/* Sliding liquid glass capsule indicator */}
       <span
-        className={`absolute top-1 bottom-1 w-6 h-6 rounded-full transition-all duration-300 transform shadow-md ${
+        className={`absolute top-[2px] left-[2px] w-[26px] h-[26px] rounded-full transition-transform duration-300 ease-out shadow-sm pointer-events-none ${
           isDark
-            ? 'left-7 bg-gradient-to-tr from-sky-500 to-indigo-600 text-white translate-x-0'
-            : 'left-1 bg-white text-amber-500 translate-x-0'
+            ? 'translate-x-[26px] bg-gradient-to-tr from-sky-500 to-indigo-600'
+            : 'translate-x-0 bg-white'
         }`}
         style={{
           boxShadow: isDark
-            ? '0 0 12px rgba(56, 189, 248, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3)'
-            : '0 2px 8px rgba(2, 132, 199, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.95)',
+            ? '0 1px 6px rgba(56, 189, 248, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.3)'
+            : '0 1px 4px rgba(2, 132, 199, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.95)',
         }}
       />
 
-      {/* Sun icon */}
-      <span className="relative z-10 w-6 h-6 flex items-center justify-center transition-colors duration-200">
-        <Sun className={`w-3.5 h-3.5 ${!isDark ? 'text-amber-500' : 'text-slate-500'}`} />
+      {/* Sun icon (left slot) */}
+      <span className="relative z-10 w-[26px] h-[26px] flex items-center justify-center transition-colors duration-200 shrink-0 pointer-events-none">
+        <Sun
+          className={`w-3.5 h-3.5 transition-all duration-200 ${
+            !isDark ? 'text-amber-500 scale-100 opacity-100' : 'text-slate-400 scale-90 opacity-60'
+          }`}
+        />
       </span>
 
-      {/* Moon icon */}
-      <span className="relative z-10 w-6 h-6 flex items-center justify-center transition-colors duration-200">
-        <Moon className={`w-3.5 h-3.5 ${isDark ? 'text-white' : 'text-slate-400'}`} />
+      {/* Moon icon (right slot) */}
+      <span className="relative z-10 w-[26px] h-[26px] flex items-center justify-center transition-colors duration-200 shrink-0 pointer-events-none">
+        <Moon
+          className={`w-3.5 h-3.5 transition-all duration-200 ${
+            isDark ? 'text-white scale-100 opacity-100' : 'text-slate-500 scale-90 opacity-60'
+          }`}
+        />
       </span>
 
       {showLabel && (
-        <span className="text-xs font-semibold px-1.5 text-slate-700 dark:text-slate-300">
+        <span className="ml-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 pointer-events-none">
           {isDark ? 'Dark' : 'Light'}
         </span>
       )}

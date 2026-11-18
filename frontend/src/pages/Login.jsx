@@ -52,16 +52,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-cream-50 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
-      {/* Liquid background accent */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-teal-200/30 blur-3xl animate-liquid-blob" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-peach-200/30 blur-3xl animate-liquid-blob" />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden transition-colors duration-300">
+      {/* Ambient background accents */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-sky-200/40 dark:bg-sky-900/20 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-purple-200/40 dark:bg-purple-900/20 blur-3xl pointer-events-none" />
 
-      <div className="max-w-4xl w-full liquid-glass rounded-4xl shadow-wellness-lg border border-white/90 overflow-hidden grid grid-cols-1 md:grid-cols-5 relative z-10">
+      <div className="max-w-4xl w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden grid grid-cols-1 md:grid-cols-5 relative z-10">
         {/* Left Side: Rich Wellness Visual & Mindy Mascot */}
-        <div className="md:col-span-2 bg-gradient-to-br from-teal-700 via-teal-800 to-sky-700 p-8 text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="md:col-span-2 bg-gradient-to-br from-sky-600 via-teal-600 to-indigo-700 p-8 text-white flex flex-col justify-between relative overflow-hidden">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/15 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-peach-300/20 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-teal-300/20 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10">
             <div className="flex items-center gap-2.5 mb-6">
@@ -69,11 +69,11 @@ export default function Login() {
                 <Heart className="w-5 h-5 text-white fill-current" />
               </div>
               <div>
-                <span className="font-bold text-lg tracking-tight block">
+                <span className="font-extrabold text-lg tracking-tight block">
                   MindBridge
                 </span>
-                <span className="text-[10px] text-teal-200 font-semibold tracking-wider uppercase">
-                  Campus Wellbeing PWA
+                <span className="text-[10px] text-sky-100 font-semibold tracking-wider uppercase">
+                  Campus Wellbeing Platform
                 </span>
               </div>
             </div>
@@ -85,29 +85,29 @@ export default function Login() {
               <h2 className="text-xl font-bold leading-tight">
                 Your Confidential Campus Sanctuary
               </h2>
-              <p className="text-xs text-teal-100/90 mt-2 leading-relaxed max-w-xs mx-auto">
+              <p className="text-xs text-sky-100/90 mt-2 leading-relaxed max-w-xs mx-auto">
                 Evidence-guided mental health tracking, private reflections, and 24/7 empathetic support tailored for college life.
               </p>
             </div>
           </div>
 
-          <div className="relative z-10 pt-4 border-t border-white/20 flex items-center justify-between text-[11px] text-teal-100">
+          <div className="relative z-10 pt-4 border-t border-white/20 flex items-center justify-between text-[11px] text-sky-100">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-teal-300" />
+              <ShieldCheck className="w-4 h-4 text-sky-200" />
               <span>Encrypted & Safe</span>
             </span>
             <span className="flex items-center gap-1">
-              <Smartphone className="w-3.5 h-3.5 text-peach-300" />
-              <span>Installable App</span>
+              <Smartphone className="w-3.5 h-3.5 text-sky-200" />
+              <span>Installable PWA</span>
             </span>
           </div>
         </div>
 
         {/* Right Side: Login Form & 1-Click Demo Buttons */}
-        <div className="md:col-span-3 p-6 sm:p-10 flex flex-col justify-between space-y-6">
+        <div className="md:col-span-3 p-6 sm:p-10 flex flex-col justify-between space-y-6 bg-white dark:bg-slate-900">
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-charcoal-900">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                 {isRegister ? 'Join MindBridge Campus' : 'Welcome to MindBridge'}
               </h3>
               <button
@@ -115,22 +115,22 @@ export default function Login() {
                   setIsRegister(!isRegister);
                   setError(null);
                 }}
-                className="text-xs font-bold text-teal-700 hover:text-teal-800 transition underline cursor-pointer"
+                className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline transition cursor-pointer"
               >
                 {isRegister ? 'Already have an account? Sign in' : 'New student? Register'}
               </button>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+              <div className="mb-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
                 <span>{error}</span>
               </div>
             )}
 
             {/* 1-Click Instant Demo Role Pills */}
-            <div className="mb-6 p-4 rounded-3xl bg-cream-50/80 border border-cream-200/90 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-600 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+            <div className="mb-6 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-sky-500" />
                 <span>Instant 1-Click Demo Access:</span>
               </span>
 
@@ -139,9 +139,9 @@ export default function Login() {
                   type="button"
                   onClick={() => handleQuickDemo('student')}
                   disabled={loading}
-                  className="py-2 px-2.5 rounded-xl bg-white hover:bg-teal-50 border border-teal-200/90 text-teal-900 text-xs font-bold shadow-wellness-sm hover:shadow transition flex flex-col items-center gap-1 cursor-pointer"
+                  className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-700 border border-sky-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs font-bold shadow-xs transition flex flex-col items-center gap-1 cursor-pointer"
                 >
-                  <GraduationCap className="w-4 h-4 text-teal-600" />
+                  <GraduationCap className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   <span>Student Demo</span>
                 </button>
 
@@ -149,9 +149,9 @@ export default function Login() {
                   type="button"
                   onClick={() => handleQuickDemo('counsellor')}
                   disabled={loading}
-                  className="py-2 px-2.5 rounded-xl bg-white hover:bg-peach-50 border border-peach-200/90 text-peach-900 text-xs font-bold shadow-wellness-sm hover:shadow transition flex flex-col items-center gap-1 cursor-pointer"
+                  className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-slate-700 border border-teal-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs font-bold shadow-xs transition flex flex-col items-center gap-1 cursor-pointer"
                 >
-                  <Stethoscope className="w-4 h-4 text-peach-600" />
+                  <Stethoscope className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   <span>Counsellor</span>
                 </button>
 
@@ -159,9 +159,9 @@ export default function Login() {
                   type="button"
                   onClick={() => handleQuickDemo('admin')}
                   disabled={loading}
-                  className="py-2 px-2.5 rounded-xl bg-white hover:bg-sky-50 border border-sky-200/90 text-sky-900 text-xs font-bold shadow-wellness-sm hover:shadow transition flex flex-col items-center gap-1 cursor-pointer"
+                  className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-slate-700 border border-purple-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs font-bold shadow-xs transition flex flex-col items-center gap-1 cursor-pointer"
                 >
-                  <ShieldCheck className="w-4 h-4 text-sky-600" />
+                  <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <span>Admin Demo</span>
                 </button>
               </div>
@@ -170,47 +170,47 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
                 <div>
-                  <label className="block text-xs font-bold text-charcoal-700 mb-1">Full Name</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-charcoal-400 absolute left-3 top-3" />
+                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <input
                       type="text"
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="e.g. Swar Sharma"
-                      className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-white border border-cream-200 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-wellness-sm"
+                      className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs"
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-charcoal-700 mb-1">Campus Email</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Campus Email</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-charcoal-400 absolute left-3 top-3" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="student@mindbridge.edu"
-                    className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-white border border-cream-200 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-wellness-sm"
+                    className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-charcoal-700 mb-1">Password</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-charcoal-400 absolute left-3 top-3" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-white border border-cream-200 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-wellness-sm"
+                    className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs"
                   />
                 </div>
               </div>
@@ -218,7 +218,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-teal-600 via-teal-700 to-sky-600 hover:from-teal-700 hover:to-sky-700 text-white font-bold text-xs sm:text-sm shadow-glow-teal transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-500 via-teal-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-500/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <span>{loading ? 'Authenticating...' : isRegister ? 'Create Account' : 'Sign in to Sanctuary'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -226,7 +226,7 @@ export default function Login() {
             </form>
           </div>
 
-          <div className="pt-2 text-center text-[10px] text-charcoal-400">
+          <div className="pt-2 text-center text-[10px] text-slate-400 dark:text-slate-500">
             Emergency Crisis Assistance is always free & confidential: <strong>Tele-MANAS 14416</strong>
           </div>
         </div>

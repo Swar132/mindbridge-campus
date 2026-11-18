@@ -44,61 +44,33 @@ def seed_database(db: Session):
     )
     db.add(student_prefs)
 
-    # Counsellor 1
-    counsellor1_user = User(
-        email="counsellor@mindbridge.edu",
+    # Official Campus Counsellor: Nitu Singh Bhadouria
+    counsellor_user = User(
+        email="nitusingh_b@dau.ac.in",
         password_hash=hash_password("counsellor123"),
-        full_name="Dr. Ananya Sharma",
+        full_name="Nitu Singh Bhadouria",
         role="counsellor",
-        college_id="FAC-PSYC-102",
-        department="Student Wellness & Psychological Counselling",
+        college_id="FAC-SAC1-01",
+        department="Student Wellness & Counselling",
         year_of_study="Faculty / Staff",
         avatar_url="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
         is_active=True
     )
-    db.add(counsellor1_user)
+    db.add(counsellor_user)
     db.flush()
 
-    counsellor1_profile = CounsellorProfile(
-        user_id=counsellor1_user.id,
-        title="Senior Campus Wellbeing Psychologist",
-        qualifications="Ph.D. Clinical Psychology (NIMHANS), Licensed Counselling Psychologist",
+    counsellor_profile = CounsellorProfile(
+        user_id=counsellor_user.id,
+        title="College Mental Health & Student Counsellor",
+        qualifications="Licensed Student Counsellor & Mental Wellbeing Specialist",
         experience_years=8,
-        areas_of_support="Academic Pressure, Exam Anxiety, Placement Uncertainty, Burnout & Sleep, Self-Esteem",
-        bio="Dr. Ananya has spent over 8 years supporting university students through high-stakes academic pressure, placement transitions, and emotional distress. Her practice integrates Cognitive Behavioral Therapy (CBT), Mindfulness-Based Stress Reduction, and compassionate grounding techniques.",
+        areas_of_support="Academic Stress, Placement & Career Uncertainty, Exam Anxiety, Sleep & Lifestyle, Emotional Wellness",
+        bio="Nitu Singh Bhadouria provides compassionate, confidential guidance for students navigating examination pressure, placement challenges, academic stress, and personal wellbeing in SAC I.",
         availability_hours="Mon - Fri: 10:00 AM - 5:00 PM",
-        contact_email="ananya.sharma@mindbridge.edu",
-        office_location="Student Wellness Centre, Block B, Cabin 204"
+        contact_email="nitusingh_b@dau.ac.in",
+        office_location="Counselling Room, SAC I, First Floor"
     )
-    db.add(counsellor1_profile)
-
-    # Counsellor 2
-    counsellor2_user = User(
-        email="rahul.verma@mindbridge.edu",
-        password_hash=hash_password("counsellor123"),
-        full_name="Mr. Rahul Verma",
-        role="counsellor",
-        college_id="FAC-PSYC-105",
-        department="Career Counselling & Student Life",
-        year_of_study="Faculty / Staff",
-        avatar_url="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150",
-        is_active=True
-    )
-    db.add(counsellor2_user)
-    db.flush()
-
-    counsellor2_profile = CounsellorProfile(
-        user_id=counsellor2_user.id,
-        title="Student Life & Career Transition Specialist",
-        qualifications="M.A. Applied Psychology, Certified Youth & Career Counsellor",
-        experience_years=6,
-        areas_of_support="Placement Anxiety, Imposter Syndrome, Relationship Strain, Social Isolation, Time Management",
-        bio="Rahul specializes in helping students navigate career anxieties, placement season pressures, and interpersonal relationships. He provides a supportive, solution-oriented sounding board.",
-        availability_hours="Tue - Sat: 11:00 AM - 6:00 PM",
-        contact_email="rahul.verma@mindbridge.edu",
-        office_location="Student Wellness Centre, Block B, Cabin 206"
-    )
-    db.add(counsellor2_profile)
+    db.add(counsellor_profile)
 
     # Admin User
     admin = User(
@@ -150,7 +122,7 @@ def seed_database(db: Session):
 
         # Week 4: 14-8 days ago (Placement Preparation & Balancing)
         (14, "Neutral", 6, ["Coding", "Practice"], "Solved two LeetCode medium problems today.", 5, "Placements and Career", ["Coding"], "23:45", "07:15", 7.5, 3, ["Late practice"]),
-        (13, "Happy", 7, ["Mentorship", "Confidence"], "Dr. Ananya's breathing exercise helped with pre-interview jitters.", 4, "Placements and Career", ["Mindfulness"], "23:15", "07:15", 8.0, 4, ["Breathing exercise"]),
+        (13, "Happy", 7, ["Mentorship", "Confidence"], "Nitu Singh Bhadouria's breathing exercise helped with pre-interview jitters.", 4, "Placements and Career", ["Mindfulness"], "23:15", "07:15", 8.0, 4, ["Breathing exercise"]),
         (12, "Neutral", 5, ["Busy"], "Long day with capstone project meeting.", 5, "Academics", ["Projects"], "23:45", "07:00", 7.2, 3, ["Busy"]),
         (11, "Anxious", 6, ["Interview Shortlist"], "First round shortlist announced. Didn't make it to slot 1.", 6, "Placements and Career", ["Rejection", "Self doubt"], "00:30", "07:00", 6.5, 2, ["Disappointment"]),
         (10, "Neutral", 6, ["Refocus", "Journaling"], "Wrote down what I need to improve. Feeling more grounded.", 5, "Placements and Career", ["Planning"], "23:30", "07:15", 7.7, 4, ["Journaling"]),
@@ -230,7 +202,7 @@ def seed_database(db: Session):
         (
             today - timedelta(days=10),
             "Handling My First Placement Rejection With Grace",
-            "Didn't make the cut for the first software engineering shortlist today. Initially, I felt that familiar sinking pit in my stomach—the voice that whispers 'Maybe you aren't cut out for product companies.' But after journaling for 10 minutes and doing the 4-7-8 breathing exercise Dr. Ananya recommended, the rational part of my brain came back online. One company's automated test score is not an appraisal of my intelligence or my career arc. Regrouping tomorrow with fresh energy.",
+            "Didn't make the cut for the first software engineering shortlist today. Initially, I felt that familiar sinking pit in my stomach—the voice that whispers 'Maybe you aren't cut out for product companies.' But after journaling for 10 minutes and doing the 4-7-8 breathing exercise counsellor Nitu Singh Bhadouria recommended, the rational part of my brain came back online. One company's automated test score is not an appraisal of my intelligence or my career arc. Regrouping tomorrow with fresh energy.",
             "Reflective",
             ["Placement", "Resilience", "Mindfulness"],
             True
@@ -269,7 +241,7 @@ def seed_database(db: Session):
         student_shared_notes="Felt intense physical anxiety during study sessions, difficulty falling asleep.",
         share_wellbeing_summary=True,
         status="completed",
-        meeting_room="Student Wellness Centre, Cabin 204",
+        meeting_room="Counselling Room, SAC I, First Floor",
         counsellor_private_notes="Discussed somatic anxiety signs. Introduced 4-7-8 diaphragmatic breathing and cognitive reframing of exam catastrophizing. Student responded well to grounding. Advised 11:30 PM screen curfew.",
         created_at=now - timedelta(days=16)
     )
@@ -285,7 +257,7 @@ def seed_database(db: Session):
         student_shared_notes="Would like to practice grounding techniques specifically for technical interview anxiety.",
         share_wellbeing_summary=True,
         status="approved",
-        meeting_room="Student Wellness Centre, Cabin 204",
+        meeting_room="Counselling Room, SAC I, First Floor",
         meeting_link="https://meet.mindbridge.campus/session-4089",
         created_at=now - timedelta(days=1)
     )
@@ -316,7 +288,7 @@ def seed_database(db: Session):
         student_shared_notes="First time living away from home. Finding it hard to make friends in the department.",
         share_wellbeing_summary=False,
         status="pending",
-        meeting_room="Student Wellness Centre, Cabin 204",
+        meeting_room="Counselling Room, SAC I, First Floor",
         created_at=now - timedelta(hours=6)
     )
     db.add(apt_pending)
@@ -475,7 +447,7 @@ Under chronic academic stress, our shoulders hunch, jaws clench, and diaphragms 
         Notification(
             user_id=student.id,
             title="Counselling Appointment Confirmed",
-            message="Dr. Ananya Sharma has approved your appointment for follow-up on placement stress.",
+            message="Nitu Singh Bhadouria has approved your appointment for follow-up on placement stress.",
             type="appointment",
             is_read=False,
             link="/appointments",

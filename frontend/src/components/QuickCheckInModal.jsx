@@ -41,7 +41,6 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     if (isOpen) {
-      // Fetch today's check-in status if already completed
       api.getTodayCheckIn().then((res) => {
         if (res && res.has_checked_in && res.today_data) {
           setIsEditing(true);
@@ -91,35 +90,34 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
         particleCount: 50,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#0D9488', '#FB923C', '#38BDF8', '#86EFAC'],
+        colors: ['#0EA5E9', '#A78BFA', '#14B8A6', '#FB923C'],
       });
 
       setTimeout(() => {
-        setIsSubmitting(false);
-        setSuccessResult(null);
         if (onSuccess) onSuccess();
         onClose();
+        setSuccessResult(null);
       }, 1600);
     } catch (err) {
-      alert('Error recording check-in: ' + err.message);
+      alert('Error submitting check-in: ' + err.message);
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="liquid-glass-apple dark:bg-slate-900/95 rounded-4xl max-w-lg w-full shadow-2xl border border-sky-100 dark:border-slate-800 overflow-hidden p-6 sm:p-8 relative animate-scale-up max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl relative max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800 transition"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header Badge */}
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 dark:text-sky-300 bg-sky-50/90 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+          <Sparkles className="w-4 h-4 text-sky-500" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
             {isEditing ? "Update Today's Check-in" : '60-Second Daily Check-in'}
           </span>
         </div>
@@ -133,21 +131,21 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
 
         {successResult ? (
           <div className="py-10 text-center space-y-3 animate-fade-in">
-            <div className="w-16 h-16 rounded-full bg-teal-100 text-teal-700 mx-auto flex items-center justify-center shadow-glow-teal animate-bounce-subtle">
+            <div className="w-16 h-16 rounded-full bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-300 mx-auto flex items-center justify-center shadow-md animate-bounce">
               <CheckCircle2 className="w-9 h-9" />
             </div>
-            <h3 className="text-base font-bold text-charcoal-900">Check-in Successfully Saved!</h3>
-            <p className="text-xs text-charcoal-600 max-w-xs mx-auto">
-              Your weekly streak is at <strong>{successResult.weekly_streak_days} days</strong>. Dashboard and analytics have been updated.
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Check-in Successfully Saved!</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xs mx-auto">
+              Your streak is at <strong>{successResult.weekly_streak_days} days</strong>. Dashboard and analytics have been updated.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* 1. Expressive Mood Selection */}
             <div>
-              <label className="block text-xs font-bold text-charcoal-700 mb-2.5 flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2.5 flex items-center justify-between">
                 <span>1. Select Primary Emotion</span>
-                <span className="text-[11px] text-teal-700 font-semibold">{selectedMood}</span>
+                <span className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold">{selectedMood}</span>
               </label>
 
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
@@ -158,10 +156,10 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                       key={mName}
                       type="button"
                       onClick={() => setSelectedMood(mName)}
-                      className={`flex flex-col items-center justify-center p-2 rounded-2xl border transition-all text-center ${
+                      className={`flex flex-col items-center justify-center p-2 rounded-2xl border transition text-center cursor-pointer ${
                         isSelected
-                          ? `${mData.bg} ${mData.border} ring-2 ring-teal-500 scale-105 shadow-wellness`
-                          : 'bg-white/70 border-cream-200/90 hover:bg-white hover:scale-102 text-charcoal-600'
+                          ? 'border-sky-500 dark:border-sky-400 bg-sky-50 dark:bg-sky-950/60 ring-2 ring-sky-400/50 shadow-xs scale-102'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       <span className="text-xl mb-1">{mData.emoji}</span>
@@ -174,9 +172,9 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
 
             {/* 2. Mood Intensity Slider */}
             <div>
-              <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-charcoal-700">
+              <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-slate-700 dark:text-slate-300">
                 <span>Mood Intensity</span>
-                <span className="text-teal-700">{moodIntensity}/10</span>
+                <span className="text-sky-600 dark:text-sky-400">{moodIntensity}/10</span>
               </div>
               <input
                 type="range"
@@ -184,23 +182,23 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                 max="10"
                 value={moodIntensity}
                 onChange={(e) => setMoodIntensity(e.target.value)}
-                className="w-full h-2 bg-cream-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
               />
-              <div className="flex justify-between text-[10px] text-charcoal-400 mt-1">
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                 <span>Gentle / Mild</span>
                 <span>Moderate</span>
                 <span>Intense</span>
               </div>
             </div>
 
-            {/* 3. Energy Level Slider (From Student Survey finding) */}
-            <div className="p-3.5 rounded-2xl bg-teal-50/70 border border-teal-200/80 space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold text-teal-950">
+            {/* 3. Energy Level Slider */}
+            <div className="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/80 dark:border-teal-900/50 space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-teal-950 dark:text-teal-200">
                 <span className="flex items-center gap-1.5">
-                  <Battery className="w-3.5 h-3.5 text-teal-600" />
+                  <Battery className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                   <span>Daytime Energy Level</span>
                 </span>
-                <span className="text-teal-800 font-mono bg-white px-2 py-0.5 rounded-lg border border-teal-200">
+                <span className="text-teal-800 dark:text-teal-300 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-teal-200 dark:border-teal-800">
                   {energyLevel}/10
                 </span>
               </div>
@@ -210,9 +208,9 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                 max="10"
                 value={energyLevel}
                 onChange={(e) => setEnergyLevel(e.target.value)}
-                className="w-full h-2 bg-teal-200/80 rounded-lg appearance-none cursor-pointer accent-teal-700"
+                className="w-full h-2 bg-teal-200 dark:bg-teal-800 rounded-lg appearance-none cursor-pointer accent-teal-600"
               />
-              <div className="flex justify-between text-[10px] text-teal-700 font-medium">
+              <div className="flex justify-between text-[10px] text-teal-700 dark:text-teal-400 font-medium">
                 <span>Drained / Fatigued</span>
                 <span>Functional</span>
                 <span>Vibrant & Alert</span>
@@ -220,13 +218,13 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             {/* 4. Stress Level & Domain */}
-            <div className="p-3.5 rounded-2xl bg-peach-50/70 border border-peach-200/80 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-peach-950">
+            <div className="p-3.5 rounded-2xl bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200/80 dark:border-orange-900/50 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-orange-950 dark:text-orange-200">
                 <span className="flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-peach-600" />
+                  <Flame className="w-3.5 h-3.5 text-orange-500" />
                   <span>Perceived Stress Level</span>
                 </span>
-                <span className="text-peach-800 font-mono bg-white px-2 py-0.5 rounded-lg border border-peach-200">
+                <span className="text-orange-800 dark:text-orange-300 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-orange-200 dark:border-orange-800">
                   {stressLevel}/10
                 </span>
               </div>
@@ -236,17 +234,17 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                 max="10"
                 value={stressLevel}
                 onChange={(e) => setStressLevel(e.target.value)}
-                className="w-full h-2 bg-peach-200 rounded-lg appearance-none cursor-pointer accent-peach-600"
+                className="w-full h-2 bg-orange-200 dark:bg-orange-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
               />
 
               <div className="pt-1">
-                <label className="block text-[11px] font-bold text-charcoal-700 mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Primary Domain of Stress:
                 </label>
                 <select
                   value={stressCategory}
                   onChange={(e) => setStressCategory(e.target.value)}
-                  className="w-full py-2 px-3 text-xs rounded-xl bg-white border border-peach-300 text-charcoal-800 focus:outline-none focus:ring-2 focus:ring-peach-500"
+                  className="w-full py-2 px-3 text-xs rounded-xl bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
                 >
                   {STRESS_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -258,13 +256,13 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             {/* 5. Last Night Sleep Hours */}
-            <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold text-sky-950">
+            <div className="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900/50 space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-sky-950 dark:text-sky-200">
                 <span className="flex items-center gap-1.5">
-                  <Moon className="w-3.5 h-3.5 text-sky-600" />
+                  <Moon className="w-3.5 h-3.5 text-sky-500" />
                   <span>Last Night Sleep Duration</span>
                 </span>
-                <span className="text-sky-800 font-mono bg-white px-2 py-0.5 rounded-lg border border-sky-200">
+                <span className="text-sky-800 dark:text-sky-300 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800">
                   {sleepHours} hrs
                 </span>
               </div>
@@ -275,9 +273,9 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                 step="0.5"
                 value={sleepHours}
                 onChange={(e) => setSleepHours(e.target.value)}
-                className="w-full h-2 bg-sky-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+                className="w-full h-2 bg-sky-200 dark:bg-sky-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
               />
-              <div className="flex justify-between text-[10px] text-sky-700 font-medium">
+              <div className="flex justify-between text-[10px] text-sky-700 dark:text-sky-400 font-medium">
                 <span>&lt; 5 hrs (Deficit)</span>
                 <span>7.5 hrs (Target)</span>
                 <span>9+ hrs (Extended)</span>
@@ -286,7 +284,7 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
 
             {/* 6. Context Tags */}
             <div>
-              <label className="block text-xs font-bold text-charcoal-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 What influenced your day? (Optional)
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -297,10 +295,10 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                       key={tag}
                       type="button"
                       onClick={() => toggleTag(tag)}
-                      className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold transition ${
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold transition cursor-pointer ${
                         isTagSelected
-                          ? 'bg-teal-600 text-white shadow-sm'
-                          : 'bg-white/80 border border-cream-200 text-charcoal-600 hover:bg-white'
+                          ? 'bg-sky-500 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       {tag}
@@ -312,7 +310,7 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
 
             {/* 7. Optional Notes */}
             <div>
-              <label className="block text-xs font-bold text-charcoal-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Private Note to Yourself (Optional)
               </label>
               <textarea
@@ -320,7 +318,7 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
                 placeholder="Anything specific on your mind today..."
-                className="w-full p-3 rounded-2xl bg-white/90 border border-cream-200 text-xs text-charcoal-800 placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
               />
             </div>
 
@@ -328,7 +326,7 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-teal-600 via-teal-700 to-sky-600 hover:from-teal-700 hover:to-sky-700 text-white text-xs sm:text-sm font-bold shadow-glow-teal transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-teal-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-sky-500/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
             >
               <Sparkles className="w-4 h-4" />
               <span>{isSubmitting ? 'Saving Check-in...' : isEditing ? 'Update Check-in' : 'Complete 60-Second Check-in'}</span>

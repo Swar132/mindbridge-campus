@@ -36,7 +36,7 @@ export default function Resources({ onOpenBreathing, onOpenGrounding }) {
     try {
       setLoading(true);
       const data = await api.getResources(selectedCategory, search);
-      setResources(data);
+      setResources(data || []);
     } catch (err) {
       console.error('Failed to load resources:', err);
     } finally {
@@ -49,20 +49,20 @@ export default function Resources({ onOpenBreathing, onOpenGrounding }) {
   }, [selectedCategory, search]);
 
   return (
-    <div className="space-y-7 animate-fade-in pb-10">
+    <div className="space-y-6 animate-fade-in pb-12 transition-colors duration-300">
       {/* Header Banner */}
-      <div className="rounded-4xl bg-gradient-to-r from-sky-100/90 via-lavender-50 to-pink-50 border border-sky-200/80 p-6 sm:p-8 shadow-wellness relative overflow-hidden">
+      <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-sky-50 via-teal-50 to-purple-50 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-teal-950/40 border border-sky-100/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 bg-sky-100 px-3 py-1 rounded-full border border-sky-200">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300 bg-teal-100/80 dark:bg-teal-950/60 px-3 py-1 rounded-full border border-teal-200 dark:border-teal-800">
               Curated Evidence-Based Guides
             </span>
-            <span className="text-xs text-charcoal-400 font-medium">Campus Psychoeducation</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Campus Psychoeducation</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-charcoal-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Wellbeing Toolkits & Coping Guides
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-600 mt-1 max-w-xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-xl leading-relaxed">
             Short, actionable guides for exam anxiety, placement rejections, sleep disruptions, and cognitive reframing.
           </p>
         </div>
@@ -70,59 +70,59 @@ export default function Resources({ onOpenBreathing, onOpenGrounding }) {
 
       {/* Somatic Quick Tool Action Banners */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div className="rounded-4xl bg-gradient-to-br from-mint-50 to-emerald-100/80 border border-mint-200 p-6 shadow-wellness flex items-center justify-between gap-4 hover:shadow-wellness-lg transition-all duration-200">
+        <div className="rounded-3xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/80 dark:border-teal-900/50 p-6 shadow-sm flex items-center justify-between gap-4 transition">
           <div>
-            <span className="text-[10px] font-bold text-mint-800 bg-white/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-mint-200 inline-block mb-2">
+            <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 bg-white/80 dark:bg-slate-800 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-teal-200 dark:border-teal-800 inline-block mb-2">
               Somatic Reset
             </span>
-            <h2 className="text-base font-serif font-bold text-charcoal-900">4-7-8 Breathwork Guide</h2>
-            <p className="text-xs text-charcoal-600 mt-1 max-w-xs leading-relaxed">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">4-7-8 Breathwork Guide</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-xs leading-relaxed">
               Stimulates vagal tone to quiet pre-exam racing heartbeats.
             </p>
             <button
               onClick={onOpenBreathing}
-              className="mt-4 px-4 py-2 rounded-xl bg-mint-600 hover:bg-mint-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-glow-mint"
+              className="mt-4 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" /> Open Breathing Tool
             </button>
           </div>
-          <div className="w-14 h-14 rounded-3xl bg-mint-500 text-white flex items-center justify-center shrink-0 shadow-glow-mint">
+          <div className="w-14 h-14 rounded-2xl bg-teal-500 text-white flex items-center justify-center shrink-0 shadow-sm">
             <Wind className="w-7 h-7" />
           </div>
         </div>
 
-        <div className="rounded-4xl bg-gradient-to-br from-peach-50 to-coral-100/80 border border-peach-200 p-6 shadow-wellness flex items-center justify-between gap-4 hover:shadow-wellness-lg transition-all duration-200">
+        <div className="rounded-3xl bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200/80 dark:border-orange-900/50 p-6 shadow-sm flex items-center justify-between gap-4 transition">
           <div>
-            <span className="text-[10px] font-bold text-coral-800 bg-white/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-peach-200 inline-block mb-2">
+            <span className="text-[10px] font-bold text-orange-800 dark:text-orange-300 bg-white/80 dark:bg-slate-800 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-orange-200 dark:border-orange-800 inline-block mb-2">
               Sensory Grounding
             </span>
-            <h2 className="text-base font-serif font-bold text-charcoal-900">5-4-3-2-1 Sensory Scan</h2>
-            <p className="text-xs text-charcoal-600 mt-1 max-w-xs leading-relaxed">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">5-4-3-2-1 Sensory Scan</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-xs leading-relaxed">
               Anchors racing thoughts back into physical reality.
             </p>
             <button
               onClick={onOpenGrounding}
-              className="mt-4 px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-glow-coral"
+              className="mt-4 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" /> Open Grounding Tool
             </button>
           </div>
-          <div className="w-14 h-14 rounded-3xl bg-coral-500 text-white flex items-center justify-center shrink-0 shadow-glow-coral">
+          <div className="w-14 h-14 rounded-2xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm">
             <Compass className="w-7 h-7" />
           </div>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="p-4 rounded-3xl bg-white/95 backdrop-blur-md border border-cream-200/90 shadow-wellness space-y-3">
+      <div className="p-4 rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
         <div className="relative">
-          <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search guides, relaxation practices, sleep hygiene..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-cream-50/70 border border-cream-200 text-xs text-charcoal-900 placeholder-charcoal-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
         </div>
 
@@ -131,10 +131,10 @@ export default function Resources({ onOpenBreathing, onOpenGrounding }) {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`text-xs px-3 py-1.5 rounded-xl shrink-0 font-bold transition ${
+              className={`text-xs px-3 py-1.5 rounded-xl shrink-0 font-bold transition cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-purple-600 text-white shadow-wellness-sm'
-                  : 'bg-cream-50 border border-cream-200 text-charcoal-600 hover:bg-cream-100'
+                  ? 'bg-sky-500 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {cat}
@@ -149,28 +149,28 @@ export default function Resources({ onOpenBreathing, onOpenGrounding }) {
           <div
             key={r.id}
             onClick={() => setSelectedResource(r)}
-            className="group rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 hover:border-lavender-300 p-6 shadow-wellness hover:shadow-wellness-lg transition-all duration-200 cursor-pointer flex flex-col justify-between hover:-translate-y-1"
+            className="group rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
                   {r.category}
                 </span>
-                <span className="text-[10px] text-charcoal-400 flex items-center gap-1">
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {r.read_time_minutes} min read
                 </span>
               </div>
 
-              <h3 className="text-base font-serif font-bold text-charcoal-900 group-hover:text-purple-700 transition">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition leading-snug">
                 {r.title}
               </h3>
 
-              <p className="text-xs text-charcoal-600 mt-2 line-clamp-3 leading-relaxed font-sans">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 line-clamp-3 leading-relaxed">
                 {r.summary}
               </p>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-cream-200/80 flex items-center justify-between text-xs font-bold text-purple-700">
+            <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-sky-600 dark:text-sky-400">
               <span>Read Full Guide</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -180,35 +180,35 @@ export default function Resources({ onOpenBreathing, onOpenGrounding }) {
 
       {/* Reader Modal */}
       {selectedResource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#FFFDF9] rounded-4xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-cream-200 relative animate-scale-up max-h-[88vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-scale-up max-h-[88vh] overflow-y-auto">
             <button
               onClick={() => setSelectedResource(null)}
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-cream-100 text-charcoal-400 hover:text-charcoal-700 transition"
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200 inline-block mb-2">
+            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800 inline-block mb-2">
               {selectedResource.category}
             </span>
 
-            <h2 className="text-2xl font-serif font-bold text-charcoal-900 mb-2">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               {selectedResource.title}
             </h2>
 
-            <div className="p-4 rounded-3xl bg-cream-50/80 border border-cream-200 my-4 text-xs font-bold text-charcoal-600">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 my-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
               Summary: {selectedResource.summary}
             </div>
 
-            <div className="prose text-xs text-charcoal-700 leading-relaxed font-sans whitespace-pre-line space-y-3">
+            <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line space-y-3">
               {selectedResource.body_markdown || selectedResource.summary}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-cream-200/80 flex justify-end">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setSelectedResource(null)}
-                className="px-5 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700"
+                className="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs cursor-pointer"
               >
                 Close Guide
               </button>

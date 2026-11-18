@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
     let email = 'student@mindbridge.edu';
     let password = 'student123';
     if (role === 'counsellor') {
-      email = 'counsellor@mindbridge.edu';
+      email = 'nitusingh_b@dau.ac.in';
       password = 'counsellor123';
     } else if (role === 'admin') {
       email = 'admin@mindbridge.edu';

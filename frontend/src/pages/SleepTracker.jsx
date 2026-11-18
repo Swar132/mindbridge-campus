@@ -66,7 +66,7 @@ export default function SleepTracker({ onNavigate }) {
         api.getSleepEntries(30),
         api.getSleepMetrics(),
       ]);
-      setEntries(entryList);
+      setEntries(entryList || []);
       setMetrics(met);
     } catch (err) {
       console.error('Failed to load sleep data:', err);
@@ -157,10 +157,10 @@ export default function SleepTracker({ onNavigate }) {
     }));
 
   return (
-    <div className="space-y-7 animate-fade-in pb-10">
-      {/* Twilight Sanctuary Header Banner */}
-      <div className="rounded-4xl bg-gradient-to-br from-night-800 via-night-900 to-indigo-950 text-white border border-indigo-900/50 p-6 sm:p-8 shadow-wellness relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-30 pointer-events-none">
+    <div className="space-y-6 animate-fade-in pb-12 transition-colors duration-300">
+      {/* Header Banner */}
+      <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-indigo-900/50 p-6 sm:p-8 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 opacity-20 pointer-events-none">
           <NightSkyIllustration />
         </div>
 
@@ -173,11 +173,11 @@ export default function SleepTracker({ onNavigate }) {
               </span>
               <span className="text-xs text-sky-200/80 font-medium">Circadian Baseline</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Sleep Sanctuary
             </h1>
             <p className="text-xs sm:text-sm text-sky-100/80 mt-1 max-w-xl leading-relaxed">
-              Rest is non-negotiable cognitive repair. Track duration, bedtime regularity, and wake quality to protect your memory consolidation.
+              Rest is foundational cognitive repair. Track duration, bedtime regularity, and wake quality to protect your memory consolidation.
             </p>
           </div>
 
@@ -192,19 +192,19 @@ export default function SleepTracker({ onNavigate }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Logging Form (5 cols) */}
-        <div className="lg:col-span-5 rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 sm:p-7 shadow-wellness space-y-5">
-          <div className="flex items-center justify-between border-b border-cream-200/80 pb-3">
+        <div className="lg:col-span-5 rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
-              <h2 className="text-lg font-serif font-bold text-charcoal-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 Log Last Night's Rest
               </h2>
-              <p className="text-xs text-charcoal-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Calculate total sleep and record subjective rest quality.
               </p>
             </div>
             {successBanner && (
-              <span className="text-xs font-bold text-mint-800 bg-mint-50 px-3 py-1 rounded-full border border-mint-200 flex items-center gap-1 animate-bounce">
-                <Check className="w-3.5 h-3.5 text-mint-600" /> Saved!
+              <span className="text-xs font-bold text-teal-800 dark:text-teal-200 bg-teal-50 dark:bg-teal-950/60 px-3 py-1 rounded-full border border-teal-200 dark:border-teal-800 flex items-center gap-1 animate-bounce">
+                <Check className="w-3.5 h-3.5 text-teal-600" /> Saved!
               </span>
             )}
           </div>
@@ -212,247 +212,200 @@ export default function SleepTracker({ onNavigate }) {
           <form onSubmit={handleCreate} className="space-y-4">
             {/* Bedtime & Wake Time Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80">
-                <label className="block text-[11px] font-bold text-indigo-900 mb-1 flex items-center gap-1">
-                  <Moon className="w-3.5 h-3.5 text-indigo-600" /> Fell Asleep
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                  <Moon className="w-3.5 h-3.5 text-indigo-500" /> Fell Asleep
                 </label>
                 <input
                   type="time"
-                  required
                   value={bedtime}
                   onChange={(e) => setBedtime(e.target.value)}
-                  className="w-full text-xs font-bold px-3 py-1.5 rounded-xl border border-indigo-200 bg-white text-indigo-950 focus:outline-none"
+                  className="w-full text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
                 />
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
-                <label className="block text-[11px] font-bold text-amber-900 mb-1 flex items-center gap-1">
-                  <Sun className="w-3.5 h-3.5 text-amber-600" /> Woke Up
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                  <Sun className="w-3.5 h-3.5 text-amber-500" /> Woke Up
                 </label>
                 <input
                   type="time"
-                  required
                   value={wakeTime}
                   onChange={(e) => setWakeTime(e.target.value)}
-                  className="w-full text-xs font-bold px-3 py-1.5 rounded-xl border border-amber-200 bg-white text-amber-950 focus:outline-none"
+                  className="w-full text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
                 />
               </div>
             </div>
 
-            {/* Calculated Duration Banner */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-200/80 flex items-center justify-between">
+            {/* Total Calculated Sleep Duration */}
+            <div className="p-4 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100/80 dark:border-sky-900/50 flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-indigo-900">Calculated Rest Duration</p>
-                <p className="text-[10px] text-indigo-700/80">
-                  {duration >= 7.5 ? '✨ Within restorative recommendation' : '⚠️ Below optimal 7.5h target'}
-                </p>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Total Calculated Sleep</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Optimal baseline: 7.5+ hrs</span>
               </div>
-              <span className="text-2xl font-serif font-black text-indigo-950">
-                {duration} <span className="text-xs font-normal text-indigo-700">hrs</span>
-              </span>
+              <div className="text-2xl font-black text-sky-600 dark:text-sky-400">
+                {duration} <span className="text-xs font-normal">hours</span>
+              </div>
             </div>
 
-            {/* Quality Stars Rating */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-charcoal-800">
-                Rest Quality & Morning Energy
+            {/* Rest Quality Rating */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Subjective Rest Quality
               </label>
               <div className="grid grid-cols-5 gap-1.5">
-                {QUALITY_LEVELS.map((q) => {
-                  const isSelected = quality === q.stars;
-                  return (
-                    <button
-                      key={q.stars}
-                      type="button"
-                      onClick={() => setQuality(q.stars)}
-                      className={`p-2 rounded-2xl border text-center transition ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-wellness-sm scale-105'
-                          : 'bg-cream-50/70 border-cream-200 text-charcoal-700 hover:bg-white'
-                      }`}
-                    >
-                      <div className="flex justify-center mb-0.5">
-                        <Star className={`w-3.5 h-3.5 ${isSelected ? 'fill-amber-300 text-amber-300' : 'text-amber-400 fill-amber-400'}`} />
-                      </div>
-                      <span className="text-[10px] font-extrabold block">{q.stars}★</span>
-                      <span className="text-[9px] block truncate opacity-80">{q.label}</span>
-                    </button>
-                  );
-                })}
+                {QUALITY_LEVELS.map((q) => (
+                  <button
+                    key={q.stars}
+                    type="button"
+                    onClick={() => setQuality(q.stars)}
+                    className={`p-2 rounded-xl border text-center transition cursor-pointer ${
+                      quality === q.stars
+                        ? 'bg-sky-500 text-white border-sky-500 shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <div className="flex justify-center text-xs">
+                      {'⭐'.repeat(q.stars)}
+                    </div>
+                    <span className="text-[10px] font-bold block mt-1 truncate">{q.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Contributing Factors */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-charcoal-800">
-                Night Influences & Factors
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Nighttime Influences & Habits
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {SLEEP_FACTORS.map((factor) => {
-                  const active = selectedFactors.includes(factor);
+                {SLEEP_FACTORS.map((f) => {
+                  const active = selectedFactors.includes(f);
                   return (
                     <button
-                      key={factor}
+                      key={f}
                       type="button"
-                      onClick={() => toggleFactor(factor)}
-                      className={`text-xs px-2.5 py-1 rounded-xl font-bold transition ${
+                      onClick={() => toggleFactor(f)}
+                      className={`text-[11px] px-2.5 py-1 rounded-xl font-bold transition cursor-pointer ${
                         active
-                          ? 'bg-indigo-600 text-white shadow-wellness-sm'
-                          : 'bg-cream-50 border border-cream-200 text-charcoal-600 hover:bg-indigo-50 hover:text-indigo-700'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
-                      {factor}
+                      {f}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Notes */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Rest Reflection (Optional)
+              </label>
+              <textarea
+                rows="2"
+                placeholder="Dreams, nighttime awakenings, or morning energy notes..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full text-xs p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-sky-500 hover:from-indigo-700 hover:to-sky-600 text-white font-extrabold text-xs shadow-glow-lavender transition hover:scale-102 active:scale-98"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-600 to-purple-600 hover:from-sky-600 hover:to-purple-700 text-white font-bold text-xs shadow-md shadow-sky-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? 'Recording...' : 'Log Sleep Sanctuary Entry 🌙'}
+              {isSubmitting ? 'Recording...' : 'Log Sleep Record ✨'}
             </button>
           </form>
         </div>
 
-        {/* 14-Day Sleep Bar Chart (7 cols) */}
+        {/* Analytics & History (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 shadow-wellness">
+          {/* 14-Day Sleep Duration Chart */}
+          <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-sm font-serif font-bold text-charcoal-900">
-                  14-Day Sleep Duration History
-                </h3>
-                <p className="text-xs text-charcoal-400">Dotted line marks the 7.5h restorative threshold</p>
-              </div>
-              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
-                Nightly Rest (Hours)
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                14-Day Rest Duration
+              </h3>
+              <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+                Target: 7.5 - 8.5h
               </span>
             </div>
 
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ECE7DC" />
-                  <XAxis dataKey="date" tick={{ fill: '#756E96', fontSize: 9 }} tickLine={false} axisLine={false} />
-                  <YAxis domain={[0, 12]} tick={{ fill: '#756E96', fontSize: 9 }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white p-2.5 rounded-xl shadow-wellness border border-cream-200 text-xs">
-                            <p className="font-bold text-charcoal-900">{label}</p>
-                            <p className="text-indigo-700 font-bold">
-                              Duration: {payload[0]?.value} hrs ({payload[0]?.payload?.quality}★ quality)
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <ReferenceLine y={7.5} stroke="#10B981" strokeDasharray="4 4" label={{ value: '7.5h Goal', fill: '#10B981', fontSize: 9 }} />
-                  <Bar dataKey="duration" fill="#6366F1" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Quick Wind-Down Routine Card */}
-          <div className="rounded-4xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200/80 p-5 shadow-wellness flex items-center justify-between gap-4">
-            <div>
-              <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">
-                Digital Wind-Down Tip
-              </span>
-              <h4 className="text-sm font-extrabold text-charcoal-900 mt-0.5">
-                Enable Warm Night Shield 45 Mins Before Bed
-              </h4>
-              <p className="text-xs text-charcoal-600 mt-0.5">
-                Blue spectrum light suppresses melatonin production by up to 50%.
+            {chartData.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-12">
+                No sleep records yet. Log your rest on the left to see your sleep history.
               </p>
-            </div>
-            <button
-              onClick={() => onNavigate('resources')}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition shrink-0"
-            >
-              Sleep Guides →
-            </button>
+            ) : (
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
+                    <XAxis dataKey="date" tick={{ fill: '#94A3B8', fontSize: 9 }} tickLine={false} axisLine={false} />
+                    <YAxis domain={[0, 12]} tick={{ fill: '#94A3B8', fontSize: 9 }} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        color: '#fff',
+                        borderRadius: '1rem',
+                        border: '1px solid rgba(148, 163, 184, 0.2)',
+                        fontSize: '11px',
+                      }}
+                    />
+                    <ReferenceLine y={7.5} stroke="#38BDF8" strokeDasharray="3 3" />
+                    <Bar dataKey="duration" fill="#6366F1" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Sleep History Table */}
-      <div className="rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 sm:p-7 shadow-wellness space-y-4">
-        <div className="flex items-center justify-between border-b border-cream-200/80 pb-3">
-          <h3 className="text-lg font-serif font-bold text-charcoal-900">
-            Past Sleep Logs
-          </h3>
-          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
-            {entries.length} Logs Saved
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          {entries.length === 0 ? (
-            <p className="text-xs text-charcoal-400 text-center py-10">No sleep entries recorded yet.</p>
-          ) : (
-            entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="p-4 rounded-3xl bg-cream-50/70 border border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white hover:shadow-wellness-sm transition-all"
-              >
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-serif font-bold text-sm shrink-0 border border-indigo-200">
-                    {entry.duration_hours}h
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-charcoal-900">
-                        {entry.bedtime} - {entry.wake_time}
-                      </span>
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.2 rounded-full border border-amber-200">
-                        {entry.quality}★ Rest
+          {/* History Feed */}
+          <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+              Recent Rest Logs
+            </h3>
+            {entries.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6">No sleep entries recorded yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {entries.slice(0, 6).map((e) => (
+                  <div
+                    key={e.id}
+                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-slate-800 dark:text-slate-100">
+                        {e.duration_hours} hrs • {e.bedtime} – {e.wake_time}
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(e.sleep_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        {e.notes ? ` • "${e.notes}"` : ''}
                       </span>
                     </div>
 
-                    {entry.factors && entry.factors.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {entry.factors.map((f, idx) => (
-                          <span
-                            key={idx}
-                            className="text-[10px] text-charcoal-600 bg-white px-2 py-0.5 rounded-md border border-cream-200"
-                          >
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">
+                        {'⭐'.repeat(e.quality || 3)}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        className="p-1 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                        title="Delete entry"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3 self-end sm:self-center">
-                  <span className="text-[10px] text-charcoal-400 font-mono">
-                    {new Date(entry.sleep_date).toLocaleDateString([], {
-                      month: 'short',
-                      day: 'numeric',
-                      weekday: 'short'
-                    })}
-                  </span>
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    className="p-1.5 rounded-xl text-charcoal-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                ))}
               </div>
-            ))
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

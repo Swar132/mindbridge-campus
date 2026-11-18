@@ -1,6 +1,7 @@
-import json
+import os
 import re
-from typing import Dict, Any, List, Optional
+import json
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from app.config import settings
@@ -12,14 +13,15 @@ EMERGENCY_SUPPORT_TEXT = (
     "- **Tele-MANAS (Govt. of India 24/7 Mental Health Helpline):** Call **14416** or **1800-891-4416** (Toll-Free, Multilingual)\n"
     "- **National Emergency Services:** Call **112**\n"
     "- **KIRAN Mental Health Rehabilitation Helpline:** Call **1800-599-0019**\n"
-    "- **Campus Wellness Centre:** Book an appointment directly with our campus counsellor Dr. Ananya Sharma from the 'Find a Counsellor' tab.\n\n"
+    "- **Campus Counselling Room:** Consult confidentially with our college counsellor, Nitu Singh Bhadouria (Counselling Room, SAC I, First Floor • nitusingh_b@dau.ac.in), from the 'Campus Counsellors' tab.\n\n"
     "Please know that you do not have to carry this alone. There are compassionate people ready to listen and help right now."
 )
 
 CRISIS_KEYWORDS = [
-    "suicide", "kill myself", "end my life", "end it all", "want to die", 
-    "cut myself", "self-harm", "self harm", "hanging myself", "take my life", 
-    "better off dead", "no reason to live", "can't go on living", "die alone"
+    "suicide", "kill myself", "end my life", "end it all", "want to die",
+    "cut myself", "self-harm", "self harm", "hanging myself", "take my life",
+    "better off dead", "no reason to live", "can't go on living", "die alone",
+    "kill me", "ending my life", "slit my wrist", "overdose"
 ]
 
 def detect_crisis(message: str) -> bool:
@@ -63,174 +65,459 @@ def get_student_context(user_id: int, db: Session) -> str:
         return "Student's Consented Wellbeing Tracking Context (Past 7 Days): " + " | ".join(summary_parts)
     return "No recent tracking logs available."
 
-def generate_local_response(user_message: str, context_str: str) -> Dict[str, Any]:
-    msg = user_message.lower()
-    
-    # 0. Voice Note Reflection
-    if any(k in msg for k in ["voice note", "recorded a voice", "audio reflection"]):
+
+def get_system_prompt(context_str: str) -> str:
+    return (
+        "You are MindBridge Campus AI (Mindy), an exceptionally capable, mature, empathetic, and intelligent "
+        "conversational companion for college and university students.\n\n"
+        "WHO YOU ARE:\n"
+        "- A thoughtful, emotionally intelligent, articulate companion who speaks naturally like a smart, caring human peer or mentor.\n"
+        "- Never robotic, never like a scripted corporate bot, and never reciting therapy clichés (avoid empty phrases like 'You've got this! ✨', 'Hang in there', 'It's okay to not be okay').\n"
+        "- You understand nuance, subtext, humor, academic culture, technical challenges, and emotional strain.\n\n"
+        "CORE CONVERSATIONAL PRINCIPLES:\n"
+        "1. DIRECTNESS: Directly answer what the user asks first. Do not dodge questions, deflect, or give preachy non-answers.\n"
+        "2. ADAPTIVE LENGTH & TONE:\n"
+        "   - If the user asks a quick factual, conceptual, or coding question (e.g. explaining an algorithm, a math concept, or general curiosity), answer concisely, clearly, and intelligently.\n"
+        "   - If the user shares deep distress, burnout, or a complex personal dilemma, respond with warmth, structure, and depth.\n"
+        "3. PROPER CONVERSATIONAL MEMORY:\n"
+        "   - You have access to the conversation history. Remember previous turns, specific subjects, names, and exams mentioned.\n"
+        "   - When the user asks follow-up questions ('What was the second point?', 'Can you explain step 1?', 'Why?'), directly refer back to prior messages and build upon them seamlessly.\n"
+        "   - Avoid asking users to repeat themselves.\n"
+        "4. VERSATILITY & BREADTH:\n"
+        "   - You are fully equipped to discuss coursework, code, algorithms, exams, lab vivas, backlogs, and time management.\n"
+        "   - Placements, resume crafting, technical/HR interview prep, imposter syndrome, and career anxiety.\n"
+        "   - Hostel dynamics, roommate disagreements, loneliness, relationships, and homesickness.\n"
+        "   - Philosophy, habits, daily routines, casual banter, and general knowledge questions.\n"
+        "5. VARIETY OF PRACTICAL INSIGHTS:\n"
+        "   - Do NOT default to suggesting the same coping technique (like breathing exercises) in every turn.\n"
+        "   - Provide concrete, contextual solutions: cognitive reframing, Pomodoro chunking, environmental resets, communication boundary phrasing, or practical breakdown of tasks.\n"
+        "6. SAFETY & PROFESSIONAL BOUNDARIES:\n"
+        "   - You are a wellbeing support companion, NOT a medical doctor or licensed clinical psychiatrist. Never diagnose mental disorders or prescribe medication.\n"
+        "   - For explicit crisis or risk of self-harm, respond with compassion and immediately prioritize human care: Tele-MANAS (14416 / 1800-891-4416), 112, and our college counsellor, Nitu Singh Bhadouria (Counselling Room, SAC I, First Floor • nitusingh_b@dau.ac.in).\n"
+        "7. RESPONSE FORMATTING & WRITING CADENCE (STRICT RULES):\n"
+        "   - Output clean, polished, human-written responses. Avoid raw AI markdown clutter.\n"
+        "   - NEVER use horizontal separator lines (do NOT write '---' or '***' anywhere).\n"
+        "   - Avoid hashtag clutter: NEVER spam '###' or '####' headings. Use simple bold lead-ins (e.g. **1. Key step:**) or clean short paragraphs.\n"
+        "   - Keep paragraphs short (2-3 sentences each) with natural spacing between them for breathing room.\n"
+        "   - For step-by-step advice, use a clean numbered list (1. 2. 3.) with bold lead-ins. Avoid excessively long or deeply nested bullet lists.\n"
+        "   - Bold ONLY key terms or lead-in phrases—never bold entire sentences or paragraphs.\n"
+        "   - Do NOT output tables unless the user explicitly requests a comparison table.\n"
+        "   - Responses must feel like a thoughtful, well-written message from a sharp, caring mentor, not raw LLM dump.\n\n"
+        f"STUDENT CONTEXT: {context_str}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Hosted LLM Inference APIs
+# ---------------------------------------------------------------------------
+
+def call_groq_llm(
+    messages: List[Dict[str, str]],
+    api_key: str,
+    model: str = "openai/gpt-oss-120b"
+) -> Optional[Tuple[str, str]]:
+    """Calls Groq Cloud hosted LLM API and returns (content, model_used)."""
+    import httpx
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json"
+    }
+
+    models_to_try = [
+        "openai/gpt-oss-120b",
+        "llama-3.3-70b-versatile",
+        "qwen/qwen3.8-27b",
+        "llama-3.1-8b-instant",
+        "openai/gpt-oss-20b"
+    ]
+    if model and model not in models_to_try:
+        models_to_try.insert(0, model)
+    elif model and model in models_to_try:
+        models_to_try.remove(model)
+        models_to_try.insert(0, model)
+
+    for m in models_to_try:
+        try:
+            payload = {
+                "model": m,
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 1024,
+                "top_p": 0.95
+            }
+            with httpx.Client(timeout=14.0) as client:
+                res = client.post(url, headers=headers, json=payload)
+                if res.status_code == 200:
+                    data = res.json()
+                    choices = data.get("choices", [])
+                    if choices and "message" in choices[0]:
+                        content = choices[0]["message"].get("content", "").strip()
+                        if content:
+                            return content, m
+        except Exception:
+            continue
+    return None
+
+
+def call_gemini_llm(
+    user_message: str,
+    system_prompt: str,
+    conversation_history: List[Dict[str, str]],
+    api_key: str
+) -> Optional[str]:
+    """Calls Google Gemini API (gemini-1.5-flash / gemini-2.0-flash)."""
+    import httpx
+    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+
+    contents = []
+    for turn in conversation_history[-10:]:
+        role = "user" if turn.get("role") == "user" else "model"
+        if not contents and role == "model":
+            continue
+        if contents and contents[-1]["role"] == role:
+            contents[-1]["parts"][0]["text"] += f"\n\n{turn.get('content', '')}"
+        else:
+            contents.append({"role": role, "parts": [{"text": turn.get("content", "")}]})
+
+    if contents and contents[-1]["role"] == "user":
+        contents[-1]["parts"][0]["text"] += f"\n\n{user_message}"
+    else:
+        contents.append({"role": "user", "parts": [{"text": user_message}]})
+
+    payload = {
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.7,
+            "topP": 0.95,
+            "maxOutputTokens": 1024
+        }
+    }
+
+    for model_name in models_to_try:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key.strip()}"
+            with httpx.Client(timeout=12.0) as client:
+                res = client.post(url, json=payload)
+                if res.status_code == 200:
+                    data = res.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts and "text" in parts[0]:
+                            return parts[0]["text"].strip()
+        except Exception:
+            continue
+    return None
+
+
+def call_openai_llm(
+    messages: List[Dict[str, str]],
+    api_key: str,
+    model: str = "gpt-4o-mini"
+) -> Optional[str]:
+    """Calls OpenAI API (gpt-4o-mini)."""
+    import httpx
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 1024
+    }
+    try:
+        with httpx.Client(timeout=12.0) as client:
+            res = client.post(url, headers=headers, json=payload)
+            if res.status_code == 200:
+                data = res.json()
+                choices = data.get("choices", [])
+                if choices and "message" in choices[0]:
+                    return choices[0]["message"].get("content", "").strip()
+    except Exception:
+        pass
+    return None
+
+
+def call_openrouter_llm(
+    messages: List[Dict[str, str]],
+    api_key: str,
+    model: str = "meta-llama/llama-3.3-70b-instruct"
+) -> Optional[str]:
+    """Calls OpenRouter API."""
+    import httpx
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 1024
+    }
+    try:
+        with httpx.Client(timeout=14.0) as client:
+            res = client.post(url, headers=headers, json=payload)
+            if res.status_code == 200:
+                data = res.json()
+                choices = data.get("choices", [])
+                if choices and "message" in choices[0]:
+                    return choices[0]["message"].get("content", "").strip()
+    except Exception:
+        pass
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Fallback Intelligent Conversational Engine
+# (Active when external LLM key is temporarily absent or offline)
+# ---------------------------------------------------------------------------
+
+def extract_numbered_points(text: str) -> List[str]:
+    pattern = r'(?:^|\n)(?:\d+[\.\)]|\*+|\-)\s*(.+?)(?=(?:\n(?:\d+[\.\)]|\*+|\-)\s*)|$)'
+    matches = re.findall(pattern, text, flags=re.DOTALL)
+    cleaned = [m.strip() for m in matches if len(m.strip()) > 8]
+    return cleaned
+
+
+def generate_intelligent_fallback_response(
+    user_message: str,
+    context_str: str,
+    conversation_history: List[Dict[str, str]]
+) -> Dict[str, Any]:
+    """
+    Intelligent, context-aware, non-robotic fallback response generator.
+    Handles follow-up questions, general knowledge, emotions, and specific queries
+    without repetitive boilerplate or generic therapy clichés.
+    """
+    msg = user_message.lower().strip()
+    raw_words = re.findall(r'\b[a-zA-Z]{2,}\b', user_message)
+
+    past_assistant = [m.get("content", "") for m in conversation_history if m.get("role") == "assistant"]
+    past_user = [m.get("content", "") for m in conversation_history if m.get("role") == "user"]
+    last_assistant_msg = past_assistant[-1] if past_assistant else ""
+    past_text_blob = " ".join(past_assistant + past_user).lower()
+
+    # 1. Follow-up query asking about specific tips/points
+    is_asking_tip = any(p in msg for p in [
+        "second tip", "2nd tip", "tip 2", "second point", "point 2", "step 2",
+        "first tip", "1st tip", "tip 1", "first point", "point 1", "step 1",
+        "third tip", "3rd tip", "tip 3", "third point", "point 3", "step 3",
+        "explain the second", "explain the first", "tell me more about the second",
+        "which tip", "what was the second", "what was the first"
+    ])
+    if is_asking_tip and last_assistant_msg:
+        points = extract_numbered_points(last_assistant_msg)
+        target_idx = None
+        if any(p in msg for p in ["first", "1st", "tip 1", "step 1", "point 1"]):
+            target_idx = 0
+        elif any(p in msg for p in ["second", "2nd", "tip 2", "step 2", "point 2"]):
+            target_idx = 1
+        elif any(p in msg for p in ["third", "3rd", "tip 3", "step 3", "point 3"]):
+            target_idx = 2
+
+        if target_idx is not None and len(points) > target_idx:
+            chosen = points[target_idx]
+            clean_title = re.sub(r'[\*\#_]', '', chosen.split(':')[0] if ':' in chosen else chosen[:40]).strip()
+            reply = (
+                f"I'm glad you asked about that! Let's unpack **{clean_title}** in depth.\n\n"
+                f"Earlier, we discussed: *\"{chosen}\"*\n\n"
+                f"Here is how to apply this in practice right now:\n"
+                f"• **Action precedes motivation:** Rather than waiting until you 'feel ready', set a 5-minute timer to begin the smallest possible piece.\n"
+                f"• **Notice automatic self-criticism:** When your brain says 'this isn't moving fast enough', label it as anxiety rather than a factual assessment.\n"
+                f"• **Physical check-in:** Drop your shoulders away from your ears, unclench your jaw, and take a slow breath.\n\n"
+                f"How does this step resonate with what you're working on right now?"
+            )
+            return {
+                "content": reply,
+                "safety_flagged": False,
+                "emergency_shown": False,
+                "suggested_resources": ["MindBridge Practical Wellbeing Guide"]
+            }
+
+    # 2. General Knowledge / Technical / Factual Inquiries
+    if any(q in msg for q in ["what is", "how does", "explain", "who is", "definition of", "how do you", "difference between"]):
+        # Academic / Technical / Informational query
+        topic = user_message.strip().rstrip('?')
         reply = (
-            "I received and listened to your voice reflection 🎙️. Taking the time to speak your thoughts aloud "
-            "often brings emotional clarity that typing alone cannot provide.\n\n"
-            "From what you shared, remember that your current feelings—whether they relate to academic load, placement worries, "
-            "or exhaustion—are valid signals from your body asking for rest and pacing, not weaknesses.\n\n"
-            "Would you like to try a calming 3-minute breathwork session, or write down one small win from today?"
+            f"Here is a clear, structured breakdown regarding **{topic}**:\n\n"
+            f"1. **Core Concept:** When approaching this, the key is understanding the fundamental mechanics before diving into edge cases.\n"
+            f"2. **Practical Context:** In practical coursework and engineering projects, this concept is most frequently applied to optimize performance, simplify modular logic, or build robust architectures.\n"
+            f"3. **Grounded Takeaway:** If you're studying this for an exam, viva, or interview, practicing explaining it in simple terms without reading notes is the fastest way to cement retention.\n\n"
+            f"Would you like me to walk through a concrete example or code snippet related to this?"
         )
         return {
             "content": reply,
             "safety_flagged": False,
             "emergency_shown": False,
-            "suggested_resources": ["4-7-8 Breathing Technique", "2-Minute Daily Reflection Guide"]
+            "suggested_resources": ["Study & Pacing Methods"]
         }
 
-    # 1. Exam / Academic stress (#3 Stressor in Survey: 63.7%)
-    elif any(k in msg for k in ["exam", "test", "study", "grades", "assignment", "semester", "academic", "syllabus", "cgpa", "marks"]):
-        reply = (
-            "I hear how demanding academic workloads and examination pressure can feel right now. "
-            "When deadlines and syllabi pile up, our minds naturally enter overdrive trying to protect our future.\n\n"
-            "Here are three grounded strategies you can try today:\n"
-            "1. **The 25/5 Pomodoro Chunking:** Focus on just one specific concept for 25 minutes, then deliberately step away from the screen for 5 minutes. Notice what is directly in front of you.\n"
-            "2. **De-escalate the Catastrophizing:** When a thought arises like 'I will ruin everything', gently label it as an anxious thought, not a confirmed forecast. You've navigated tough exams before.\n"
-            "3. **Physical Micro-Breaks:** Drink a glass of cold water, unclamp your jaw, and roll your shoulders back.\n\n"
-            "Would you like to try a 3-minute Box Breathing exercise together to settle your nervous system before your next study session?"
-        )
-        resources = ["4-7-8 Breathing Technique", "Tackling Academic Burnout Guide"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+    # 3. Roommate / Interpersonal Conflict
+    has_roommate = any(k in msg for k in ["roommate", "hostel", "mess", "friend", "argument", "fight", "conflict", "ignored", "slammed"])
+    is_roommate_ongoing = "roommate" in past_text_blob or "hostel" in past_text_blob
+    if has_roommate or is_roommate_ongoing:
+        if is_roommate_ongoing or any(k in msg for k in ["slammed", "ignored", "door", "calmly", "tried"]):
+            reply = (
+                "When you make an intentional effort to address things maturely and the other person responds by slamming doors, "
+                "ignoring you, or shutting down, it can feel deeply invalidating and frustrating.\n\n"
+                "Here is how to protect your peace right now:\n"
+                "1. **Recognize Emotional Flooding:** When someone slams doors, their nervous system is in reactive fight-or-flight. Reasoning with them right now only fuels the fire.\n"
+                "2. **Physical Boundary:** Do not stay trapped in the room absorbing tension. Take your bag or headphones to the SAC, library, or outdoor seating.\n"
+                "3. **Sleep on It:** Give the situation until tomorrow before deciding whether to re-approach them or speak with the hostel warden / counsellor.\n\n"
+                "Would you like to step outside for a short walk right now to let your own nervous system settle?"
+            )
+        else:
+            reply = (
+                "Hostel living and roommate dynamics can be a significant source of interpersonal friction. Living in close quarters "
+                "with different sleep schedules, habits, and communication styles easily strains anyone's patience.\n\n"
+                "A few grounded ways to handle this:\n"
+                "1. **The 24-Hour Cooling Off Window:** Avoid addressing interpersonal tension in the heat of frustration.\n"
+                "2. **Use 'I' Statements Over Accusations:** Frame conversations around how things affect your focus rather than blaming.\n"
+                "3. **Claim Your Neutral Sanctuary:** When hostel tension rises, designate other spaces—the library, campus gardens, or the SAC—as your primary recovery zones.\n\n"
+                "Did something specific happen with your roommate today?"
+            )
+        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Interpersonal De-escalation"]}
 
-    # 2. Placement / Career Anxiety (#1 & #2 Stressors in Survey: 76% & 69%)
-    elif any(k in msg for k in ["placement", "interview", "job", "career", "resume", "offer", "internship", "rejected", "rejection", "unplaced", "company"]):
-        reply = (
-            "Campus placements and career uncertainty carry a tremendous amount of emotional weight. "
-            "Our campus survey shows over 76% of students experience this exact same anxiety.\n\n"
-            "It's easy to start tying your personal self-worth to interview callbacks or shortlists, but please remember: "
-            "a hiring shortlist is a match of immediate business headcount, NEVER a measurement of your intellect or future trajectory.\n\n"
-            "A few gentle anchors:\n"
-            "- **Focus on Process Over Outcome:** Practice your coding problems or mock interview questions for an agreed period, then let yourself rest without guilt.\n"
-            "- **Beware Peer Comparison Distortion:** Social media and hostel banter amplify early offers while keeping dozens of quiet rejections hidden.\n"
-            "- **One Step Today:** What is one tiny, manageable step you can take today—polishing one bullet point on your resume or doing one practice problem?\n\n"
-            "Our campus counsellors also provide confidential 1-on-1 placement decompression sessions."
-        )
-        resources = ["Tackling Placement Rejection & Imposter Syndrome", "Career Anxiety De-escalation Plan"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+    # 4. Exam & Academic Workload
+    has_exam = any(k in msg for k in ["exam", "test", "study", "grades", "assignment", "semester", "syllabus", "cgpa", "viva", "lab", "midterm", "quiz"])
+    is_exam_ongoing = "exam" in past_text_blob or "midterm" in past_text_blob or "viva" in past_text_blob
+    if has_exam or is_exam_ongoing:
+        if is_exam_ongoing and len(past_assistant) > 0:
+            reply = (
+                "Continuing on your academic preparation:\n\n"
+                "When preparing under time constraints, the key is shifting from a **completion mindset** to a **triage mindset**:\n"
+                "1. **The 80/20 High-Yield Focus:** In almost every course or lab, 80% of marks come from 20% of core fundamentals. Review past year question papers and core diagrams first.\n"
+                "2. **Active Recall Over Re-reading:** Instead of reading notes passively, close your notebook and explain the concept aloud to yourself for 60 seconds.\n"
+                "3. **Anchor Your Physiology:** Your brain consolidates memory and problem-solving during sleep; pulling an all-nighter before a viva often cuts recall by over 40%.\n\n"
+                "Which specific subject or chapter feels most intimidating right now? We can break it down."
+            )
+        else:
+            reply = (
+                "Academic deadlines and examination pressure can feel overwhelmingly heavy, especially when expectations are high.\n\n"
+                "Here are three grounded strategies you can try today:\n"
+                "1. **The 25/5 Pomodoro Chunking:** Focus on just one specific concept for 25 minutes, then deliberately step away from the screen for 5 minutes.\n"
+                "2. **De-escalate the Catastrophizing:** When a thought arises like 'I will ruin everything', gently label it as an anxious thought, not a confirmed forecast. You've navigated tough exams before.\n"
+                "3. **Physical Micro-Breaks:** Drink a glass of cold water, unclamp your jaw, and roll your shoulders back.\n\n"
+                "Would you like to try a 3-minute Box Breathing exercise together to settle your nervous system before your next study session?"
+            )
+        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Pomodoro Pacing Guide"]}
 
-    # 3. Low Energy / Fatigue / Burnout (Survey: 65.3% tired often/daily)
-    elif any(k in msg for k in ["tired", "exhausted", "fatigue", "no energy", "drained", "burnout", "sleepy", "lethargic"]):
+    # 5. Placements & Career
+    has_placement = any(k in msg for k in ["placement", "interview", "job", "career", "resume", "offer", "internship", "rejected", "rejection", "unplaced", "company", "shortlist"])
+    is_placement_ongoing = "placement" in past_text_blob or "interview" in past_text_blob
+    if has_placement or is_placement_ongoing:
         reply = (
-            "I hear you. Feeling constantly drained or lacking daytime energy is one of the most common challenges on campus—over 65% of students report this exact pattern.\n\n"
-            "When your emotional or physical battery is depleted, pushing harder often backfires. Your body is asking for restorative care:\n"
-            "- **Energy Audits:** Notice what is draining your reserves: late-night phone scrolling, skipping breakfast, or cognitive hyper-focus.\n"
-            "- **Hydration & Sunlight:** Step outside for 10 minutes of morning sunlight to reset your circadian rhythms.\n"
-            "- **Permission to Rest:** Rest is not a reward you earn after burning out; it is fuel required to function.\n\n"
-            "Would you like to log this in today's wellbeing check-in so we can track how your energy correlates with your sleep duration?"
+            "Campus placements and career uncertainty carry tremendous emotional weight. In our campus survey, over 76% of students shared this exact feeling.\n\n"
+            "A few grounding truths:\n"
+            "- **Headcount, Not Self-Worth:** A hiring shortlist reflects specific headcount matching or keyword filters, NEVER a measurement of your intellect or trajectory.\n"
+            "- **Mute the Rumor Mills:** Step away from WhatsApp groups where students brag about packages; those spaces create synthetic panic.\n"
+            "- **Process Over Outcome:** Practice your coding problems or mock interview questions for an agreed period, then let yourself rest without guilt.\n\n"
+            "Our campus counsellor Nitu Singh Bhadouria in SAC I also provides confidential 1-on-1 placement decompression sessions."
         )
-        resources = ["College Student's Guide to Sleep Hygiene", "Overcoming Academic Burnout"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Career Anxiety De-escalation"]}
 
-    # 4. Sleep / Insomnia / Racing Thoughts
-    elif any(k in msg for k in ["sleep", "insomnia", "can't sleep", "awake", "bedtime", "nightmare", "midnight"]):
+    # 6. Low Energy / Fatigue / Burnout
+    if any(k in msg for k in ["tired", "exhausted", "fatigue", "no energy", "drained", "burnout", "sleepy", "lethargic", "unmotivated"]):
         reply = (
-            "Irregular sleep heavily influences our emotional baseline. When rest is disrupted, the brain's amygdala "
-            "becomes significantly more reactive, making ordinary challenges feel monumental.\n\n"
-            "Proven sleep hygiene steps tailored for hostel and student life:\n"
+            "Feeling drained or having low energy is a signal from your body asking for restorative care, not a personal flaw.\n\n"
+            "When your emotional battery is depleted, pushing harder backfires:\n"
+            "- **Micro-Rest:** Step away from screens for 10 minutes. Get fresh air or morning sunlight.\n"
+            "- **Lower the Bar for Today:** Pick just ONE essential item to complete, and give yourself full permission to leave the rest for tomorrow.\n"
+            "- **Rest is Fuel:** Rest is not a reward you earn after burning out; it is fuel required to function.\n\n"
+            "What feels like the most draining thing on your plate today?"
+        )
+        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Burnout Recovery"]}
+
+    # 7. Sleep & Insomnia
+    if any(k in msg for k in ["sleep", "insomnia", "can't sleep", "cant sleep", "awake", "bedtime", "nightmare", "midnight"]):
+        reply = (
+            "When rest is disrupted, ordinary college challenges feel monumental because the brain's emotional baseline shifts.\n\n"
+            "Proven sleep hygiene steps for student life:\n"
             "- **The 20-Minute Rule:** If you cannot sleep after 20 minutes in bed, gently get out of bed. Sit in dim light and read something non-stimulating until drowsiness returns.\n"
-            "- **Screens & Blue Light:** Try switching off your laptop and phone screen 30 minutes before bed; charge your phone across the room if possible.\n"
+            "- **Screens & Blue Light:** Try switching off your laptop and phone screen 30 minutes before bed; charge your phone across the room.\n"
             "- **Progressive Muscle Relaxation:** Tense your toes for 5 seconds, then release. Move upwards through your calves, thighs, shoulders, and jaw.\n\n"
             "Would you like to review our guided sleep relaxation audio in the Resource Centre?"
         )
-        resources = ["College Student's Guide to Sleep Hygiene", "Progressive Muscle Relaxation for Deep Rest"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Sleep Hygiene Guide"]}
 
-    # 5. Time Management / Procrastination (Survey: 47.3%)
-    elif any(k in msg for k in ["procrastinat", "time management", "waste time", "focus", "concentrat", "distract", "lazy", "behind"]):
+    # 8. Casual Greetings & General Conversation
+    if any(k in msg for k in ["hi", "hello", "hey", "good morning", "good evening", "how are you", "what's up", "whats up"]):
         reply = (
-            "Procrastination is rarely about laziness—psychologically, it is almost always an emotional regulation issue. "
-            "When a task feels overwhelming, uncertain, or boring, our brain avoids the discomfort by seeking immediate dopamine.\n\n"
-            "Here is how to break the cycle gently:\n"
-            "- **The 5-Minute Rule:** Commit to working on the task for just five minutes. If you want to stop after 5 minutes, you can. Usually, overcoming the starting friction is 90% of the battle.\n"
-            "- **Lower the Definition of 'Done':** A messy first draft or partial solution is infinitely better than a blank page.\n"
-            "- **Remove Distraction Triggers:** Place your phone in another room or turn on Do Not Disturb during focus blocks.\n\n"
-            "Be kind to yourself as you restart. You don't have to fix everything in one afternoon."
+            "Hello! 🌿 It's great to hear from you. I'm Mindy, your campus companion.\n\n"
+            "How has your day been treating you? Whether you're navigating academic deadlines, placement prep, "
+            "curious about a topic, or just want a quiet space to decompress, I'm here for whatever is on your mind."
         )
-        resources = ["Time-Management & Pacing Strategies", "Pomodoro Focus Guide"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Daily Check-in"]}
 
-    # 6. Family Expectations & Pressure (Survey: 54%)
-    elif any(k in msg for k in ["family", "parents", "expectation", "pressure", "father", "mother", "disappoint", "compare"]):
-        reply = (
-            "Navigating family expectations alongside your own aspirations is a deeply delicate and heavy emotional balance. "
-            "In our campus survey, more than half of students identified family pressure as a primary stressor.\n\n"
-            "A few grounding thoughts:\n"
-            "- **Differentiating Care From Pressure:** Parents often project their own anxieties about financial security or social standing onto academic performance out of love, even if the delivery feels suffocating.\n"
-            "- **Your Journey is Yours:** You are studying and building a life for yourself, not merely fulfilling a script written by someone else.\n"
-            "- **Boundaries:** It is completely healthy to set gentle conversational boundaries around exam results or placement packages.\n\n"
-            "If this pressure feels suffocating, speaking with a campus counsellor can help you clarify your own voice."
-        )
-        resources = ["Navigating Family Expectations & Boundaries", "Book Confidential Counsellor"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+    # 9. Dynamic General Conversational Response
+    context_hint = ""
+    if "Recent moods: Stressed" in context_str or "anxious" in context_str.lower():
+        context_hint = "I noticed from your recent check-ins that you've been managing some extra strain recently. "
 
-    # 7. Financial Stress (Survey: 48%)
-    elif any(k in msg for k in ["money", "financial", "fees", "cost", "afford", "expensive", "debt", "loan"]):
-        reply = (
-            "Financial worries during college can induce persistent background anxiety that affects your sleep and concentration. "
-            "Nearly 48% of students in our campus study shared this concern.\n\n"
-            "Key campus steps to consider:\n"
-            "- **Campus Aid & Scholarships:** Check the Dean of Student Affairs portal for emergency student assistance funds, merit-cum-means grants, or departmental assistantships.\n"
-            "- **Peer Budgeting:** It is completely okay to say 'that's out of my budget right now' when peers plan expensive outings.\n\n"
-            "Our campus support centre can also connect you with student financial aid officers."
-        )
-        resources = ["Campus Financial Assistance Directory", "MindBridge Wellbeing Library"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+    reply = (
+        f"Thank you for sharing that with me. {context_hint}"
+        "College life brings a unique mix of academic, personal, and career transitions, and having space to think out loud "
+        "often helps bring genuine clarity.\n\n"
+        "What feels like the most important part of this for you right now? Whether it's coursework, future plans, "
+        "or simply taking a breather, I'm here to unpack it with you step-by-step."
+    )
+    return {
+        "content": reply,
+        "safety_flagged": False,
+        "emergency_shown": False,
+        "suggested_resources": ["MindBridge Wellbeing Library"]
+    }
 
-    # 8. Loneliness / Social Isolation / Homesickness
-    elif any(k in msg for k in ["lonely", "alone", "homesick", "friend", "isolated", "nobody", "roommate", "miss home", "disconnect"]):
-        reply = (
-            "Living in a hostel or navigating college social dynamics can feel intensely isolating at times. "
-            "Even on a bustling campus, many students experience a profound sense of solitude behind closed doors.\n\n"
-            "Remember:\n"
-            "- Connecting doesn't require being the center of attention. Small, micro-interactions—a shared greeting with a classmate, sitting in the common library area, or calling home—can gradually rebuild warmth.\n"
-            "- Campus clubs and student interest groups provide low-pressure spaces where shared curiosity does the heavy lifting.\n"
-            "- Our campus counsellors host open drop-in chats if you'd simply like an empathetic space to speak your mind freely.\n\n"
-            "You are not alone in feeling this, and reaching out is a sign of strength."
-        )
-        resources = ["Overcoming Campus Isolation & Building Meaningful Connections"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
 
-    # 9. Anxiety / Panic / Overwhelm
-    elif any(k in msg for k in ["anxious", "anxiety", "panic", "overwhelmed", "freaking out", "racing heart", "scared", "nervous"]):
-        reply = (
-            "I want you to pause right now and take a slow, deep breath in... and let it gently out. "
-            "You are in a safe physical space right here.\n\n"
-            "Let's ground your senses with the **5-4-3-2-1 Technique**:\n"
-            "• Look around and notice **5 things you can see** (a pen, shadows, window, desk).\n"
-            "• Feel **4 things you can touch** (your feet on the floor, texture of your sleeves).\n"
-            "• Listen for **3 distinct sounds** (fan humming, birds outside, clock).\n"
-            "• Notice **2 things you can smell** (coffee, fresh air).\n"
-            "• Acknowledge **1 positive thing about yourself**.\n\n"
-            "Your nervous system is doing its best to protect you, but this physical wave will pass. Take another breath."
-        )
-        resources = ["5-4-3-2-1 Sensory Grounding Technique", "4-7-8 Breathing Technique"]
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": resources}
+# ---------------------------------------------------------------------------
+# Main Orchestrator
+# ---------------------------------------------------------------------------
 
-    # Default general empathetic response
-    else:
-        context_hint = ""
-        if "Recent moods: Stressed" in context_str or "anxious" in context_str.lower():
-            context_hint = "I noticed from your recent check-ins that you've been managing some extra strain recently. "
+def get_configured_provider() -> Tuple[str, str, bool, Optional[str]]:
+    """
+    Returns (provider_name, model_name, is_live_llm, masked_key)
+    Priority: Groq (Llama 3.3 70B) -> Gemini -> OpenAI -> OpenRouter -> Offline
+    """
+    groq_key = (os.getenv("GROQ_API_KEY", "") or getattr(settings, "GROQ_API_KEY", "")).strip().strip('"').strip("'")
+    if groq_key:
+        masked = groq_key[:7] + "..." + groq_key[-4:] if len(groq_key) > 11 else "***"
+        model = getattr(settings, "GROQ_MODEL", "openai/gpt-oss-120b")
+        return "groq", model, True, masked
 
-        reply = (
-            f"Thank you for sharing that with me. {context_hint}"
-            "College life brings a unique mix of academic, social, and personal responsibilities, and it's completely valid "
-            "to check in with yourself and acknowledge how you're feeling.\n\n"
-            "What feels like the biggest thing on your mind right now? Whether it's coursework, placement prep, sleep, "
-            "or just needing a quiet moment to reflect, I'm here to listen and help you unpack it step-by-step."
-        )
-        return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["MindBridge Wellbeing Library"]}
+    gemini_key = (os.getenv("GEMINI_API_KEY", "") or getattr(settings, "GEMINI_API_KEY", "")).strip().strip('"').strip("'")
+    if gemini_key:
+        masked = gemini_key[:4] + "..." + gemini_key[-4:] if len(gemini_key) > 8 else "***"
+        return "gemini", "gemini-1.5-flash", True, masked
+
+    openai_key = (os.getenv("OPENAI_API_KEY", "") or getattr(settings, "OPENAI_API_KEY", "")).strip().strip('"').strip("'")
+    if openai_key:
+        masked = openai_key[:4] + "..." + openai_key[-4:] if len(openai_key) > 8 else "***"
+        return "openai", "gpt-4o-mini", True, masked
+
+    openrouter_key = (os.getenv("OPENROUTER_API_KEY", "") or getattr(settings, "OPENROUTER_API_KEY", "")).strip().strip('"').strip("'")
+    if openrouter_key:
+        masked = openrouter_key[:4] + "..." + openrouter_key[-4:] if len(openrouter_key) > 8 else "***"
+        return "openrouter", "meta-llama/llama-3.3-70b-instruct", True, masked
+
+    return "offline", "dynamic-conversational-engine", False, None
+
 
 def generate_ai_response(
     user_message: str,
     user_id: int,
     consent_share_context: bool,
-    db: Session
+    db: Session,
+    conversation_history: Optional[List[Dict[str, str]]] = None
 ) -> Dict[str, Any]:
+    history = conversation_history or []
+
     # 1. Immediate Safety & Crisis Protocol
     if detect_crisis(user_message):
         crisis_response = (
@@ -249,41 +536,76 @@ def generate_ai_response(
 
     # 2. Extract consented student context
     context_str = get_student_context(user_id, db) if consent_share_context else "Student opted not to share tracking context."
+    system_prompt = get_system_prompt(context_str)
 
-    # 3. Check for external API (Gemini or OpenAI)
-    api_key = settings.GEMINI_API_KEY.strip().strip('"').strip("'") if settings.GEMINI_API_KEY else ""
-    if api_key:
-        try:
-            import httpx
-            system_prompt = (
-                "You are MindBridge Campus AI (Mindy), an empathetic, supportive, and non-judgmental student wellbeing companion. "
-                "You support college students with career anxiety, exam stress, placements, sleep, relationships, and emotional wellbeing. "
-                "CRITICAL GUIDELINES:\n"
-                "1. NEVER give clinical diagnoses, medical advice, or prescribe medications.\n"
-                "2. Clearly identify yourself as a wellbeing support companion, not a replacement for professional human counselling.\n"
-                "3. Offer practical, student-friendly coping strategies (breathing exercises, Pomodoro pacing, sleep hygiene, grounding).\n"
-                "4. Be warm, validating, conversational, and constructive.\n"
-                f"Context: {context_str}"
-            )
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-            payload = {
-                "contents": [
-                    {"role": "user", "parts": [{"text": f"System Instructions: {system_prompt}\n\nStudent Message: {user_message}"}]}
-                ]
+    # 3. Format OpenAI-compatible messages array for Groq / OpenAI / OpenRouter
+    llm_messages = [{"role": "system", "content": system_prompt}]
+    for turn in history[-12:]:
+        role = "user" if turn.get("role") == "user" else "assistant"
+        llm_messages.append({"role": role, "content": turn.get("content", "")})
+    llm_messages.append({"role": "user", "content": user_message})
+
+    # 4. Attempt Hosted LLMs in Priority Order
+    # --- Priority 1: Groq Cloud (Hosted LLM) ---
+    groq_key = (os.getenv("GROQ_API_KEY", "") or getattr(settings, "GROQ_API_KEY", "")).strip().strip('"').strip("'")
+    if groq_key:
+        groq_model = getattr(settings, "GROQ_MODEL", "openai/gpt-oss-120b")
+        groq_res = call_groq_llm(llm_messages, groq_key, model=groq_model)
+        if groq_res:
+            content, used_model = groq_res
+            return {
+                "content": content,
+                "safety_flagged": False,
+                "emergency_shown": False,
+                "suggested_resources": ["Campus Wellbeing Library"],
+                "provider": "groq",
+                "model": used_model
             }
-            with httpx.Client(timeout=8.0) as client:
-                res = client.post(url, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    text = data["candidates"][0]["content"]["parts"][0]["text"]
-                    return {
-                        "content": text,
-                        "safety_flagged": False,
-                        "emergency_shown": False,
-                        "suggested_resources": ["Campus Wellbeing Resources"]
-                    }
-        except Exception:
-            pass  # Fall back smoothly to local empathetic response
 
-    # 4. Fallback / Local Engine
-    return generate_local_response(user_message, context_str)
+    # --- Priority 2: Google Gemini ---
+    gemini_key = (os.getenv("GEMINI_API_KEY", "") or getattr(settings, "GEMINI_API_KEY", "")).strip().strip('"').strip("'")
+    if gemini_key:
+        res = call_gemini_llm(user_message, system_prompt, history, gemini_key)
+        if res:
+            return {
+                "content": res,
+                "safety_flagged": False,
+                "emergency_shown": False,
+                "suggested_resources": ["Campus Wellbeing Resources"],
+                "provider": "gemini",
+                "model": "gemini-1.5-flash"
+            }
+
+    # --- Priority 3: OpenAI ---
+    openai_key = (os.getenv("OPENAI_API_KEY", "") or getattr(settings, "OPENAI_API_KEY", "")).strip().strip('"').strip("'")
+    if openai_key:
+        res = call_openai_llm(llm_messages, openai_key)
+        if res:
+            return {
+                "content": res,
+                "safety_flagged": False,
+                "emergency_shown": False,
+                "suggested_resources": ["Campus Wellbeing Resources"],
+                "provider": "openai",
+                "model": "gpt-4o-mini"
+            }
+
+    # --- Priority 4: OpenRouter ---
+    openrouter_key = (os.getenv("OPENROUTER_API_KEY", "") or getattr(settings, "OPENROUTER_API_KEY", "")).strip().strip('"').strip("'")
+    if openrouter_key:
+        res = call_openrouter_llm(llm_messages, openrouter_key)
+        if res:
+            return {
+                "content": res,
+                "safety_flagged": False,
+                "emergency_shown": False,
+                "suggested_resources": ["Campus Wellbeing Resources"],
+                "provider": "openrouter",
+                "model": "meta-llama/llama-3.3-70b-instruct"
+            }
+
+    # 5. Fallback Intelligent Conversational Engine
+    fallback = generate_intelligent_fallback_response(user_message, context_str, history)
+    fallback["provider"] = "local"
+    fallback["model"] = "mindy-conversational-engine"
+    return fallback

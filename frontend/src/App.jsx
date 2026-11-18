@@ -85,6 +85,7 @@ export default function App() {
           <Insights
             onNavigate={setActiveTab}
             onOpenBreathing={() => setIsBreathingOpen(true)}
+            onOpenCheckIn={() => setIsCheckInOpen(true)}
           />
         );
       case 'resources':
@@ -116,7 +117,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-cream-50 flex font-sans text-charcoal-800 relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex font-sans text-slate-800 dark:text-slate-100 relative overflow-x-hidden transition-colors duration-300">
       {/* Ambient Morphing Liquid Blobs */}
       <LiquidBlobBackground />
 

@@ -57,7 +57,7 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
     try {
       setLoading(true);
       const data = await api.getMoods(filterDays);
-      setEntries(data);
+      setEntries(data || []);
     } catch (err) {
       console.error('Failed to load mood entries:', err);
     } finally {
@@ -84,7 +84,7 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
         particleCount: 30,
         spread: 50,
         origin: { y: 0.6 },
-        colors: ['#A78BFA', '#34D399', '#FBBF24'],
+        colors: ['#A78BFA', '#34D399', '#38BDF8'],
       });
 
       setNotes('');
@@ -131,7 +131,7 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
   });
 
   const pieData = Object.entries(moodCounts).map(([name, value]) => {
-    const visual = MOOD_VISUALS[name] || { accentColor: '#A78BFA' };
+    const visual = MOOD_VISUALS[name] || { accentColor: '#0EA5E9' };
     return { name, value, color: visual.accentColor };
   });
 
@@ -150,31 +150,31 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
   const activeVisual = MOOD_VISUALS[selectedMood] || MOOD_VISUALS['Happy'];
 
   return (
-    <div className="space-y-7 animate-fade-in pb-10">
+    <div className="space-y-6 animate-fade-in pb-12 transition-colors duration-300">
       {/* Header Banner */}
-      <div className="rounded-4xl bg-gradient-to-r from-amber-50 via-lavender-50 to-pink-50 border border-amber-200/80 p-6 sm:p-8 shadow-wellness relative overflow-hidden">
+      <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-sky-50 via-purple-50 to-teal-50 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-sky-950/40 border border-sky-100/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 dark:text-sky-300 bg-sky-100/80 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
                 Emotional Self-Awareness
               </span>
-              <span className="text-xs text-charcoal-400 font-medium">Daily Reflection Log</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Daily Reflection Log</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-charcoal-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Expressive Mood Sanctuary
             </h1>
-            <p className="text-xs sm:text-sm text-charcoal-600 mt-1 max-w-xl leading-relaxed">
-              Track how your feelings shift across exam weeks, project sprints, and weekends. Cultivate self-compassion.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-xl leading-relaxed">
+              Track how your feelings shift across exam weeks, project sprints, and campus weekends. Cultivate mindful self-compassion.
             </p>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
-              onClick={() => onNavigate('insights')}
-              className="px-4 py-2 rounded-2xl bg-white hover:bg-cream-50 text-xs font-bold text-charcoal-800 transition shadow-wellness-sm border border-cream-200 flex items-center gap-1.5"
+              onClick={() => onNavigate && onNavigate('insights')}
+              className="px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition shadow-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
             >
-              <TrendingUp className="w-3.5 h-3.5 text-purple-600" />
+              <TrendingUp className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>View Insights</span>
             </button>
           </div>
@@ -184,19 +184,19 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
       {/* Main Grid: Logging Form + Visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Mood Form (7 Cols) */}
-        <div className="lg:col-span-7 rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 sm:p-7 shadow-wellness space-y-5">
-          <div className="flex items-center justify-between border-b border-cream-200/80 pb-3">
+        <div className="lg:col-span-7 rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
-              <h2 className="text-lg font-serif font-bold text-charcoal-900">
-                How does your inner weather look today?
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                How does your emotional weather feel today?
               </h2>
-              <p className="text-xs text-charcoal-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Pick the mood that resonates most right now.
               </p>
             </div>
             {successBanner && (
-              <span className="text-xs font-bold text-mint-800 bg-mint-50 px-3 py-1 rounded-full border border-mint-200 flex items-center gap-1 animate-bounce">
-                <Check className="w-3.5 h-3.5 text-mint-600" /> Logged!
+              <span className="text-xs font-bold text-teal-800 dark:text-teal-200 bg-teal-50 dark:bg-teal-950/60 px-3 py-1 rounded-full border border-teal-200 dark:border-teal-800 flex items-center gap-1 animate-bounce">
+                <Check className="w-3.5 h-3.5 text-teal-600" /> Logged!
               </span>
             )}
           </div>
@@ -221,17 +221,17 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
                       else if (key === 'Stressed') setIntensity(8);
                       else if (key === 'Exhausted') setIntensity(3);
                     }}
-                    className={`p-3 rounded-3xl border-2 text-center transition-all duration-200 flex flex-col items-center justify-between ${
+                    className={`p-3 rounded-2xl border text-center transition-all duration-200 flex flex-col items-center justify-between cursor-pointer ${
                       isSelected
-                        ? `${visual.bg} ${visual.border} ${visual.ring} ring-4 scale-105 shadow-wellness-lg`
-                        : 'bg-cream-50/70 border-cream-200 hover:bg-white hover:border-lavender-300 hover:scale-102'
+                        ? 'border-sky-500 dark:border-sky-400 bg-sky-50/80 dark:bg-sky-950/50 ring-2 ring-sky-400/50 shadow-sm scale-102'
+                        : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span className="text-2xl sm:text-3xl block">{visual.emoji}</span>
-                    <span className={`text-xs font-extrabold block mt-1.5 ${visual.text}`}>
+                    <span className="text-xs font-bold block mt-1.5 text-slate-800 dark:text-slate-100">
                       {key}
                     </span>
-                    <span className="text-[10px] text-charcoal-400 block truncate">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
                       {visual.sub}
                     </span>
                   </button>
@@ -240,12 +240,12 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
             </div>
 
             {/* Intensity Slider */}
-            <div className="p-4 rounded-3xl bg-cream-50/80 border border-cream-200">
+            <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center text-xs font-bold mb-2">
-                <span className="text-charcoal-800">
+                <span className="text-slate-800 dark:text-slate-200">
                   Felt Intensity ({activeVisual.label})
                 </span>
-                <span className="px-3 py-0.5 rounded-full bg-white text-purple-700 font-extrabold border border-purple-200 shadow-wellness-sm">
+                <span className="px-3 py-0.5 rounded-full bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 font-extrabold border border-slate-200 dark:border-slate-600 shadow-xs">
                   {intensity} / 10
                 </span>
               </div>
@@ -255,9 +255,9 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
                 max="10"
                 value={intensity}
                 onChange={(e) => setIntensity(parseInt(e.target.value, 10))}
-                className="w-full h-2.5 bg-cream-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
               />
-              <div className="flex justify-between text-[10px] text-charcoal-400 mt-1 font-semibold">
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
                 <span>Gentle / Subtle</span>
                 <span>Moderate</span>
                 <span>Intense Presence</span>
@@ -266,7 +266,7 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
 
             {/* Suggested Tags */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-charcoal-800">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                 Context & Triggers
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -277,10 +277,10 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
                       key={tag}
                       type="button"
                       onClick={() => toggleTag(tag)}
-                      className={`text-xs px-3 py-1 rounded-xl font-bold transition ${
+                      className={`text-xs px-3 py-1 rounded-xl font-bold transition cursor-pointer ${
                         active
-                          ? 'bg-purple-600 text-white shadow-wellness-sm'
-                          : 'bg-cream-50 border border-cream-200 text-charcoal-600 hover:bg-lavender-50 hover:text-purple-700'
+                          ? 'bg-sky-500 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       {tag}
@@ -296,12 +296,12 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
                   placeholder="Add custom tag (e.g. Lab viva, Coffee date)..."
                   value={customTag}
                   onChange={(e) => setCustomTag(e.target.value)}
-                  className="flex-1 text-xs px-3.5 py-2 rounded-xl bg-cream-50/60 border border-cream-200 text-charcoal-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="flex-1 text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomTag}
-                  className="px-3.5 py-2 rounded-xl bg-cream-100 hover:bg-cream-200 text-charcoal-700 text-xs font-bold transition flex items-center gap-1"
+                  className="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
@@ -310,7 +310,7 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
 
             {/* Note & Submit Button */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-charcoal-800">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                 Personal Journal Note (Optional)
               </label>
               <textarea
@@ -318,13 +318,13 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
                 placeholder="What contributed to this feeling? Any insights to capture..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full text-xs p-3.5 rounded-2xl bg-cream-50/60 border border-cream-200 text-charcoal-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none font-sans"
+                className="w-full text-xs p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
               />
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-coral-500 hover:from-purple-700 hover:to-coral-600 text-white font-extrabold text-xs shadow-glow-lavender transition hover:scale-102 active:scale-98"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-teal-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-sky-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? 'Recording...' : `Log ${selectedMood} Entry ✨`}
               </button>
@@ -335,174 +335,106 @@ export default function MoodTracker({ onNavigate, onOpenBreathing }) {
         {/* Analytics & Distribution (5 Cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Valence Trajectory Chart Card */}
-          <div className="rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 shadow-wellness">
+          <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-serif font-bold text-charcoal-900">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 14-Day Valence Trajectory
               </h3>
-              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+              <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
                 Recent 14 Logs
               </span>
             </div>
 
-            <div className="h-44 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ECE7DC" />
-                  <XAxis dataKey="date" tick={{ fill: '#756E96', fontSize: 9 }} tickLine={false} axisLine={false} />
-                  <YAxis domain={[0, 10]} tick={{ fill: '#756E96', fontSize: 9 }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white p-2.5 rounded-xl shadow-wellness border border-cream-200 text-xs">
-                            <p className="font-bold text-charcoal-900">{label}</p>
-                            <p className="text-purple-700 font-bold">
-                              Valence: {payload[0]?.value}/10 ({payload[0]?.payload?.mood})
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="intensity"
-                    stroke="#7C3AED"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#curveGrad)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            {chartData.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-12">
+                No mood logs recorded yet. Log your first mood to view your trajectory.
+              </p>
+            ) : (
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
+                    <XAxis dataKey="date" tick={{ fill: '#94A3B8', fontSize: 9 }} tickLine={false} axisLine={false} />
+                    <YAxis domain={[0, 10]} tick={{ fill: '#94A3B8', fontSize: 9 }} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white dark:bg-slate-800 p-2.5 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 text-xs">
+                              <p className="font-bold text-slate-900 dark:text-white">{label}</p>
+                              <p className="text-sky-600 dark:text-sky-400 font-bold">
+                                Valence: {payload[0]?.value}/10 ({payload[0]?.payload?.mood})
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="intensity"
+                      stroke="#0EA5E9"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#curveGrad)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
-          {/* Mood Breakdown Donut Card */}
-          <div className="rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 shadow-wellness">
-            <h3 className="text-sm font-serif font-bold text-charcoal-900 mb-1">
-              Mood Proportion Breakdown
+          {/* Recent Mood History Log */}
+          <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+              Recent Emotion Logs
             </h3>
-            <p className="text-xs text-charcoal-400 mb-3">Recorded distribution over {filterDays} days</p>
-
-            <div className="h-44 w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} innerRadius={45} outerRadius={68} paddingAngle={4} dataKey="value">
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
-              {pieData.map((item) => (
-                <span
-                  key={item.name}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5 bg-cream-50 border border-cream-200"
-                >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  {item.name} ({item.value})
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Timeline of Past Entries */}
-      <div className="rounded-4xl bg-white/95 backdrop-blur-md border border-cream-200/90 p-6 sm:p-7 shadow-wellness space-y-4">
-        <div className="flex items-center justify-between border-b border-cream-200/80 pb-3">
-          <div>
-            <h3 className="text-lg font-serif font-bold text-charcoal-900">
-              Personal Emotional Timeline
-            </h3>
-            <p className="text-xs text-charcoal-500">
-              Browse previous reflections and see your journey over time.
-            </p>
-          </div>
-          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
-            {entries.length} Entries Recorded
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          {entries.length === 0 ? (
-            <p className="text-xs text-charcoal-400 text-center py-10">No entries recorded yet.</p>
-          ) : (
-            entries.map((entry) => {
-              const visual = MOOD_VISUALS[entry.mood] || MOOD_VISUALS['Happy'];
-              return (
-                <div
-                  key={entry.id}
-                  className="p-4 rounded-3xl bg-cream-50/70 border border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white hover:shadow-wellness-sm transition-all"
-                >
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <span className="text-3xl shrink-0 p-2 rounded-2xl bg-white shadow-wellness-sm border border-cream-200">
-                      {visual.emoji}
-                    </span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-extrabold ${visual.text}`}>
-                          {entry.mood}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-white border border-cream-200 text-charcoal-700">
-                          Intensity: {entry.intensity}/10
-                        </span>
+            {entries.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6">No mood entries recorded yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {entries.slice(0, 6).map((e) => {
+                  const visual = MOOD_VISUALS[e.mood] || { emoji: '🙂' };
+                  return (
+                    <div
+                      key={e.id}
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">{visual.emoji}</span>
+                        <div>
+                          <div className="font-bold text-slate-800 dark:text-slate-100">{e.mood}</div>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(e.recorded_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
                       </div>
 
-                      {entry.notes && (
-                        <p className="text-xs text-charcoal-700 mt-1 italic">
-                          "{entry.notes}"
-                        </p>
-                      )}
-
-                      {entry.tags && entry.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {entry.tags.map((t, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200"
-                            >
-                              #{t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold text-[10px]">
+                          {e.intensity}/10
+                        </span>
+                        <button
+                          onClick={() => handleDelete(e.id)}
+                          className="p-1 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 self-end sm:self-center">
-                    <span className="text-[10px] text-charcoal-400 font-mono">
-                      {new Date(entry.recorded_at).toLocaleDateString([], {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                    <button
-                      onClick={() => handleDelete(entry.id)}
-                      className="p-1.5 rounded-xl text-charcoal-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
