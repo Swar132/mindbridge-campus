@@ -1,15 +1,39 @@
 import React from 'react';
 
-// Ambient Liquid Glass Background Blobs
+// Ambient Liquid Glass Background Blobs (Apple iOS Light Blue & Dark Mode)
 export function LiquidBlobBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Soft Blue Liquid Blob */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-br from-sky-200/40 via-teal-100/30 to-transparent blur-3xl animate-liquid-blob" />
-      {/* Warm Peach Liquid Blob */}
-      <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-peach-200/40 via-coral-100/25 to-transparent blur-3xl animate-liquid-blob" style={{ animationDelay: '-5s' }} />
-      {/* Soft Teal Liquid Blob */}
-      <div className="absolute -bottom-32 left-1/3 w-[32rem] h-[32rem] rounded-full bg-gradient-to-tr from-teal-200/35 via-mint-100/30 to-transparent blur-3xl animate-liquid-blob" style={{ animationDelay: '-9s' }} />
+      {/* Light Sky Blue Liquid Glass Blob */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-br from-sky-300/35 via-blue-200/25 to-transparent dark:from-sky-500/15 dark:via-blue-600/10 blur-3xl animate-liquid-blob" />
+      {/* Pure Soft Cyan / Ice Blue Blob */}
+      <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-blue-200/40 via-sky-100/30 to-transparent dark:from-indigo-600/15 dark:via-sky-400/10 blur-3xl animate-liquid-blob" style={{ animationDelay: '-5s' }} />
+      {/* Soft Ethereal Azure Liquid Blob */}
+      <div className="absolute -bottom-32 left-1/3 w-[32rem] h-[32rem] rounded-full bg-gradient-to-tr from-sky-200/35 via-indigo-100/25 to-transparent dark:from-cyan-600/15 dark:via-blue-800/10 blur-3xl animate-liquid-blob" style={{ animationDelay: '-9s' }} />
+    </div>
+  );
+}
+
+// Delicate mountain / wave silhouette decoration for metric cards (matching reference image)
+export function CardWaveDecoration({ color = '#38bdf8', opacity = 0.25 }) {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-14 pointer-events-none overflow-hidden rounded-b-3xl">
+      <svg
+        viewBox="0 0 200 60"
+        preserveAspectRatio="none"
+        className="w-full h-full"
+        style={{ opacity }}
+      >
+        <path
+          d="M0 60 L0 38 L30 18 L65 42 L110 8 L155 45 L185 24 L200 35 L200 60 Z"
+          fill={color}
+        />
+        <path
+          d="M0 60 L0 48 L45 32 L90 52 L140 28 L180 48 L200 42 L200 60 Z"
+          fill={color}
+          style={{ opacity: 0.6 }}
+        />
+      </svg>
     </div>
   );
 }

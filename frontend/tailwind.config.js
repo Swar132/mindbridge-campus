@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,6 +8,28 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Pure Light Blue & White Aesthetic (Matching User Design)
+        canvas: {
+          light: '#F4F8FD',
+          surface: '#FFFFFF',
+          card: '#FFFFFF',
+          dark: '#0B1120',
+          'dark-surface': '#111827',
+          'dark-card': '#1E293B',
+        },
+        sky: {
+          25: '#F8FBFF',
+          50: '#F0F7FF',
+          100: '#E0F0FE',
+          200: '#BAE0FD',
+          300: '#7DC8FC',
+          400: '#38BDF8',
+          500: '#0EA5E9',
+          600: '#0284C7',
+          700: '#0369A1',
+          800: '#075985',
+          900: '#0C4A6E',
+        },
         cream: {
           50: '#FAF9F6',
           100: '#F5F3EF',

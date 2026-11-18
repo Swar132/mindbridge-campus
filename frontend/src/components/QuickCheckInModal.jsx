@@ -107,27 +107,27 @@ export default function QuickCheckInModal({ isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="liquid-glass rounded-4xl max-w-lg w-full shadow-2xl border border-white/90 overflow-hidden p-6 sm:p-8 relative animate-scale-up max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="liquid-glass-apple dark:bg-slate-900/95 rounded-4xl max-w-lg w-full shadow-2xl border border-sky-100 dark:border-slate-800 overflow-hidden p-6 sm:p-8 relative animate-scale-up max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-charcoal-400 hover:text-charcoal-700 hover:bg-white/60 transition"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800 transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header Badge */}
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-teal-600" />
-          <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 bg-teal-50/90 px-2.5 py-0.5 rounded-full border border-teal-200">
+          <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 dark:text-sky-300 bg-sky-50/90 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
             {isEditing ? "Update Today's Check-in" : '60-Second Daily Check-in'}
           </span>
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-bold text-charcoal-900 mt-1">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
           How is your student wellbeing today?
         </h2>
-        <p className="text-xs text-charcoal-500 mt-0.5 mb-5">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-5">
           Fast, confidential tracking across your mood, energy, tension, and rest.
         </p>
 

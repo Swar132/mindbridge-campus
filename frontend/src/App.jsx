@@ -38,11 +38,11 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-cream-50 flex flex-col items-center justify-center p-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-sky-500 text-white flex items-center justify-center font-bold mb-3 shadow-glow-teal animate-bounce-subtle">
+      <div className="min-h-screen bg-canvas-light dark:bg-canvas-dark text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-4 transition-colors duration-300">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center font-bold mb-3 shadow-lg shadow-sky-500/25 animate-bounce-subtle">
           <Heart className="w-6 h-6 fill-current" />
         </div>
-        <p className="text-xs text-charcoal-600 font-bold">Opening MindBridge Campus Sanctuary...</p>
+        <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Opening MindBridge Campus Sanctuary...</p>
       </div>
     );
   }
@@ -148,11 +148,11 @@ export default function App() {
 
       {/* App-like Mobile Bottom Navigation Bar (PWA Experience) */}
       {isStudent && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 liquid-glass border-t border-cream-200/90 px-3 py-1.5 md:hidden flex items-center justify-around shadow-wellness-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-30 liquid-glass-apple border-t border-sky-100/90 dark:border-slate-800/90 px-3 py-1.5 md:hidden flex items-center justify-around shadow-lg">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`flex flex-col items-center py-1 px-3 text-[11px] transition cursor-pointer ${
-              activeTab === 'dashboard' ? 'text-teal-700 font-bold' : 'text-charcoal-400 hover:text-charcoal-800'
+              activeTab === 'dashboard' ? 'text-sky-600 dark:text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -162,7 +162,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('mood')}
             className={`flex flex-col items-center py-1 px-3 text-[11px] transition cursor-pointer ${
-              activeTab === 'mood' ? 'text-teal-700 font-bold' : 'text-charcoal-400 hover:text-charcoal-800'
+              activeTab === 'mood' ? 'text-sky-600 dark:text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Smile className="w-4 h-4" />
@@ -172,7 +172,7 @@ export default function App() {
           {/* Central 1-Tap Check-In Floating Pill */}
           <button
             onClick={() => setIsCheckInOpen(true)}
-            className="flex flex-col items-center -mt-4 bg-gradient-to-r from-teal-600 to-sky-600 text-white p-2.5 rounded-full shadow-glow-teal hover:scale-105 active:scale-95 transition cursor-pointer"
+            className="flex flex-col items-center -mt-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-full shadow-lg shadow-sky-500/30 hover:scale-105 active:scale-95 transition cursor-pointer"
           >
             <Sparkles className="w-5 h-5 fill-current" />
           </button>
@@ -180,7 +180,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('journal')}
             className={`flex flex-col items-center py-1 px-3 text-[11px] transition cursor-pointer ${
-              activeTab === 'journal' ? 'text-teal-700 font-bold' : 'text-charcoal-400 hover:text-charcoal-800'
+              activeTab === 'journal' ? 'text-sky-600 dark:text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <BookOpen className="w-4 h-4" />
@@ -190,7 +190,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('ai')}
             className={`flex flex-col items-center py-1 px-3 text-[11px] transition cursor-pointer ${
-              activeTab === 'ai' ? 'text-teal-700 font-bold' : 'text-charcoal-400 hover:text-charcoal-800'
+              activeTab === 'ai' ? 'text-sky-600 dark:text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Bot className="w-4 h-4" />
