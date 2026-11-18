@@ -1,0 +1,270 @@
+{
+  "metadata": {
+    "total_responses": 300,
+    "original_collected": 18,
+    "synthetic_generated": 282,
+    "provenance_note": "Dataset contains 18 original student responses and 282 synthetic pattern-augmented responses."
+  },
+  "year_of_study": {
+    "Fourth Year": 164,
+    "Postgraduate": 110,
+    "Third Year": 14,
+    "Second Year": 12
+  },
+  "academic_status": {
+    "Preparing for internships or placements": 197,
+    "Regular semester": 56,
+    "Preparing for examinations": 46,
+    "(No response)": 1
+  },
+  "living_arrangement": {
+    "College hostel": 214,
+    "Paying guest accommodation": 55,
+    "Living with family": 31
+  },
+  "stress_frequency": {
+    "Sometimes": 101,
+    "Almost every day": 98,
+    "Rarely": 70,
+    "Often": 19,
+    "Never": 11,
+    "(No response)": 1
+  },
+  "major_stressors": {
+    "Career uncertainty": 228,
+    "Internship and placement preparation": 207,
+    "Academic workload and assignments": 191,
+    "Examinations and grades": 181,
+    "Family expectations": 162,
+    "Financial concerns": 144,
+    "Time management": 142,
+    "Relationships and friendships": 119,
+    "Health and lifestyle": 91,
+    "Hostel or accommodation-related concerns": 91,
+    "Loneliness or social isolation": 77
+  },
+  "overall_mood": {
+    "Mostly positive": 99,
+    "Neutral or mixed": 97,
+    "Mostly low": 52,
+    "Very low": 34,
+    "Very positive": 17,
+    "(No response)": 1
+  },
+  "sleep_hours": {
+    "More than 8 hours": 75,
+    "6-7 hours": 68,
+    "My sleep schedule varies significantly": 56,
+    "7-8 hours": 52,
+    "4-5 hours": 37,
+    "Less than 4 hours": 12
+  },
+  "energy_deficiency_frequency": {
+    "Often": 135,
+    "Sometimes": 77,
+    "Almost every day": 61,
+    "Rarely": 27
+  },
+  "talk_support_availability": {
+    "Often": 105,
+    "Sometimes": 94,
+    "Always": 38,
+    "Never": 35,
+    "Prefer not to answer": 14,
+    "Rarely": 14
+  },
+  "comfort_discussing_difficulties": {
+    "Neutral": 105,
+    "Somewhat comfortable": 73,
+    "It depends on the person or situation": 59,
+    "Somewhat uncomfortable": 39,
+    "Very comfortable": 23,
+    "(No response)": 1
+  },
+  "coping_mechanisms": {
+    "Listen to music or watch entertainment": 179,
+    "Talk to friends": 166,
+    "Talk to family": 143,
+    "Sleep or take a break": 135,
+    "Keep my feelings to myself": 121,
+    "Exercise or participate in sports": 58,
+    "Write in a journal": 49,
+    "Practise meditation": 43,
+    "yoga or breathing exercises": 38,
+    "Seek professional counselling": 34,
+    "mentor or faculty member": 24,
+    "Talk to a teacher": 18
+  },
+  "considered_counselling": {
+    "No, I have not considered it": 153,
+    "Yes, but I have not accessed it": 77,
+    "Yes, and I have accessed it": 70
+  },
+  "counselling_barriers": {
+    "Concerns about confidentiality": 173,
+    "Social stigma or fear of judgement": 171,
+    "Financial constraints": 166,
+    "Discomfort discussing personal matters": 150,
+    "Not knowing whom to approach": 118,
+    "Lack of awareness about available support": 113,
+    "Difficulty finding suitable counsellors": 91,
+    "I do not think I need such support": 75,
+    "Lack of time": 51
+  },
+  "most_useful_support": {
+    "Placement and career anxiety support": 187,
+    "Academic stress management": 166,
+    "Emotional wellbeing exercises": 146,
+    "Time-management and productivity support": 139,
+    "Sleep and routine improvement resources": 132,
+    "Guidance on relationships and social connections": 115,
+    "Access to professional counsellors": 103,
+    "Peer support communities": 83,
+    "General self-help resources": 45
+  },
+  "interested_in_tracking_app": {
+    "Probably yes": 112,
+    "Definitely yes": 110,
+    "Probably not": 44,
+    "Definitely not": 19,
+    "Not sure": 15
+  },
+  "desired_tracking_metrics": {
+    "Daily activities and habits": 167,
+    "Stress levels": 163,
+    "Anxiety or worry levels (self-reported)": 163,
+    "Energy levels": 163,
+    "Daily mood": 154,
+    "Sleep duration and quality": 152,
+    "Personal reflections or journal entries": 145,
+    "Academic workload and pressure": 144,
+    "Social interaction and connection": 124,
+    "(No response)": 17
+  },
+  "desired_features": {
+    "Sleep and energy tracking": 169,
+    "Weekly and monthly wellbeing charts": 169,
+    "AI-generated personal wellbeing insights": 165,
+    "Daily mood check-in": 151,
+    "Personalized coping strategies and suggestions": 151,
+    "Stress-level tracking": 150,
+    "Study stress and placement preparation resources": 148,
+    "Guided breathing and meditation exercises": 126,
+    "Progress tracking and personal goals": 124,
+    "Verified mental-health resources and helplines": 122,
+    "Daily journaling and reflection": 114,
+    "Reminders for daily check-ins": 113,
+    "AI-based journal theme analysis": 106,
+    "Counsellor directory": 93,
+    "Counselling appointment requests": 88,
+    "(No response)": 24
+  },
+  "desired_insights": {
+    "Weekly summary of my mood and stress": 187,
+    "stress and mood": 185,
+    "Relationship between sleep": 180,
+    "Suggestions for activities that may support my wellbeing": 179,
+    "Identification of recurring sources of stress": 165,
+    "Identification of changes in my sleep patterns": 164,
+    "Personalized suggestions based on my check-ins": 159,
+    "Comparison of my current and previous weeks": 151,
+    "I would prefer to see only my raw tracking data": 96,
+    "(No response)": 16
+  },
+  "support_access_mode": {
+    "A combination of these": 122,
+    "Option to request an appointment with a counsellor": 76,
+    "Self-help resources only": 31,
+    "Option to contact a professional counsellor": 31,
+    "I am not interested in support features": 21,
+    "Peer support and student communities": 18,
+    "(No response)": 1
+  },
+  "communication_preference": {
+    "Texting / Typing messages": 150,
+    "Both texting and voice notes": 98,
+    "Sending voice notes / Audio messages": 50,
+    "(No response)": 2
+  },
+  "reminder_frequency": {
+    "2-3 times per week": 192,
+    "Every day": 54,
+    "Once a week": 52,
+    "(No response)": 2
+  },
+  "dashboard_preference": {
+    "Customizable dashboard where I choose what to see": 116,
+    "Minimal dashboard with only essential information": 74,
+    "Simple dashboard showing mood, stress and sleep": 56,
+    "Detailed dashboard with charts, trends and AI insights": 51,
+    "(No response)": 3
+  },
+  "trust_factors": {
+    "Clear explanation of how my information is used": 179,
+    "Easy-to-use interface": 174,
+    "No unnecessary notifications": 164,
+    "Relevant recommendations": 152,
+    "Useful and understandable insights": 138,
+    "Control over what personal information I share": 135,
+    "Access to verified counsellors": 134,
+    "Quick daily check-ins": 131,
+    "Scientifically reviewed wellbeing resources": 130,
+    "(No response)": 8
+  },
+  "open_ended_themes": {
+    "quick_checkins_desired": 131,
+    "privacy_confidentiality_emphasis": 12,
+    "academic_placement_stress_emphasis": 30
+  },
+  "original_sample_stats": {
+    "sample_size": 18,
+    "stress_frequency": {
+      "Sometimes": 6,
+      "Almost every day": 6,
+      "Rarely": 3,
+      "Often": 1,
+      "Never": 1
+    },
+    "communication_preference": {
+      "Texting / Typing messages": 8,
+      "Both texting and voice notes": 5,
+      "Sending voice notes / Audio messages": 3
+    },
+    "top_stressors": {
+      "Career uncertainty": 16,
+      "Internship and placement preparation": 14,
+      "Academic workload and assignments": 12,
+      "Examinations and grades": 11,
+      "Family expectations": 10,
+      "Financial concerns": 8,
+      "Time management": 7,
+      "Relationships and friendships": 6,
+      "Health and lifestyle": 5,
+      "Hostel or accommodation-related concerns": 4,
+      "Loneliness or social isolation": 4
+    },
+    "dashboard_preference": {
+      "Customizable dashboard where I choose what to see": 6,
+      "Minimal dashboard with only essential information": 4,
+      "Simple dashboard showing mood, stress and sleep": 3,
+      "Detailed dashboard with charts, trends and AI insights": 2
+    },
+    "desired_features": {
+      "AI-generated personal wellbeing insights": 12,
+      "Weekly and monthly wellbeing charts": 11,
+      "Stress-level tracking": 10,
+      "Sleep and energy tracking": 10,
+      "Daily mood check-in": 9,
+      "Personalized coping strategies and suggestions": 8,
+      "Study stress and placement preparation resources": 8,
+      "Daily journaling and reflection": 7,
+      "Verified mental-health resources and helplines": 7,
+      "Progress tracking and personal goals": 7,
+      "Reminders for daily check-ins": 6,
+      "Guided breathing and meditation exercises": 6,
+      "AI-based journal theme analysis": 5,
+      "Counsellor directory": 4,
+      "Counselling appointment requests": 4
+    }
+  }
+}
