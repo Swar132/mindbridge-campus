@@ -234,7 +234,7 @@ def seed_database(db: Session):
     # Appointment 1: Completed
     apt_completed = Appointment(
         student_id=student.id,
-        counsellor_id=counsellor1_profile.id,
+        counsellor_id=counsellor_profile.id,
         appointment_date=today - timedelta(days=14),
         time_slot="02:00 PM - 03:00 PM",
         reason="Midterm exam panic and sleep disruption",
@@ -250,7 +250,7 @@ def seed_database(db: Session):
     # Appointment 2: Approved upcoming
     apt_approved = Appointment(
         student_id=student.id,
-        counsellor_id=counsellor1_profile.id,
+        counsellor_id=counsellor_profile.id,
         appointment_date=today + timedelta(days=2),
         time_slot="03:00 PM - 04:00 PM",
         reason="Follow-up on placement interview stress management",
@@ -281,7 +281,7 @@ def seed_database(db: Session):
 
     apt_pending = Appointment(
         student_id=student2.id,
-        counsellor_id=counsellor1_profile.id,
+        counsellor_id=counsellor_profile.id,
         appointment_date=today + timedelta(days=4),
         time_slot="11:00 AM - 12:00 PM",
         reason="Feeling isolated in hostel and academic adjustment difficulties",
