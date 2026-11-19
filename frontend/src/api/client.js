@@ -158,4 +158,14 @@ export const api = {
     request(`/admin/users/${id}/status?is_active=${is_active}`, { method: 'PUT' }),
   changeUserRole: (id, new_role) =>
     request(`/admin/users/${id}/role?new_role=${new_role}`, { method: 'PUT' }),
+
+  // SMS Wellbeing Reminders
+  getReminderStatus: () => request('/reminders/status'),
+  updatePhoneNumber: (phoneData) => request('/reminders/phone', { method: 'POST', body: JSON.stringify(phoneData) }),
+  sendReminderOTP: (phone_number) => request('/reminders/otp/send', { method: 'POST', body: JSON.stringify({ phone_number }) }),
+  verifyReminderOTP: (phone_number, otp_code) => request('/reminders/otp/verify', { method: 'POST', body: JSON.stringify({ phone_number, otp_code }) }),
+  updateReminderPreferences: (prefData) => request('/reminders/preferences', { method: 'PUT', body: JSON.stringify(prefData) }),
+  triggerTestReminder: () => request('/reminders/test-reminder', { method: 'POST' }),
+  optOutReminders: () => request('/reminders/opt-out', { method: 'POST' }),
+  getSMSLogs: () => request('/reminders/logs'),
 };

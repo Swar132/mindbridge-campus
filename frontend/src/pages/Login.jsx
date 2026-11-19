@@ -12,6 +12,8 @@ export default function Login() {
   const [role, setRole] = useState('student');
   const [department, setDepartment] = useState('Computer Science & Engineering');
   const [yearOfStudy, setYearOfStudy] = useState('3rd Year');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -28,6 +30,8 @@ export default function Login() {
           role,
           department,
           year_of_study: yearOfStudy,
+          phone_number: phoneNumber.trim() ? phoneNumber.trim() : null,
+          country_code: countryCode,
         });
       } else {
         await login(email, password);
@@ -169,20 +173,58 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                    <input
-                      type="text"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Swar Sharma"
-                      className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs"
-                    />
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <input
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Swar Sharma"
+                        className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs"
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Mobile Number <span className="text-[10px] font-normal text-slate-400">(Optional for SMS reminders)</span>
+                      </label>
+                    </div>
+                    <div className="flex gap-2">
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="w-28 py-2.5 px-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs cursor-pointer"
+                      >
+                        <option value="+91">🇮🇳 +91 (IN)</option>
+                        <option value="+1">🇺🇸 +1 (US)</option>
+                        <option value="+44">🇬🇧 +44 (UK)</option>
+                        <option value="+61">🇦🇺 +61 (AU)</option>
+                        <option value="+971">🇦🇪 +971 (AE)</option>
+                        <option value="+65">🇸🇬 +65 (SG)</option>
+                        <option value="+49">🇩🇪 +49 (DE)</option>
+                      </select>
+                      <div className="relative flex-1">
+                        <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="tel"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder="e.g. 98765 43210"
+                          className="w-full py-2.5 pl-9 pr-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-xs"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                      Receive gentle daily check-in invitations (verified via OTP in Settings).
+                    </p>
+                  </div>
+                </>
               )}
 
               <div>

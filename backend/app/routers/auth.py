@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.user import User, UserPreference, CounsellorProfile
 from app.schemas.auth import UserRegister, UserLogin, UserResponse, Token, UserProfileUpdate
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
+from app.services.sms_service import clean_phone_number, validate_phone_number, SMSService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -42,6 +43,14 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
             detail="An account with this email already exists. Please log in instead."
         )
 
+    # Validate phone if provided
+    phone_e164 = None
+    if user_in.phone_number and user_in.phone_number.strip():
+        phone_e164 = clean_phone_number(user_in.phone_number, user_in.country_code or "+91")
+        is_valid, err = validate_phone_number(phone_e164)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=err)
+
     user = User(
         email=email,
         password_hash=hash_password(user_in.password.strip()),
@@ -49,13 +58,20 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         role=(user_in.role or "student").strip().lower(),
         college_id=user_in.college_id.strip() if user_in.college_id else None,
         department=user_in.department.strip() if user_in.department else None,
-        year_of_study=user_in.year_of_study.strip() if user_in.year_of_study else None
+        year_of_study=user_in.year_of_study.strip() if user_in.year_of_study else None,
+        phone_number=phone_e164,
+        phone_verified=False
     )
     db.add(user)
     db.flush()
 
     # Create default user preferences
-    pref = UserPreference(user_id=user.id)
+    pref = UserPreference(
+        user_id=user.id,
+        sms_reminders_enabled=False,
+        sms_consent_given=False,
+        timezone="Asia/Kolkata"
+    )
     db.add(pref)
 
     # If registered as counsellor, create counsellor profile
@@ -69,6 +85,13 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(user)
+
+    # If phone provided at signup, dispatch verification OTP
+    if phone_e164:
+        try:
+            SMSService.send_verification_otp(db, user, phone_e164)
+        except Exception as ex:
+            print(f"[AUTH] Note: Failed to send OTP during registration: {ex}")
 
     token = create_access_token({"sub": str(user.id), "role": user.role, "email": user.email})
     return {"access_token": token, "token_type": "bearer", "user": user}
@@ -120,6 +143,23 @@ def update_profile(
         current_user.year_of_study = profile_in.year_of_study.strip()
     if profile_in.avatar_url is not None:
         current_user.avatar_url = profile_in.avatar_url.strip()
+    if profile_in.phone_number is not None:
+        raw = profile_in.phone_number.strip()
+        if raw:
+            cleaned = clean_phone_number(raw)
+            is_valid, err = validate_phone_number(cleaned)
+            if not is_valid:
+                raise HTTPException(status_code=400, detail=err)
+            if current_user.phone_number != cleaned:
+                current_user.phone_number = cleaned
+                current_user.phone_verified = False
+                if current_user.preferences:
+                    current_user.preferences.sms_reminders_enabled = False
+        else:
+            current_user.phone_number = None
+            current_user.phone_verified = False
+            if current_user.preferences:
+                current_user.preferences.sms_reminders_enabled = False
 
     db.commit()
     db.refresh(current_user)

@@ -10,6 +10,8 @@ class UserRegister(BaseModel):
     college_id: Optional[str] = None
     department: Optional[str] = None
     year_of_study: Optional[str] = None
+    phone_number: Optional[str] = None
+    country_code: Optional[str] = "+91"
 
 class UserLogin(BaseModel):
     email: str
@@ -21,6 +23,7 @@ class UserProfileUpdate(BaseModel):
     department: Optional[str] = None
     year_of_study: Optional[str] = None
     avatar_url: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -31,6 +34,8 @@ class UserResponse(BaseModel):
     department: Optional[str] = None
     year_of_study: Optional[str] = None
     avatar_url: Optional[str] = None
+    phone_number: Optional[str] = None
+    phone_verified: bool = False
     is_active: bool
     created_at: datetime
 

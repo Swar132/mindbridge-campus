@@ -5,6 +5,7 @@ from app.models.ai import AIConversation, AIMessage
 from app.models.appointment import Appointment
 from app.models.resource import WellbeingResource
 from app.models.notification import Notification
+from app.models.sms import PhoneVerification, SMSLog
 
 __all__ = [
     "User",
@@ -19,4 +20,6 @@ __all__ = [
     "Appointment",
     "WellbeingResource",
     "Notification",
+    "PhoneVerification",
+    "SMSLog",
 ]

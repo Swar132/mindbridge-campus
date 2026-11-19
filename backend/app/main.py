@@ -1,4 +1,5 @@
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,8 @@ from fastapi.responses import FileResponse
 from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app.services.seed_data import seed_database
+from app.migrations import run_migrations
+from app.services.sms_scheduler import start_sms_reminder_scheduler, stop_sms_reminder_scheduler
 
 # Routers
 from app.routers import (
@@ -23,19 +26,31 @@ from app.routers import (
     notifications,
     admin,
     checkin,
+    reminders,
 )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create DB tables
     Base.metadata.create_all(bind=engine)
+    # Apply schema migrations to existing database
+    try:
+        run_migrations(engine)
+    except Exception as ex:
+        print(f"[STARTUP] Migration notice: {ex}")
+
     # Seed default data
     db = SessionLocal()
     try:
         seed_database(db)
     finally:
         db.close()
+
+    # Start persistent SMS background reminder worker
+    scheduler_task = asyncio.create_task(start_sms_reminder_scheduler())
     yield
+    stop_sms_reminder_scheduler()
+    scheduler_task.cancel()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -67,13 +82,15 @@ app.include_router(resources.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(checkin.router, prefix=settings.API_V1_STR)
+app.include_router(reminders.router, prefix=settings.API_V1_STR)
 
 @app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
         "service": "MindBridge Campus Backend",
-        "database": "connected"
+        "database": "connected",
+        "sms_reminders": "active"
     }
 
 # Check if production build exists to serve frontend directly

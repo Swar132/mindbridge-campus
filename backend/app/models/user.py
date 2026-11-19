@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from datetime import datetime, timezone, date
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -15,6 +15,8 @@ class User(Base):
     department = Column(String(100), nullable=True)
     year_of_study = Column(String(50), nullable=True)
     avatar_url = Column(String(500), nullable=True)
+    phone_number = Column(String(30), nullable=True, index=True)  # E.164 e.g. +919876543210
+    phone_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -55,5 +57,13 @@ class UserPreference(Base):
     reminder_time = Column(String(10), default="20:00")
     consent_ai_analysis = Column(Boolean, default=True)
     email_notifications = Column(Boolean, default=True)
+
+    # SMS Reminder Configuration
+    sms_reminders_enabled = Column(Boolean, default=False)
+    reminder_frequency = Column(String(20), default="daily")  # "daily", "weekdays"
+    timezone = Column(String(50), default="Asia/Kolkata")
+    sms_consent_given = Column(Boolean, default=False)
+    sms_consent_at = Column(DateTime, nullable=True)
+    last_reminder_sent_date = Column(Date, nullable=True)
 
     user = relationship("User", back_populates="preferences")
