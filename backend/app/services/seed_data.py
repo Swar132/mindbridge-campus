@@ -293,141 +293,20 @@ def seed_database(db: Session):
     )
     db.add(apt_pending)
 
-    # 5. Seed Curated Wellbeing Resources
+    # 5. Seed Curated Wellbeing Resources (12 Comprehensive Guides across 6 College Pillars)
+    from update_rich_resources import GUIDES
     resources = [
         WellbeingResource(
-            title="The 4-7-8 Breathing Technique for Acute Stress & Panic",
-            category="Stress Management",
-            content_type="breathing",
-            summary="A clinically validated breathwork technique developed to calm the sympathetic nervous system in under two minutes.",
-            content="""### How the 4-7-8 Breathing Technique Works
-
-The 4-7-8 breathing method, popularized by Dr. Andrew Weil, acts as a natural tranquilizer for the nervous system. When you deliberately lengthen your exhalation relative to your inhalation, your body stimulates the vagus nerve, lowering heart rate and blood pressure.
-
-#### Step-by-Step Instructions:
-1. **Empty Your Lungs:** Exhale completely through your mouth, making a gentle whoosh sound.
-2. **Inhale (4 Seconds):** Close your mouth and inhale quietly through your nose for a mental count of **4**.
-3. **Hold Your Breath (7 Seconds):** Hold your breath comfortably for a count of **7**.
-4. **Exhale (8 Seconds):** Exhale completely through your mouth, making a whoosh sound for a count of **8**.
-5. **Repeat:** Complete this cycle 4 times in total.
-
-#### When to Use This in College:
-- Right before walking into a test hall or viva examination.
-- During technical coding rounds when your mind blanks out.
-- When lying in bed unable to stop racing thoughts about grades or deadlines.
-""",
-            read_time_minutes=3,
-            tags=json.dumps(["Breathing", "Acute Panic", "Exam Anxiety", "Instant Relief"]),
-            is_featured=True
-        ),
-        WellbeingResource(
-            title="Tackling Placement Rejection & Imposter Syndrome",
-            category="Placement Preparation Stress",
-            content_type="article",
-            summary="Practical strategies for university students to separate their identity from shortlisting outcomes during recruitment drives.",
-            content="""### Understanding the Psychology of Placement Season
-
-Campus placement drives are uniquely stressful because they condense years of academic preparation into rapid-fire interviews, high-visibility WhatsApp groups, and relentless peer comparisons.
-
-#### 1. Decouple Performance From Self-Worth
-An interview rejection is not a character diagnosis. It is merely data about one company's specific algorithmic filter or staffing quota on that particular morning.
-
-#### 2. Beware the Availability Heuristic
-When someone lands a marquee job offer, everyone hears about it immediately. But behind every offer are dozens of unannounced rejections that classmates quietly absorb. You are never as uniquely 'behind' as you imagine.
-
-#### 3. Focus on Process Milestones
-Instead of measuring your day by whether you got an email callback, measure it by concrete daily commitments:
-- Did you solve your two data structure problems?
-- Did you practice explaining your project architecture out loud?
-- Did you step away from screens and get proper rest?
-
-#### 4. The 24-Hour Rule
-Allow yourself 24 hours to grieve a missed opportunity or feel frustrated. After 24 hours, perform an objective retro: What technical question gave you friction? Refactor that topic, and move forward.
-""",
-            read_time_minutes=6,
-            tags=json.dumps(["Placements", "Career Anxiety", "Imposter Syndrome", "Self Worth"]),
-            is_featured=True
-        ),
-        WellbeingResource(
-            title="The College Student's Guide to Sleep Hygiene During Finals",
-            category="Sleep Hygiene",
-            content_type="guide",
-            summary="How to optimize sleep architecture without sacrificing academic productivity during intensive study weeks.",
-            content="""### The Myth of the All-Nighter
-
-Neuroimaging studies show that pulling an all-nighter impairs cognitive retrieval by up to 40%—the neurological equivalent of having a blood alcohol concentration of 0.10%. Sacrificing sleep to cram is biologically counterproductive.
-
-#### Evidence-Based Sleep Rules for Campus:
-- **Anchor Your Wake-Up Time:** Even if you slept 45 minutes later, try to wake up within a 30-minute window every day. Your circadian clock is primarily reset by morning light.
-- **The 20-Minute Rebound:** If you're tossing and turning after 20 minutes, get out of bed. The bed must only be associated with sleep, not academic frustration.
-- **The Screen Buffer:** Blue light from IDEs and phone screens suppresses melatonin synthesis. Switch to night mode at 8 PM and avoid screens 30 minutes before sleep.
-- **Caffeine Half-Life:** Caffeine has an average half-life of 5 to 7 hours in young adults. A 4:00 PM cold brew is still circulating in your bloodstream at 11:00 PM.
-""",
-            read_time_minutes=5,
-            tags=json.dumps(["Sleep Hygiene", "Circadian Rhythm", "Finals", "Productivity"]),
-            is_featured=True
-        ),
-        WellbeingResource(
-            title="The 5-4-3-2-1 Sensory Grounding Technique",
-            category="Anxiety Management",
-            content_type="exercise",
-            summary="An effective somatic exercise to interrupt panic spirals and bring your awareness back into the present moment.",
-            content="""### Grounding Yourself in the Present
-
-When anxiety spikes, your brain enters survival mode, flooding you with worst-case scenarios. Grounding uses your sensory pathways to signal to your nervous system that you are physically safe right now.
-
-#### The 5 Steps:
-1. **5 Things You Can SEE:** Look around your room or lecture hall. Notice tiny details: a crack in a floor tile, the reflection on your water bottle, dust motes in sunlight.
-2. **4 Things You Can TOUCH:** Feel the firmness of your chair beneath you, the fabric of your jeans, your notebook's texture, your feet rooted on the floor.
-3. **3 Things You Can HEAR:** Listen beyond the obvious. A distant ceiling fan, birds outside the window, someone turning a page.
-4. **2 Things You Can SMELL:** Pencil shavings, coffee, fresh air, hand sanitizer.
-5. **1 Thing You Can TASTE:** A sip of water, mint gum, or simply notice the taste in your mouth.
-
-End with a long, slow sigh.
-""",
-            read_time_minutes=4,
-            tags=json.dumps(["Grounding", "Panic", "Anxiety", "Sensory"]),
-            is_featured=False
-        ),
-        WellbeingResource(
-            title="Overcoming Campus Isolation & Building Meaningful Ties",
-            category="Emotional Wellbeing",
-            content_type="article",
-            summary="Navigating the unspoken epidemic of loneliness in university hostels and finding authentic community.",
-            content="""### Loneliness in a Crowded Campus
-
-It is entirely possible to be surrounded by hundreds of peers in a hostel mess or lecture hall and still feel acutely isolated. True connection is not about the quantity of your acquaintances; it is about feeling seen.
-
-#### Low-Friction Ways to Reconnect:
-- **Parallel Play:** You don't need intense conversations to connect. Studying alongside someone in the library or working on code side-by-side provides low-stakes social nourishment.
-- **Join Micro-Interest Clubs:** From campus astronomy societies to badminton clubs, interest-based groups remove the awkwardness of small talk because you have an immediate shared topic.
-- **Speak With a Counsellor:** If social anxiety is blocking you from stepping out, speaking with a campus counsellor can help you untangle core beliefs about acceptance.
-""",
-            read_time_minutes=5,
-            tags=json.dumps(["Loneliness", "Hostel Life", "Friendships", "Campus Adaptation"]),
-            is_featured=False
-        ),
-        WellbeingResource(
-            title="Progressive Muscle Relaxation (PMR) for Deep Rest",
-            category="Mindfulness and Meditation",
-            content_type="exercise",
-            summary="A systematic relaxation method to release physical muscle tension stored from prolonged study sessions.",
-            content="""### What is Progressive Muscle Relaxation?
-
-Under chronic academic stress, our shoulders hunch, jaws clench, and diaphragms tighten without us even noticing. PMR systematically tenses and then releases each muscle group so you learn the distinct physical contrast between tension and release.
-
-#### Sequence:
-1. **Feet & Toes:** Curl toes tightly for 5 seconds. Release and feel the warmth.
-2. **Calves & Thighs:** Flex legs firmly for 5 seconds. Release completely.
-3. **Abdomen:** Tighten your stomach muscles. Hold for 5 seconds. Release.
-4. **Hands & Arms:** Clench fists and tighten biceps for 5 seconds. Release.
-5. **Shoulders & Neck:** Shrug shoulders up toward your ears. Hold for 5 seconds. Drop them down completely.
-6. **Face & Jaw:** Scrunch eyes and clench jaw gently for 5 seconds. Release.
-""",
-            read_time_minutes=4,
-            tags=json.dumps(["PMR", "Body Scan", "Rest", "Tension Release"]),
-            is_featured=False
+            title=g["title"],
+            category=g["category"],
+            content_type=g["content_type"],
+            summary=g["summary"],
+            content=g["content"],
+            read_time_minutes=g["read_time_minutes"],
+            tags=json.dumps(g["tags"]),
+            is_featured=g["is_featured"]
         )
+        for g in GUIDES
     ]
 
     for r in resources:

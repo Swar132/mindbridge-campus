@@ -146,6 +146,7 @@ export const api = {
     const qs = params.toString();
     return request(`/resources/${qs ? `?${qs}` : ''}`);
   },
+  getPersonalizedResources: () => request('/resources/personalized'),
   getResource: (id) => request(`/resources/${id}`),
   createResource: (resData) => request('/resources/', { method: 'POST', body: JSON.stringify(resData) }),
   updateResource: (id, resData) => request(`/resources/${id}`, { method: 'PUT', body: JSON.stringify(resData) }),

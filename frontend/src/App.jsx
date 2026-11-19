@@ -93,6 +93,7 @@ export default function App() {
           <Resources
             onOpenBreathing={() => setIsBreathingOpen(true)}
             onOpenGrounding={() => setIsGroundingOpen(true)}
+            onNavigate={setActiveTab}
           />
         );
       case 'counsellors':
