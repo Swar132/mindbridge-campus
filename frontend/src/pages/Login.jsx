@@ -401,7 +401,7 @@ export default function Login() {
                           ) : (
                             <Check className="w-3.5 h-3.5" />
                           )}
-                          <span>Verify</span>
+                          <span>Verify Email</span>
                         </button>
                       </div>
 
@@ -475,7 +475,7 @@ export default function Login() {
                           ) : (
                             <Check className="w-3.5 h-3.5" />
                           )}
-                          <span>Verify</span>
+                          <span>Verify Phone</span>
                         </button>
                       </div>
 

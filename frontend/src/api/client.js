@@ -169,7 +169,6 @@ export const api = {
   sendReminderOTP: (phone_number) => request('/reminders/otp/send', { method: 'POST', body: JSON.stringify({ phone_number }) }),
   verifyReminderOTP: (phone_number, otp_code) => request('/reminders/otp/verify', { method: 'POST', body: JSON.stringify({ phone_number, otp_code }) }),
   updateReminderPreferences: (prefData) => request('/reminders/preferences', { method: 'PUT', body: JSON.stringify(prefData) }),
-  triggerTestReminder: () => request('/reminders/test-reminder', { method: 'POST' }),
   optOutReminders: () => request('/reminders/opt-out', { method: 'POST' }),
   getSMSLogs: () => request('/reminders/logs'),
 };

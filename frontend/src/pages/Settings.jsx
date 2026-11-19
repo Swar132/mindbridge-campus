@@ -58,8 +58,6 @@ export default function Settings() {
   const [smsFrequency, setSmsFrequency] = useState('daily');
   const [smsTimezone, setSmsTimezone] = useState('Asia/Kolkata');
   const [smsConsent, setSmsConsent] = useState(false);
-  const [testLoading, setTestLoading] = useState(false);
-  const [testResult, setTestResult] = useState(null);
   const [smsLogs, setSmsLogs] = useState([]);
   const [showLogs, setShowLogs] = useState(false);
 
@@ -167,33 +165,6 @@ export default function Settings() {
       setOtpError(err.message || 'Incorrect verification code.');
     } finally {
       setOtpLoading(false);
-    }
-  };
-
-  // Trigger Instant Test SMS Reminder
-  const handleTestReminder = async () => {
-    setTestLoading(true);
-    setTestResult(null);
-    try {
-      const res = await api.triggerTestReminder();
-      setTestResult({
-        success: true,
-        message: res.message || 'Test reminder sent successfully!'
-      });
-      confetti({
-        particleCount: 25,
-        spread: 45,
-        origin: { y: 0.7 },
-        colors: ['#0EA5E9', '#14B8A6'],
-      });
-      loadLogs();
-    } catch (err) {
-      setTestResult({
-        success: false,
-        message: err.message || 'Failed to trigger test reminder.'
-      });
-    } finally {
-      setTestLoading(false);
     }
   };
 
@@ -306,9 +277,20 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                Email Address (Primary Account)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Email Address (Primary Account)
+                </label>
+                {user?.email_verified ? (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Verified
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                    Awaiting Verification
+                  </span>
+                )}
+              </div>
               <input
                 type="email"
                 disabled
@@ -618,34 +600,9 @@ export default function Settings() {
               </label>
             </div>
 
-            {/* Friendly Example SMS Preview Banner */}
-            <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                SMS Preview:
-              </span>
-              <p className="text-xs font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 leading-relaxed">
-                "Hey {fullName.split(' ')[0] || 'Friend'}! Take a moment for yourself today. How are you feeling? Complete your MindBridge wellbeing check-in whenever you're ready: https://mindbridge-campus-te1l.onrender.com 💙 (Reply STOP to opt out)"
-              </p>
-              <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1"><Check className="w-3 h-3 text-teal-500" /> Zero spam</span>
-                <span className="flex items-center gap-1"><Check className="w-3 h-3 text-teal-500" /> Skips automatically if already checked in today</span>
-                <span className="flex items-center gap-1"><Check className="w-3 h-3 text-teal-500" /> Carrier & DLT compliant</span>
-              </div>
-            </div>
-
-            {/* Test SMS Trigger & Opt-Out Actions */}
+            {/* Delivery History & Opt-Out Actions */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleTestReminder}
-                  disabled={testLoading || !reminderStatus?.phone_verified}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-xs transition disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer"
-                >
-                  {testLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  <span>⚡ Send Test SMS Reminder Now</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={loadLogs}
@@ -666,13 +623,6 @@ export default function Settings() {
                 </button>
               )}
             </div>
-
-            {testResult && (
-              <div className={`p-3 rounded-xl text-xs font-medium flex items-center gap-2 ${testResult.success ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border border-teal-200' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border border-rose-200'}`}>
-                {testResult.success ? <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
-                <span>{testResult.message}</span>
-              </div>
-            )}
 
             {/* Delivery Logs Modal/Dropdown */}
             {showLogs && (

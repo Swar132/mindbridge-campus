@@ -381,7 +381,9 @@ class SMSService:
 
         db.commit()
 
-        # Send real Welcome SMS
+        # Send real Welcome SMS immediately upon verification
+        welcome_status = "sent"
+        welcome_error = None
         try:
             SMSService.dispatch_sms(
                 phone_number=phone_number,
@@ -391,11 +393,20 @@ class SMSService:
                 db=db
             )
         except Exception as welcome_ex:
+            welcome_status = "failed"
+            welcome_error = str(welcome_ex)
             print(f"[SMS] Welcome SMS notice: {welcome_ex}")
+
+        if welcome_status == "sent":
+            msg = "Phone number successfully verified! A welcome SMS has been dispatched to your mobile phone."
+        else:
+            msg = f"Phone number successfully verified! (Welcome SMS status: {welcome_error})"
 
         return {
             "success": True,
-            "message": "Phone number successfully verified! Daily SMS reminders are active.",
+            "message": msg,
+            "welcome_sms_status": welcome_status,
+            "welcome_sms_error": welcome_error,
             "phone_number": user.phone_number,
             "phone_masked": mask_phone_number(user.phone_number),
             "phone_verified": True

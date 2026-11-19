@@ -9,6 +9,7 @@ class PhoneVerification(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     phone_number = Column(String(30), nullable=False, index=True)
+    otp_code = Column(String(10), nullable=True, default=None)
     otp_hash = Column(String(128), nullable=False)
     otp_salt = Column(String(32), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

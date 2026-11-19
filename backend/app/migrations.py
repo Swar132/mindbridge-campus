@@ -79,6 +79,12 @@ def run_migrations(engine: Engine):
         # Check phone_verifications table for otp_hash and otp_salt
         if "phone_verifications" in inspector.get_table_names():
             pv_cols = [c["name"] for c in inspector.get_columns("phone_verifications")]
+            if is_postgres and "otp_code" in pv_cols:
+                try:
+                    conn.execute(text("ALTER TABLE phone_verifications ALTER COLUMN otp_code DROP NOT NULL;"))
+                except Exception as ex:
+                    print(f"[MIGRATION] Notice dropping NOT NULL on otp_code: {ex}")
+
             if "otp_hash" not in pv_cols:
                 if is_postgres:
                     conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN IF NOT EXISTS otp_hash VARCHAR(128) DEFAULT '';"))
