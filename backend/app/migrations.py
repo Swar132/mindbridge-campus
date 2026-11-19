@@ -3,7 +3,7 @@ from sqlalchemy.engine import Engine
 
 def run_migrations(engine: Engine):
     """
-    Safely adds missing columns to existing tables in PostgreSQL / SQLite
+    Safely adds missing columns and tables to existing database
     without dropping or resetting any existing user records.
     """
     inspector = inspect(engine)
@@ -25,6 +25,12 @@ def run_migrations(engine: Engine):
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE;"))
                 else:
                     conn.execute(text("ALTER TABLE users ADD COLUMN phone_verified BOOLEAN DEFAULT 0;"))
+
+            if "email_verified" not in user_cols:
+                if is_postgres:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;"))
+                else:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0;"))
             
             conn.commit()
 
@@ -68,4 +74,16 @@ def run_migrations(engine: Engine):
                 else:
                     conn.execute(text("ALTER TABLE user_preferences ADD COLUMN last_reminder_sent_date DATE;"))
 
+            conn.commit()
+
+        # Check phone_verifications table for otp_hash and otp_salt
+        if "phone_verifications" in inspector.get_table_names():
+            pv_cols = [c["name"] for c in inspector.get_columns("phone_verifications")]
+            if "otp_hash" not in pv_cols:
+                if is_postgres:
+                    conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN IF NOT EXISTS otp_hash VARCHAR(128) DEFAULT '';"))
+                    conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN IF NOT EXISTS otp_salt VARCHAR(32) DEFAULT '';"))
+                else:
+                    conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN otp_hash VARCHAR(128) DEFAULT '';"))
+                    conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN otp_salt VARCHAR(32) DEFAULT '';"))
             conn.commit()

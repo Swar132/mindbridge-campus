@@ -17,6 +17,7 @@ class User(Base):
     avatar_url = Column(String(500), nullable=True)
     phone_number = Column(String(30), nullable=True, index=True)  # E.164 e.g. +919876543210
     phone_verified = Column(Boolean, default=False)
+    email_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

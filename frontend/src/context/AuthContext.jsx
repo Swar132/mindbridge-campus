@@ -42,6 +42,16 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
+  const completeAuth = (authResponse) => {
+    if (authResponse?.access_token) {
+      setAuthToken(authResponse.access_token);
+    }
+    if (authResponse?.user) {
+      setUser(authResponse.user);
+    }
+    return authResponse?.user;
+  };
+
   const logout = () => {
     try {
       api.logout().catch(() => {});
@@ -78,6 +88,7 @@ export function AuthProvider({ children }) {
         loading,
         login,
         register,
+        completeAuth,
         logout,
         demoLogin,
         updateUser,

@@ -63,6 +63,10 @@ export const api = {
   // Auth
   login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  registerInitiate: (data) => request('/auth/register-initiate', { method: 'POST', body: JSON.stringify(data) }),
+  verifyRegisterEmail: (session_id, otp_code) => request('/auth/register-verify-email', { method: 'POST', body: JSON.stringify({ session_id, otp_code }) }),
+  verifyRegisterPhone: (session_id, otp_code) => request('/auth/register-verify-phone', { method: 'POST', body: JSON.stringify({ session_id, otp_code }) }),
+  resendRegisterOTP: (session_id, target) => request('/auth/register-resend-otp', { method: 'POST', body: JSON.stringify({ session_id, target }) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   getMe: () => request('/auth/me'),
   updateProfile: (profileData) => request('/auth/profile', { method: 'PUT', body: JSON.stringify(profileData) }),

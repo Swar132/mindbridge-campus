@@ -6,6 +6,7 @@ from app.models.appointment import Appointment
 from app.models.resource import WellbeingResource
 from app.models.notification import Notification
 from app.models.sms import PhoneVerification, SMSLog
+from app.models.registration import PendingRegistration
 
 __all__ = [
     "User",
@@ -22,4 +23,5 @@ __all__ = [
     "Notification",
     "PhoneVerification",
     "SMSLog",
+    "PendingRegistration",
 ]

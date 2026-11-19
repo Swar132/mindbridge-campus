@@ -70,16 +70,22 @@ def update_phone_number(
             current_user.preferences.sms_reminders_enabled = False
         db.commit()
 
-    # Automatically dispatch OTP
-    otp_res = SMSService.send_verification_otp(db, current_user, cleaned)
-    return {
-        "success": otp_res.get("success", False),
-        "message": otp_res.get("message"),
-        "phone_number": cleaned,
-        "phone_masked": mask_phone_number(cleaned),
-        "phone_verified": current_user.phone_verified,
-        "test_otp": otp_res.get("test_otp")
-    }
+    # Dispatch real OTP to phone
+    try:
+        otp_res = SMSService.send_verification_otp(db, current_user, cleaned)
+        return {
+            "success": True,
+            "message": otp_res.get("message"),
+            "phone_number": cleaned,
+            "phone_masked": mask_phone_number(cleaned),
+            "phone_verified": current_user.phone_verified
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except RuntimeError as re:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(re))
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"SMS OTP dispatch failed: {ex}")
 
 @router.post("/otp/send")
 def send_otp(
@@ -88,14 +94,15 @@ def send_otp(
     db: Session = Depends(get_db)
 ):
     cleaned = clean_phone_number(payload.phone_number)
-    is_valid, err = validate_phone_number(cleaned)
-    if not is_valid:
-        raise HTTPException(status_code=400, detail=err)
-
-    res = SMSService.send_verification_otp(db, current_user, cleaned)
-    if not res.get("success"):
-        raise HTTPException(status_code=400, detail=res.get("message"))
-    return res
+    try:
+        res = SMSService.send_verification_otp(db, current_user, cleaned)
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except RuntimeError as re:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(re))
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"SMS OTP dispatch failed: {ex}")
 
 @router.post("/otp/verify")
 def verify_otp(
@@ -104,10 +111,15 @@ def verify_otp(
     db: Session = Depends(get_db)
 ):
     cleaned = clean_phone_number(payload.phone_number)
-    res = SMSService.verify_otp_code(db, current_user, cleaned, payload.otp_code)
-    if not res.get("success"):
-        raise HTTPException(status_code=400, detail=res.get("message"))
-    return res
+    try:
+        res = SMSService.verify_otp_code(db, current_user, cleaned, payload.otp_code)
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except RuntimeError as re:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(re))
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"OTP verification failed: {ex}")
 
 @router.put("/preferences")
 def update_preferences(

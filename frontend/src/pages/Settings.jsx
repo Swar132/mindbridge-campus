@@ -51,7 +51,6 @@ export default function Settings() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpNotice, setOtpNotice] = useState(null);
   const [otpError, setOtpError] = useState(null);
-  const [testOtpHint, setTestOtpHint] = useState(null);
 
   // SMS Preferences State
   const [smsEnabled, setSmsEnabled] = useState(false);
@@ -119,7 +118,6 @@ export default function Settings() {
     setOtpLoading(true);
     setOtpError(null);
     setOtpNotice(null);
-    setTestOtpHint(null);
     try {
       const res = await api.updatePhoneNumber({
         phone_number: phoneInput.trim(),
@@ -127,9 +125,6 @@ export default function Settings() {
       });
       setOtpSent(true);
       setOtpNotice(res.message);
-      if (res.test_otp) {
-        setTestOtpHint(res.test_otp);
-      }
       // Refresh status
       const updated = await api.getReminderStatus();
       setReminderStatus(updated);
@@ -506,19 +501,6 @@ export default function Settings() {
                         <span>Verify & Activate</span>
                       </button>
                     </div>
-
-                    {testOtpHint && (
-                      <div className="p-2 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200 text-xs flex items-center justify-between">
-                        <span>🧪 <strong>Testing code generated:</strong> <code className="font-mono font-bold text-teal-600 dark:text-teal-400 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded">{testOtpHint}</code></span>
-                        <button
-                          type="button"
-                          onClick={() => setOtpCode(testOtpHint)}
-                          className="text-[11px] underline font-bold hover:text-teal-900 cursor-pointer"
-                        >
-                          Auto-fill
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
 

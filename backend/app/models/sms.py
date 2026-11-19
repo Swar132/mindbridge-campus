@@ -9,7 +9,8 @@ class PhoneVerification(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     phone_number = Column(String(30), nullable=False, index=True)
-    otp_code = Column(String(10), nullable=False)
+    otp_hash = Column(String(128), nullable=False)
+    otp_salt = Column(String(32), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_verified = Column(Boolean, default=False)
@@ -23,11 +24,11 @@ class SMSLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     phone_number = Column(String(30), nullable=False, index=True)
-    message_type = Column(String(50), nullable=False)  # "otp", "daily_reminder", "test_reminder", "opt_out"
+    message_type = Column(String(50), nullable=False)  # "otp", "welcome", "daily_reminder", "test_reminder", "opt_out"
     message_body = Column(Text, nullable=False)
-    provider = Column(String(50), default="simulated")  # "twilio", "fast2sms", "msg91", "simulated"
+    provider = Column(String(50), nullable=False)  # "twilio", "fast2sms", "msg91"
     provider_message_id = Column(String(255), nullable=True)
-    status = Column(String(50), default="sent")  # "sent", "delivered", "failed", "simulated"
+    status = Column(String(50), default="sent")  # "sent", "delivered", "failed"
     error_message = Column(Text, nullable=True)
     sent_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 

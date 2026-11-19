@@ -1,17 +1,20 @@
 import os
 import re
-import secrets
 from datetime import datetime, timezone, timedelta, date
 from typing import Optional, Tuple, Dict, Any, List
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 import httpx
 
 from app.config import settings
 from app.models.user import User, UserPreference
 from app.models.sms import PhoneVerification, SMSLog
+from app.services.otp_security import generate_secure_otp, hash_otp, verify_otp_hash
 
-# Default Indian SMS template conforming to DLT messaging guidelines
+WELCOME_SMS_MESSAGE = (
+    "Welcome to MindBridge Campus! Your phone number has been successfully verified. "
+    "We're glad to have you with us. Take a moment each day to check in with yourself. 💙"
+)
+
 REMINDER_MESSAGE_TEMPLATE = (
     "Hey {first_name}! Take a moment for yourself today. How are you feeling? "
     "Complete your MindBridge wellbeing check-in whenever you're ready: "
@@ -20,7 +23,7 @@ REMINDER_MESSAGE_TEMPLATE = (
 
 OTP_MESSAGE_TEMPLATE = (
     "Your MindBridge Campus verification code is: {otp}. "
-    "Valid for 10 minutes. Please do not share this code. 🌿"
+    "Valid for 5 minutes. Please do not share this code. 🌿"
 )
 
 OPT_OUT_MESSAGE = (
@@ -29,43 +32,34 @@ OPT_OUT_MESSAGE = (
 )
 
 def clean_phone_number(phone_raw: str, default_country: str = "+91") -> str:
-    """
-    Normalizes a phone number to standard E.164 format.
-    E.g.: '98765 43210' with '+91' -> '+919876543210'
-          '+91-98765-43210' -> '+919876543210'
-          '+1 (555) 123-4567' -> '+15551234567'
-    """
-    cleaned = re.sub(r"[\s\-\(\)\.]", "", phone_raw.strip())
+    """Normalizes a phone number to standard E.164 format."""
+    cleaned = re.sub(r"[\s\-\(\)\.]", "", str(phone_raw).strip())
     if cleaned.startswith("+"):
         return cleaned
-    # Remove leading zeros
     cleaned = cleaned.lstrip("0")
     if default_country.startswith("+"):
         return f"{default_country}{cleaned}"
     return f"+{default_country}{cleaned}"
 
 def validate_phone_number(phone_e164: str) -> Tuple[bool, str]:
-    """
-    Validates E.164 format with specific handling for India (+91) and international numbers.
-    """
+    """Validates international E.164 phone number syntax."""
     if not phone_e164 or not phone_e164.startswith("+"):
         return False, "Phone number must start with a valid country code (e.g. +91)."
 
     if not re.match(r"^\+[1-9]\d{7,14}$", phone_e164):
         return False, "Phone number must be in valid international E.164 format (7-15 digits)."
 
-    # India specific validation: +91 followed by 10 digits starting with 6, 7, 8, or 9
     if phone_e164.startswith("+91"):
         digits = phone_e164[3:]
         if len(digits) != 10:
-            return False, f"Indian phone numbers require 10 digits after +91 (received {len(digits)})."
+            return False, f"Indian phone numbers require exactly 10 digits after +91 (received {len(digits)})."
         if digits[0] not in "6789":
             return False, "Indian mobile numbers must start with 6, 7, 8, or 9."
 
     return True, "Valid phone number"
 
 def mask_phone_number(phone: str) -> str:
-    """Masks phone number for privacy e.g. +91 98•••• 3210"""
+    """Masks phone number for student privacy e.g. +91 98•••• 3210"""
     if not phone or len(phone) < 6:
         return phone or ""
     prefix = phone[:5]
@@ -96,30 +90,30 @@ class SMSService:
         if twilio_sid and twilio_token and twilio_from:
             return {
                 "provider": "twilio",
-                "is_live": True,
+                "is_configured": True,
                 "masked_from": mask_phone_number(twilio_from),
                 "description": "Twilio Cloud SMS Gateway"
             }
         elif fast2sms_key:
             return {
                 "provider": "fast2sms",
-                "is_live": True,
+                "is_configured": True,
                 "masked_from": "Fast2SMS India Route",
-                "description": "Fast2SMS Indian DLT SMS Gateway"
+                "description": "Fast2SMS Indian DLT Gateway"
             }
         elif msg91_key:
             return {
                 "provider": "msg91",
-                "is_live": True,
+                "is_configured": True,
                 "masked_from": "MSG91 Route",
                 "description": "MSG91 Enterprise SMS Gateway"
             }
         else:
             return {
-                "provider": "simulated",
-                "is_live": False,
-                "masked_from": "MindBridge Campus SMS Simulator",
-                "description": "Carrier-Compliant Gateway Simulator (Active for dev/testing; set TWILIO_* or FAST2SMS_* for live cellular delivery)"
+                "provider": "none",
+                "is_configured": False,
+                "masked_from": None,
+                "description": "No SMS provider configured. Set TWILIO_ACCOUNT_SID & TWILIO_AUTH_TOKEN or FAST2SMS_API_KEY in Render environment variables."
             }
 
     @staticmethod
@@ -131,16 +125,24 @@ class SMSService:
         db: Optional[Session] = None
     ) -> Dict[str, Any]:
         """
-        Sends an SMS through the configured provider (Twilio / Fast2SMS / MSG91 / Simulated)
-        and logs the delivery to the persistent PostgreSQL sms_logs table.
+        Sends real SMS through configured provider.
+        Raises an explicit error if no provider is configured.
         """
         provider_info = SMSService.get_provider_status()
         provider_name = provider_info["provider"]
+
+        if not provider_info["is_configured"]:
+            raise RuntimeError(
+                "SMS delivery gateway is not configured. "
+                "Please configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER "
+                "(or FAST2SMS_API_KEY) in Render environment variables."
+            )
+
         provider_msg_id = None
         delivery_status = "sent"
         error_msg = None
 
-        # 1. Attempt Twilio
+        # 1. Twilio
         if provider_name == "twilio":
             try:
                 sid = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
@@ -158,7 +160,7 @@ class SMSService:
                 elif from_num:
                     payload["From"] = from_num
 
-                with httpx.Client(timeout=10.0) as client:
+                with httpx.Client(timeout=12.0) as client:
                     resp = client.post(url, data=payload, auth=(sid, token))
                     if resp.status_code in (200, 201):
                         data = resp.json()
@@ -166,16 +168,17 @@ class SMSService:
                         delivery_status = "delivered"
                     else:
                         delivery_status = "failed"
-                        error_msg = f"Twilio HTTP {resp.status_code}: {resp.text}"
+                        error_msg = f"Twilio API error (HTTP {resp.status_code}): {resp.text}"
+                        raise RuntimeError(error_msg)
             except Exception as e:
                 delivery_status = "failed"
                 error_msg = str(e)
+                raise RuntimeError(f"Twilio dispatch failed: {e}")
 
-        # 2. Attempt Fast2SMS (India)
+        # 2. Fast2SMS (India)
         elif provider_name == "fast2sms":
             try:
                 api_key = os.getenv("FAST2SMS_API_KEY", "").strip()
-                # Extract 10 digits for Indian numbers
                 target_num = phone_number.replace("+91", "").strip()
                 url = "https://www.fast2sms.com/dev/bulkV2"
                 headers = {"authorization": api_key}
@@ -186,7 +189,7 @@ class SMSService:
                     "flash": 0,
                     "numbers": target_num
                 }
-                with httpx.Client(timeout=10.0) as client:
+                with httpx.Client(timeout=12.0) as client:
                     resp = client.post(url, headers=headers, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
@@ -194,21 +197,40 @@ class SMSService:
                             provider_msg_id = data.get("request_id")
                             delivery_status = "delivered"
                         else:
-                            delivery_status = "failed"
                             error_msg = data.get("message", "Fast2SMS error")
+                            raise RuntimeError(f"Fast2SMS error: {error_msg}")
                     else:
-                        delivery_status = "failed"
-                        error_msg = f"Fast2SMS HTTP {resp.status_code}: {resp.text}"
+                        raise RuntimeError(f"Fast2SMS HTTP {resp.status_code}: {resp.text}")
             except Exception as e:
                 delivery_status = "failed"
                 error_msg = str(e)
+                raise RuntimeError(f"Fast2SMS dispatch failed: {e}")
 
-        # 3. Simulated Provider (Reliable, persistent fallback)
-        else:
-            provider_msg_id = f"sim_{secrets.token_hex(8)}"
-            delivery_status = "simulated"
-            print(f"[SMS-SIMULATOR] Delivery to {mask_phone_number(phone_number)} | Type: {message_type}")
-            print(f"                Body: {message_body}")
+        # 3. MSG91
+        elif provider_name == "msg91":
+            try:
+                auth_key = os.getenv("MSG91_AUTH_KEY", "").strip()
+                sender = os.getenv("MSG91_SENDER_ID", "MNDBRG").strip()
+                target_num = phone_number.replace("+", "").strip()
+                url = "https://api.msg91.com/api/v2/sendsms"
+                headers = {"authkey": auth_key, "content-type": "application/json"}
+                payload = {
+                    "sender": sender,
+                    "route": "4",
+                    "country": "91",
+                    "sms": [{"message": message_body, "to": [target_num]}]
+                }
+                with httpx.Client(timeout=12.0) as client:
+                    resp = client.post(url, headers=headers, json=payload)
+                    if resp.status_code == 200:
+                        provider_msg_id = "msg91_ok"
+                        delivery_status = "delivered"
+                    else:
+                        raise RuntimeError(f"MSG91 HTTP {resp.status_code}: {resp.text}")
+            except Exception as e:
+                delivery_status = "failed"
+                error_msg = str(e)
+                raise RuntimeError(f"MSG91 dispatch failed: {e}")
 
         # Persistent Logging to PostgreSQL
         if db:
@@ -234,12 +256,11 @@ class SMSService:
                     pass
 
         return {
-            "success": delivery_status in ("sent", "delivered", "simulated"),
+            "success": True,
             "provider": provider_name,
             "status": delivery_status,
             "provider_message_id": provider_msg_id,
-            "phone_masked": mask_phone_number(phone_number),
-            "error": error_msg
+            "phone_masked": mask_phone_number(phone_number)
         }
 
     @staticmethod
@@ -249,18 +270,17 @@ class SMSService:
         phone_number: str
     ) -> Dict[str, Any]:
         """
-        Generates and dispatches a 6-digit OTP to verify phone ownership.
-        Enforces a 60-second cooldown between requests.
+        Generates and dispatches a 5-minute cryptographic OTP to student's phone.
+        Stores SHA-256 hash. Enforces 60-second cooldown.
         """
-        # Validate format
         is_valid, err = validate_phone_number(phone_number)
         if not is_valid:
-            return {"success": False, "message": err}
+            raise ValueError(err)
 
         now = datetime.now(timezone.utc)
         one_min_ago = now - timedelta(seconds=60)
 
-        # Rate-limiting: Check if OTP sent in last 60 seconds
+        # Rate-limiting: Check cooldown
         recent_req = db.query(PhoneVerification).filter(
             PhoneVerification.user_id == user.id,
             PhoneVerification.phone_number == phone_number
@@ -269,20 +289,17 @@ class SMSService:
         if recent_req:
             created_utc = to_utc_aware(recent_req.created_at)
             if created_utc and created_utc >= one_min_ago:
-                return {
-                    "success": False,
-                    "message": "Please wait at least 60 seconds before requesting a new verification code."
-                }
+                raise ValueError("Please wait at least 60 seconds before requesting a new verification code.")
 
-        # Generate 6-digit cryptographic OTP
-        otp_code = str(secrets.randbelow(900000) + 100000)
-        expires_at = now + timedelta(minutes=10)
+        otp_code = generate_secure_otp()
+        otp_hash_val, otp_salt_val = hash_otp(otp_code)
+        expires_at = now + timedelta(minutes=5)
 
-        # Store in PostgreSQL
         verification = PhoneVerification(
             user_id=user.id,
             phone_number=phone_number,
-            otp_code=otp_code,
+            otp_hash=otp_hash_val,
+            otp_salt=otp_salt_val,
             created_at=now,
             expires_at=expires_at,
             is_verified=False,
@@ -291,9 +308,9 @@ class SMSService:
         db.add(verification)
         db.commit()
 
-        # Dispatch OTP SMS
+        # Send actual SMS
         sms_body = OTP_MESSAGE_TEMPLATE.format(otp=otp_code)
-        dispatch_res = SMSService.dispatch_sms(
+        SMSService.dispatch_sms(
             phone_number=phone_number,
             message_body=sms_body,
             message_type="otp",
@@ -303,11 +320,9 @@ class SMSService:
 
         return {
             "success": True,
-            "message": f"Verification code sent to {mask_phone_number(phone_number)}! Valid for 10 minutes.",
+            "message": f"Verification code sent to {mask_phone_number(phone_number)}. Valid for 5 minutes.",
             "phone_masked": mask_phone_number(phone_number),
-            "expires_in_seconds": 600,
-            # In simulated mode, provide the code in response to facilitate rapid testing and onboarding
-            "test_otp": otp_code if dispatch_res.get("provider") == "simulated" else None
+            "expires_in_seconds": 300
         }
 
     @staticmethod
@@ -318,12 +333,12 @@ class SMSService:
         otp_code: str
     ) -> Dict[str, Any]:
         """
-        Validates OTP code and activates verified phone status.
+        Verifies plain OTP against stored cryptographic hash.
+        Sends welcome SMS upon successful verification.
         """
         clean_code = otp_code.strip()
         now = datetime.now(timezone.utc)
 
-        # Find latest pending verification for this user and phone
         record = db.query(PhoneVerification).filter(
             PhoneVerification.user_id == user.id,
             PhoneVerification.phone_number == phone_number,
@@ -331,27 +346,26 @@ class SMSService:
         ).order_by(PhoneVerification.created_at.desc()).first()
 
         if not record:
-            return {"success": False, "message": "No pending verification found. Please request a new code."}
+            raise ValueError("No pending verification found. Please request a new code.")
 
         exp_utc = to_utc_aware(record.expires_at)
         if exp_utc and exp_utc < now:
-            return {"success": False, "message": "Verification code has expired. Please request a new one."}
+            raise ValueError("Verification code has expired. Please request a new one.")
 
         if record.attempts >= 5:
-            return {"success": False, "message": "Too many failed attempts. Please request a new code."}
+            raise ValueError("Too many failed attempts. Please request a new code.")
 
         record.attempts += 1
 
-        if record.otp_code != clean_code:
+        if not verify_otp_hash(clean_code, record.otp_hash, record.otp_salt):
             db.commit()
-            return {"success": False, "message": "Incorrect verification code. Please check and try again."}
+            raise ValueError("Incorrect verification code. Please check and try again.")
 
         # Mark verified
         record.is_verified = True
         user.phone_number = phone_number
         user.phone_verified = True
 
-        # Activate user preferences
         if user.preferences:
             user.preferences.sms_reminders_enabled = True
             user.preferences.sms_consent_given = True
@@ -367,23 +381,21 @@ class SMSService:
 
         db.commit()
 
-        # Send confirmation welcome SMS
-        welcome_sms = (
-            "MindBridge Campus: Your phone number is verified! 🌿 "
-            "Daily wellbeing reminders are now active. "
-            "Reply STOP anytime to opt out."
-        )
-        SMSService.dispatch_sms(
-            phone_number=phone_number,
-            message_body=welcome_sms,
-            message_type="verification_welcome",
-            user_id=user.id,
-            db=db
-        )
+        # Send real Welcome SMS
+        try:
+            SMSService.dispatch_sms(
+                phone_number=phone_number,
+                message_body=WELCOME_SMS_MESSAGE,
+                message_type="welcome",
+                user_id=user.id,
+                db=db
+            )
+        except Exception as welcome_ex:
+            print(f"[SMS] Welcome SMS notice: {welcome_ex}")
 
         return {
             "success": True,
-            "message": "Phone number successfully verified! Daily SMS reminders are now active.",
+            "message": "Phone number successfully verified! Daily SMS reminders are active.",
             "phone_number": user.phone_number,
             "phone_masked": mask_phone_number(user.phone_number),
             "phone_verified": True
@@ -395,25 +407,17 @@ class SMSService:
         user: User,
         is_test: bool = False
     ) -> Dict[str, Any]:
-        """
-        Sends the daily wellbeing check-in reminder SMS to a consented student.
-        Enforces:
-        1. Verified phone requirement
-        2. Explicit student consent
-        3. Avoid duplicate reminders if user already checked in today (unless test trigger)
-        4. Avoid sending duplicate reminders on the same calendar day (unless test trigger)
-        """
+        """Sends daily check-in reminder SMS to consented student."""
         if not user.phone_number or not user.phone_verified:
-            return {"success": False, "message": "User does not have a verified mobile number."}
+            raise ValueError("User does not have a verified mobile number.")
 
         prefs = user.preferences
         if not is_test:
             if not prefs or not prefs.sms_reminders_enabled:
-                return {"success": False, "message": "SMS reminders are disabled by student preferences."}
+                raise ValueError("SMS reminders are disabled by student.")
             if not prefs.sms_consent_given:
-                return {"success": False, "message": "Explicit consent for SMS reminders was revoked or not provided."}
+                raise ValueError("Explicit student consent for SMS reminders was not provided.")
 
-        # Check timezone and current date
         user_tz_str = (prefs.timezone if prefs and prefs.timezone else "Asia/Kolkata")
         try:
             import zoneinfo
@@ -424,10 +428,8 @@ class SMSService:
         now_user = datetime.now(user_tz)
         today_user_date = now_user.date()
 
-        # Duplicate Prevention 1: Has student already checked in today?
         if not is_test:
             from app.models.tracking import MoodEntry
-            # Check mood entries today in user's timezone
             start_of_day_utc = datetime.combine(today_user_date, datetime.min.time(), tzinfo=user_tz).astimezone(timezone.utc)
             already_checked_in = db.query(MoodEntry).filter(
                 MoodEntry.user_id == user.id,
@@ -437,22 +439,19 @@ class SMSService:
             if already_checked_in:
                 return {
                     "success": False,
-                    "message": "Student has already completed their check-in today. Reminder skipped."
+                    "message": "Student has already completed check-in today. Reminder skipped."
                 }
 
-            # Duplicate Prevention 2: Has reminder already been sent today?
             if prefs and prefs.last_reminder_sent_date == today_user_date:
                 return {
                     "success": False,
                     "message": "Reminder was already sent for today. Duplicate avoided."
                 }
 
-        # Prepare message
         first_name = user.full_name.split()[0] if user.full_name else "Friend"
-        prefix = "⚡ [TEST REMINDER] " if is_test else ""
+        prefix = "⚡ [TEST] " if is_test else ""
         sms_text = prefix + REMINDER_MESSAGE_TEMPLATE.format(first_name=first_name)
 
-        # Dispatch
         res = SMSService.dispatch_sms(
             phone_number=user.phone_number,
             message_body=sms_text,
@@ -461,38 +460,37 @@ class SMSService:
             db=db
         )
 
-        # Update last sent date
-        if res.get("success") and not is_test and prefs:
+        if not is_test and prefs:
             prefs.last_reminder_sent_date = today_user_date
             db.commit()
 
         return {
-            "success": res.get("success", False),
-            "message": f"Daily reminder sent to {mask_phone_number(user.phone_number)}." if res.get("success") else "Failed to send SMS reminder.",
+            "success": True,
+            "message": f"Daily reminder sent to {mask_phone_number(user.phone_number)}.",
             "details": res
         }
 
     @staticmethod
     def opt_out(db: Session, user: User) -> Dict[str, Any]:
-        """
-        Immediately halts SMS reminders and revokes consent.
-        """
+        """Opts out user from SMS reminders."""
         if user.preferences:
             user.preferences.sms_reminders_enabled = False
             user.preferences.sms_consent_given = False
             db.commit()
 
-        # Log opt-out
         if user.phone_number:
-            SMSService.dispatch_sms(
-                phone_number=user.phone_number,
-                message_body=OPT_OUT_MESSAGE,
-                message_type="opt_out",
-                user_id=user.id,
-                db=db
-            )
+            try:
+                SMSService.dispatch_sms(
+                    phone_number=user.phone_number,
+                    message_body=OPT_OUT_MESSAGE,
+                    message_type="opt_out",
+                    user_id=user.id,
+                    db=db
+                )
+            except Exception:
+                pass
 
         return {
             "success": True,
-            "message": "You have been successfully opted out of SMS reminders. You can re-enable them anytime in Settings."
+            "message": "You have been successfully opted out of SMS reminders."
         }
