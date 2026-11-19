@@ -41,7 +41,18 @@ async function request(endpoint, options = {}) {
 
   const data = await response.json();
   if (!response.ok) {
-    const errorMsg = data.detail || (typeof data === 'string' ? data : 'API Request Failed');
+    let errorMsg = 'API Request Failed';
+    if (typeof data.detail === 'string') {
+      errorMsg = data.detail;
+    } else if (Array.isArray(data.detail)) {
+      errorMsg = data.detail.map(d => d.msg || (typeof d === 'string' ? d : JSON.stringify(d))).join(', ');
+    } else if (data.detail && typeof data.detail === 'object') {
+      errorMsg = data.detail.msg || JSON.stringify(data.detail);
+    } else if (data.message) {
+      errorMsg = data.message;
+    } else if (typeof data === 'string') {
+      errorMsg = data;
+    }
     throw new Error(errorMsg);
   }
 
@@ -52,6 +63,7 @@ export const api = {
   // Auth
   login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  logout: () => request('/auth/logout', { method: 'POST' }),
   getMe: () => request('/auth/me'),
   updateProfile: (profileData) => request('/auth/profile', { method: 'PUT', body: JSON.stringify(profileData) }),
 

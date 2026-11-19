@@ -43,6 +43,11 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    try {
+      api.logout().catch(() => {});
+    } catch (e) {
+      // ignore
+    }
     setAuthToken(null);
     setUser(null);
   };

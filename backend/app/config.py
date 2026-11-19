@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings
 def get_sanitized_database_url() -> str:
     raw_url = os.getenv("DATABASE_URL", "sqlite:///./mindbridge.db")
     if raw_url.startswith("postgres://"):
-        return raw_url.replace("postgres://", "postgresql://", 1)
+        return raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+"):
+        return raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     return raw_url
 
 class Settings(BaseSettings):

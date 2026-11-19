@@ -1,5 +1,7 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database import get_db
 from app.models.user import User, UserPreference, CounsellorProfile
 from app.schemas.auth import UserRegister, UserLogin, UserResponse, Token, UserProfileUpdate
@@ -7,29 +9,56 @@ from app.auth import hash_password, verify_password, create_access_token, get_cu
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+def is_valid_email(email: str) -> bool:
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
+
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserRegister, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == user_in.email).first()
+    email = user_in.email.strip().lower()
+    if not email or not is_valid_email(email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide a valid email address (e.g., student@campus.edu)."
+        )
+
+    if not user_in.password or len(user_in.password.strip()) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters long."
+        )
+
+    full_name = user_in.full_name.strip()
+    if not full_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Full name is required."
+        )
+
+    # Check for duplicate user
+    existing = db.query(User).filter(func.lower(User.email) == email).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email already exists. Please log in instead."
+        )
 
     user = User(
-        email=user_in.email,
-        password_hash=hash_password(user_in.password),
-        full_name=user_in.full_name,
-        role=user_in.role or "student",
-        college_id=user_in.college_id,
-        department=user_in.department,
-        year_of_study=user_in.year_of_study
+        email=email,
+        password_hash=hash_password(user_in.password.strip()),
+        full_name=full_name,
+        role=(user_in.role or "student").strip().lower(),
+        college_id=user_in.college_id.strip() if user_in.college_id else None,
+        department=user_in.department.strip() if user_in.department else None,
+        year_of_study=user_in.year_of_study.strip() if user_in.year_of_study else None
     )
     db.add(user)
     db.flush()
 
-    # Create default preferences
+    # Create default user preferences
     pref = UserPreference(user_id=user.id)
     db.add(pref)
 
-    # If registered as counsellor, create placeholder profile
+    # If registered as counsellor, create counsellor profile
     if user.role == "counsellor":
         profile = CounsellorProfile(
             user_id=user.id,
@@ -46,20 +75,30 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(login_in: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == login_in.email).first()
-    if not user and login_in.email == "counsellor@mindbridge.edu":
-        user = db.query(User).filter(User.email == "nitusingh_b@dau.ac.in").first()
+    email = login_in.email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == email).first()
+    
+    # Backward compatibility for default counsellor demo email
+    if not user and email == "counsellor@mindbridge.edu":
+        user = db.query(User).filter(func.lower(User.email) == "nitusingh_b@dau.ac.in").first()
 
-    if not user or not verify_password(login_in.password, user.password_hash):
+    if not user or not verify_password(login_in.password.strip(), user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect email or password. Please verify your credentials."
         )
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="User account is deactivated")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User account is deactivated. Please contact the campus wellness team."
+        )
 
     token = create_access_token({"sub": str(user.id), "role": user.role, "email": user.email})
     return {"access_token": token, "token_type": "bearer", "user": user}
+
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user)):
+    return {"message": "Logged out successfully", "user_id": current_user.id}
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
@@ -72,15 +111,15 @@ def update_profile(
     db: Session = Depends(get_db)
 ):
     if profile_in.full_name is not None:
-        current_user.full_name = profile_in.full_name
+        current_user.full_name = profile_in.full_name.strip()
     if profile_in.college_id is not None:
-        current_user.college_id = profile_in.college_id
+        current_user.college_id = profile_in.college_id.strip()
     if profile_in.department is not None:
-        current_user.department = profile_in.department
+        current_user.department = profile_in.department.strip()
     if profile_in.year_of_study is not None:
-        current_user.year_of_study = profile_in.year_of_study
+        current_user.year_of_study = profile_in.year_of_study.strip()
     if profile_in.avatar_url is not None:
-        current_user.avatar_url = profile_in.avatar_url
+        current_user.avatar_url = profile_in.avatar_url.strip()
 
     db.commit()
     db.refresh(current_user)
