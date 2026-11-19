@@ -420,7 +420,8 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         year_of_study=user_in.year_of_study.strip() if user_in.year_of_study else None,
         phone_number=phone_e164,
         phone_verified=False,
-        email_verified=False
+        email_verified=True,
+        is_active=True
     )
     db.add(user)
     db.flush()
