@@ -87,11 +87,11 @@ export default function GoalPlannerTool({ userId, onNavigate }) {
     try {
       setSyncingWithAI(true);
       setSyncSuccess(false);
-      const memoryValue = `Student's Active Goal: "${goal.title}" (Deadline: ${goal.deadline}). Motivation: "${goal.motivation}". Daily Micro-Steps: ${goal.microSteps.map(s => s.text).join('; ')}.`;
       await api.createMemory({
-        memory_key: 'active_semester_goal',
-        memory_value: memoryValue,
-        category: 'goals'
+        category: 'goal',
+        topic: goal.title,
+        key_point: goal.motivation,
+        details: `Target Deadline: ${goal.deadline}. Daily Micro-Steps: ${goal.microSteps.map(s => s.text).join('; ')}`
       });
       setSyncSuccess(true);
       setTimeout(() => setSyncSuccess(false), 4000);
