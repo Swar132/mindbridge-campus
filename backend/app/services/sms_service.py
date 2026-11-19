@@ -73,6 +73,14 @@ def mask_phone_number(phone: str) -> str:
     masked_middle = "•" * max(3, len(phone) - 9)
     return f"{prefix} {masked_middle} {suffix}"
 
+def to_utc_aware(dt: Optional[datetime]) -> Optional[datetime]:
+    """Ensures datetimes are timezone-aware UTC for safe comparisons."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
 
 class SMSService:
     @staticmethod
@@ -255,15 +263,16 @@ class SMSService:
         # Rate-limiting: Check if OTP sent in last 60 seconds
         recent_req = db.query(PhoneVerification).filter(
             PhoneVerification.user_id == user.id,
-            PhoneVerification.phone_number == phone_number,
-            PhoneVerification.created_at >= one_min_ago
-        ).first()
+            PhoneVerification.phone_number == phone_number
+        ).order_by(PhoneVerification.created_at.desc()).first()
 
         if recent_req:
-            return {
-                "success": False,
-                "message": "Please wait at least 60 seconds before requesting a new verification code."
-            }
+            created_utc = to_utc_aware(recent_req.created_at)
+            if created_utc and created_utc >= one_min_ago:
+                return {
+                    "success": False,
+                    "message": "Please wait at least 60 seconds before requesting a new verification code."
+                }
 
         # Generate 6-digit cryptographic OTP
         otp_code = str(secrets.randbelow(900000) + 100000)
@@ -324,7 +333,8 @@ class SMSService:
         if not record:
             return {"success": False, "message": "No pending verification found. Please request a new code."}
 
-        if record.expires_at < now:
+        exp_utc = to_utc_aware(record.expires_at)
+        if exp_utc and exp_utc < now:
             return {"success": False, "message": "Verification code has expired. Please request a new one."}
 
         if record.attempts >= 5:

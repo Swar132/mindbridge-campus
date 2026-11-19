@@ -10,8 +10,8 @@ class PhoneVerification(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     phone_number = Column(String(30), nullable=False, index=True)
     otp_code = Column(String(10), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime(timezone=True), nullable=False)
     is_verified = Column(Boolean, default=False)
     attempts = Column(Integer, default=0)
 
@@ -29,6 +29,6 @@ class SMSLog(Base):
     provider_message_id = Column(String(255), nullable=True)
     status = Column(String(50), default="sent")  # "sent", "delivered", "failed", "simulated"
     error_message = Column(Text, nullable=True)
-    sent_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    sent_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
     user = relationship("User", foreign_keys=[user_id])
