@@ -28,12 +28,37 @@ class AIMessageResponse(BaseModel):
 class AIConversationResponse(BaseModel):
     id: int
     title: str
+    summary: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     messages: List[AIMessageResponse] = []
 
     class Config:
         from_attributes = True
+
+class StudentMemoryResponse(BaseModel):
+    id: int
+    user_id: int
+    category: str
+    topic: str
+    key_point: str
+    details: Optional[str] = None
+    progress_status: str
+    target_frequency: Optional[str] = None
+    last_mentioned_at: Optional[datetime] = None
+    created_at: datetime
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class StudentMemoryCreateRequest(BaseModel):
+    category: Optional[str] = "goal"
+    topic: str
+    key_point: str
+    details: Optional[str] = None
+    progress_status: Optional[str] = "active"
+    target_frequency: Optional[str] = None
 
 class SuggestedPrompt(BaseModel):
     title: str

@@ -29,6 +29,7 @@ class User(Base):
     sleep_entries = relationship("SleepEntry", back_populates="user", cascade="all, delete-orphan")
     journal_entries = relationship("JournalEntry", back_populates="user", cascade="all, delete-orphan")
     conversations = relationship("AIConversation", back_populates="user", cascade="all, delete-orphan")
+    memories = relationship("StudentMemory", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 class CounsellorProfile(Base):

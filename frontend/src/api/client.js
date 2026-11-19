@@ -114,9 +114,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ message, conversation_id, consent_share_context, message_type, audio_url }),
     }),
-  getConversations: () => request('/ai/conversations'),
+  getConversations: (limit = 30, offset = 0) => request(`/ai/conversations?limit=${limit}&offset=${offset}`),
   getConversation: (id) => request(`/ai/conversations/${id}`),
   deleteConversation: (id) => request(`/ai/conversations/${id}`, { method: 'DELETE' }),
+  getMemories: () => request('/ai/memory'),
+  createMemory: (memoryData) => request('/ai/memory', { method: 'POST', body: JSON.stringify(memoryData) }),
+  deleteMemory: (id) => request(`/ai/memory/${id}`, { method: 'DELETE' }),
+  clearMemories: () => request('/ai/memory', { method: 'DELETE' }),
 
   // Insights
   getPersonalInsights: () => request('/insights/personal'),

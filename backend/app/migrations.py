@@ -93,3 +93,53 @@ def run_migrations(engine: Engine):
                     conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN otp_hash VARCHAR(128) DEFAULT '';"))
                     conn.execute(text("ALTER TABLE phone_verifications ADD COLUMN otp_salt VARCHAR(32) DEFAULT '';"))
             conn.commit()
+
+        # Check ai_conversations table for summary column
+        if "ai_conversations" in inspector.get_table_names():
+            conv_cols = [c["name"] for c in inspector.get_columns("ai_conversations")]
+            if "summary" not in conv_cols:
+                if is_postgres:
+                    conn.execute(text("ALTER TABLE ai_conversations ADD COLUMN IF NOT EXISTS summary TEXT;"))
+                else:
+                    conn.execute(text("ALTER TABLE ai_conversations ADD COLUMN summary TEXT;"))
+                conn.commit()
+
+        # Check student_memories table
+        if "student_memories" not in inspector.get_table_names():
+            if is_postgres:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS student_memories (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        category VARCHAR(50) NOT NULL DEFAULT 'goal',
+                        topic VARCHAR(255) NOT NULL DEFAULT 'General Goal',
+                        key_point TEXT NOT NULL,
+                        details TEXT,
+                        progress_status VARCHAR(50) NOT NULL DEFAULT 'active',
+                        target_frequency VARCHAR(100),
+                        last_mentioned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        is_active BOOLEAN DEFAULT TRUE
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_student_memories_user_id ON student_memories(user_id);
+                """))
+            else:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS student_memories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        category VARCHAR(50) NOT NULL DEFAULT 'goal',
+                        topic VARCHAR(255) NOT NULL DEFAULT 'General Goal',
+                        key_point TEXT NOT NULL,
+                        details TEXT,
+                        progress_status VARCHAR(50) NOT NULL DEFAULT 'active',
+                        target_frequency VARCHAR(100),
+                        last_mentioned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        is_active BOOLEAN DEFAULT 1
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_student_memories_user_id ON student_memories(user_id);
+                """))
+            conn.commit()

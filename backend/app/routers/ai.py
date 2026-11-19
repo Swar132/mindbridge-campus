@@ -2,22 +2,28 @@ import os
 import json
 from typing import List, Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.config import settings
 from app.models.user import User
-from app.models.ai import AIConversation, AIMessage
+from app.models.ai import AIConversation, AIMessage, StudentMemory
 from app.schemas.ai import (
     ChatMessageRequest,
     AIMessageResponse,
     AIConversationResponse,
+    StudentMemoryResponse,
+    StudentMemoryCreateRequest,
     SuggestedPrompt,
     AIConfigResponse,
     AIConfigUpdateRequest
 )
 from app.auth import get_current_user
-from app.services.ai_service import generate_ai_response, get_configured_provider
+from app.services.ai_service import (
+    generate_ai_response,
+    get_configured_provider,
+    extract_and_update_student_memories
+)
 
 router = APIRouter(prefix="/ai", tags=["AI Wellbeing Assistant"])
 
@@ -110,6 +116,11 @@ def get_suggested_prompts():
             category="Hostel Life"
         ),
         SuggestedPrompt(
+            title="Daily DSA Practice Habit",
+            prompt="I want to solve two DSA problems daily on LeetCode for placement readiness. Can you help me stay accountable and track this goal?",
+            category="Coding & Habits"
+        ),
+        SuggestedPrompt(
             title="Life & Motivation Reflection",
             prompt="I feel like I've been going through the motions lately with zero genuine motivation. How do I reconnect with what matters to me?",
             category="Personal Growth"
@@ -121,6 +132,10 @@ def get_suggested_prompts():
         )
     ]
 
+# ---------------------------------------------------------------------------
+# Chat & Conversational Persistence
+# ---------------------------------------------------------------------------
+
 @router.post("/chat", response_model=AIMessageResponse)
 async def chat_with_assistant(
     chat_in: ChatMessageRequest,
@@ -130,7 +145,7 @@ async def chat_with_assistant(
     if not chat_in.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    # Get or create conversation
+    # Get or create conversation (strictly scoped to current_user.id)
     conversation = None
     if chat_in.conversation_id:
         conversation = db.query(AIConversation).filter(
@@ -181,7 +196,7 @@ async def chat_with_assistant(
         for m in history_records
     ]
 
-    # Generate AI response
+    # Generate AI response with long-term memory dossier
     effective_message = chat_in.message
     if chat_in.message_type == "voice" and (not effective_message or effective_message.startswith("🎙️")):
         effective_message = "I just recorded and shared a voice note about my student wellbeing and feelings today."
@@ -191,7 +206,8 @@ async def chat_with_assistant(
         user_id=current_user.id,
         consent_share_context=chat_in.consent_share_context if chat_in.consent_share_context is not None else True,
         db=db,
-        conversation_history=conversation_history
+        conversation_history=conversation_history,
+        current_conv_id=conversation.id
     )
 
     # Save assistant message
@@ -206,6 +222,24 @@ async def chat_with_assistant(
     )
     db.add(assistant_msg)
     conversation.updated_at = datetime.now(timezone.utc)
+
+    # Auto-extract and persist student long-term memories / goals
+    try:
+        extract_and_update_student_memories(
+            user_id=current_user.id,
+            user_message=effective_message,
+            ai_reply=ai_result["content"],
+            db=db
+        )
+    except Exception as ex:
+        print(f"[MEMORY EXTRACTION ERROR] {ex}")
+
+    # Auto-update conversation summary if needed
+    if not conversation.summary or len(past_messages) >= 4:
+        clean_first = effective_message[:100].replace('\n', ' ')
+        clean_reply = ai_result["content"][:120].replace('\n', ' ')
+        conversation.summary = f"Student explored: '{clean_first}'. Mindy provided practical guidance: '{clean_reply}'."
+
     db.commit()
     db.refresh(assistant_msg)
 
@@ -219,12 +253,19 @@ async def chat_with_assistant(
 
 @router.get("/conversations", response_model=List[AIConversationResponse])
 def get_conversations(
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    convs = db.query(AIConversation).filter(
-        AIConversation.user_id == current_user.id
-    ).order_by(AIConversation.updated_at.desc()).all()
+    convs = (
+        db.query(AIConversation)
+        .filter(AIConversation.user_id == current_user.id)
+        .order_by(AIConversation.updated_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     return convs
 
 @router.get("/conversations/{conversation_id}", response_model=AIConversationResponse)
@@ -262,5 +303,79 @@ def delete_conversation(
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
     db.delete(conv)
+    db.commit()
+    return None
+
+# ---------------------------------------------------------------------------
+# Student Long-Term Memory & Goals Management Endpoints
+# (Strictly scoped to current_user.id for total privacy)
+# ---------------------------------------------------------------------------
+
+@router.get("/memory", response_model=List[StudentMemoryResponse])
+def get_student_memories(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns all active long-term memories and tracked goals for the authenticated student.
+    Ensures zero cross-tenant access.
+    """
+    memories = (
+        db.query(StudentMemory)
+        .filter(
+            StudentMemory.user_id == current_user.id,
+            StudentMemory.is_active == True
+        )
+        .order_by(StudentMemory.last_mentioned_at.desc())
+        .all()
+    )
+    return memories
+
+@router.post("/memory", response_model=StudentMemoryResponse)
+def create_student_memory(
+    req: StudentMemoryCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Allows student to explicitly add a personal goal or focus area to Mindy's memory."""
+    mem = StudentMemory(
+        user_id=current_user.id,
+        category=req.category or "goal",
+        topic=req.topic.strip(),
+        key_point=req.key_point.strip(),
+        details=req.details,
+        progress_status=req.progress_status or "active",
+        target_frequency=req.target_frequency,
+        last_mentioned_at=datetime.now(timezone.utc)
+    )
+    db.add(mem)
+    db.commit()
+    db.refresh(mem)
+    return mem
+
+@router.delete("/memory/{memory_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_student_memory(
+    memory_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Deletes an individual memory item, strictly verifying ownership."""
+    mem = db.query(StudentMemory).filter(
+        StudentMemory.id == memory_id,
+        StudentMemory.user_id == current_user.id
+    ).first()
+    if not mem:
+        raise HTTPException(status_code=404, detail="Memory record not found")
+    db.delete(mem)
+    db.commit()
+    return None
+
+@router.delete("/memory", status_code=status.HTTP_204_NO_CONTENT)
+def clear_all_student_memories(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Clears all long-term memories for the authenticated student, giving full privacy control."""
+    db.query(StudentMemory).filter(StudentMemory.user_id == current_user.id).delete()
     db.commit()
     return None
