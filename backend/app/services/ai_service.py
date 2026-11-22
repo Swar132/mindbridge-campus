@@ -15,7 +15,7 @@ EMERGENCY_SUPPORT_TEXT = (
     "- **Tele-MANAS (Govt. of India 24/7 Mental Health Helpline):** Call **14416** or **1800-891-4416** (Toll-Free, Multilingual)\n"
     "- **National Emergency Services:** Call **112**\n"
     "- **KIRAN Mental Health Rehabilitation Helpline:** Call **1800-599-0019**\n"
-    "- **Campus Counselling Room:** Consult confidentially with our college counsellor, Nitu Singh Bhadouria (Counselling Room, SAC I, First Floor • nitusingh_b@dau.ac.in), from the 'Campus Counsellors' tab.\n\n"
+    "- **Campus Counselling Room:** Consult confidentially with our college counsellor, Dr. Nitu Singh Bhadouria (Counselling Room, SAC I, First Floor • nitusingh_b@dau.ac.in), from the 'Campus Counsellors' tab.\n\n"
     "Please know that you do not have to carry this alone. There are compassionate people ready to listen and help right now."
 )
 
@@ -715,7 +715,7 @@ def generate_intelligent_fallback_response(
             "1. **Headcount, Not Self-Worth:** A hiring shortlist reflects specific keyword filters and business headcounts, NEVER a measurement of your intellect or trajectory.\n"
             "2. **Mute the Rumor Mills:** Step away from hostel groups where people boast about CTC numbers; those spaces create synthetic panic.\n"
             "3. **Process Over Outcome:** Practice your coding problems or mock interview questions for an agreed period, then let yourself rest without guilt.{follow_up_goal}\n\n"
-            "Our campus counsellor Nitu Singh Bhadouria in SAC I also provides confidential 1-on-1 placement decompression sessions."
+            "Our campus counsellor Dr. Nitu Singh Bhadouria in SAC I also provides confidential 1-on-1 placement decompression sessions."
         ).format(follow_up_goal=follow_up_goal)
         return {"content": reply, "safety_flagged": False, "emergency_shown": False, "suggested_resources": ["Career Anxiety De-escalation"]}
 

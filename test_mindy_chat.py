@@ -71,7 +71,7 @@ def run_tests():
     print(f"Mindy:\n{reply_e[:300]}...\n")
     assert res_e["safety_flagged"] is True
     assert "14416" in reply_e, "Tele-MANAS helpline must be present"
-    assert "Nitu Singh Bhadouria" in reply_e, "College counsellor must be referenced"
+    assert "Dr. Nitu Singh Bhadouria" in reply_e, "College counsellor must be referenced"
     assert "nitusingh_b@dau.ac.in" in reply_e, "Counsellor email must be present"
 
     print("ALL 5 DIVERSE CONVERSATION TESTS PASSED WITH 100% SUCCESS!")

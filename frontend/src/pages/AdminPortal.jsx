@@ -244,7 +244,7 @@ export default function AdminPortal() {
             <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
               <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider block">Campus Staff</span>
               <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{stats?.total_counsellors || 1}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Nitu Singh Bhadouria (SAC I)</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Dr. Nitu Singh Bhadouria (SAC I)</p>
             </div>
 
             <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">

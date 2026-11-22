@@ -44,11 +44,11 @@ def seed_database(db: Session):
     )
     db.add(student_prefs)
 
-    # Official Campus Counsellor: Nitu Singh Bhadouria
+    # Official Campus Counsellor: Dr. Nitu Singh Bhadouria
     counsellor_user = User(
         email="nitusingh_b@dau.ac.in",
         password_hash=hash_password("counsellor123"),
-        full_name="Nitu Singh Bhadouria",
+        full_name="Dr. Nitu Singh Bhadouria",
         role="counsellor",
         college_id="FAC-SAC1-01",
         department="Student Wellness & Counselling",
@@ -65,7 +65,7 @@ def seed_database(db: Session):
         qualifications="Licensed Student Counsellor & Mental Wellbeing Specialist",
         experience_years=8,
         areas_of_support="Academic Stress, Placement & Career Uncertainty, Exam Anxiety, Sleep & Lifestyle, Emotional Wellness",
-        bio="Nitu Singh Bhadouria provides compassionate, confidential guidance for students navigating examination pressure, placement challenges, academic stress, and personal wellbeing in SAC I.",
+        bio="Dr. Nitu Singh Bhadouria provides compassionate, confidential guidance for students navigating examination pressure, placement challenges, academic stress, and personal wellbeing in SAC I.",
         availability_hours="Mon - Fri: 10:00 AM - 5:00 PM",
         contact_email="nitusingh_b@dau.ac.in",
         office_location="Counselling Room, SAC I, First Floor"
@@ -122,7 +122,7 @@ def seed_database(db: Session):
 
         # Week 4: 14-8 days ago (Placement Preparation & Balancing)
         (14, "Neutral", 6, ["Coding", "Practice"], "Solved two LeetCode medium problems today.", 5, "Placements and Career", ["Coding"], "23:45", "07:15", 7.5, 3, ["Late practice"]),
-        (13, "Happy", 7, ["Mentorship", "Confidence"], "Nitu Singh Bhadouria's breathing exercise helped with pre-interview jitters.", 4, "Placements and Career", ["Mindfulness"], "23:15", "07:15", 8.0, 4, ["Breathing exercise"]),
+        (13, "Happy", 7, ["Mentorship", "Confidence"], "Dr. Nitu Singh Bhadouria's breathing exercise helped with pre-interview jitters.", 4, "Placements and Career", ["Mindfulness"], "23:15", "07:15", 8.0, 4, ["Breathing exercise"]),
         (12, "Neutral", 5, ["Busy"], "Long day with capstone project meeting.", 5, "Academics", ["Projects"], "23:45", "07:00", 7.2, 3, ["Busy"]),
         (11, "Anxious", 6, ["Interview Shortlist"], "First round shortlist announced. Didn't make it to slot 1.", 6, "Placements and Career", ["Rejection", "Self doubt"], "00:30", "07:00", 6.5, 2, ["Disappointment"]),
         (10, "Neutral", 6, ["Refocus", "Journaling"], "Wrote down what I need to improve. Feeling more grounded.", 5, "Placements and Career", ["Planning"], "23:30", "07:15", 7.7, 4, ["Journaling"]),
@@ -326,7 +326,7 @@ def seed_database(db: Session):
         Notification(
             user_id=student.id,
             title="Counselling Appointment Confirmed",
-            message="Nitu Singh Bhadouria has approved your appointment for follow-up on placement stress.",
+            message="Dr. Nitu Singh Bhadouria has approved your appointment for follow-up on placement stress.",
             type="appointment",
             is_read=False,
             link="/appointments",

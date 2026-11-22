@@ -82,7 +82,7 @@ export default function CounsellorPortal() {
                 <Stethoscope className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 Counsellor Care Workspace
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Nitu Singh Bhadouria • SAC I</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Dr. Nitu Singh Bhadouria • SAC I</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Case Care Management

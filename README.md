@@ -21,35 +21,33 @@ College life exposes students to intense examination anxiety, placement uncertai
 
 ---
 
-## 📊 Dashboard Metrics & Equilibrium Formulas
+## 📊 Dashboard Metrics & Formulas
 
 The student dashboard adheres to a **Strict Non-Fabrication Policy**: when a student has no logs, the system displays an invitation to complete their first 60-second check-in rather than generating synthetic sine waves or fake scores.
 
-### 1. What is Equilibrium on the Dashboard?
+### 1. Dashboard Metrics Overview
 
-In MindBridge Campus, **Equilibrium** represents psychological balance and circadian consistency. It appears in two primary locations on the student dashboard:
-
-#### A. Rating History Graph (`Equilibrium %` — Orange Curve & Tooltip)
+#### A. Rating History Graph (`Stress Balance %` — Orange Curve & Tooltip)
 In the 7-day and 14-day **Rating History** area chart, two curves are plotted:
 1. **Wellbeing (Sky Blue):** Daily emotional valence and mood intensity:
    $$\text{Wellbeing (\%)} = \text{Mood Intensity} \times 10 \quad (\text{Scale: } 10\% \text{ to } 100\%)$$
-2. **Equilibrium (Amber/Orange):** Inverted daily stress balance, measuring calm, emotional steadiness, and unburdened cognitive bandwidth:
-   $$\text{Equilibrium (\%)} = (10 - \text{Stress Level}) \times 10$$
-   - **Stress Level 1 (Minimal tension):** $\text{Equilibrium} = (10 - 1) \times 10 = 90\%$
-   - **Stress Level 5 (Moderate stress):** $\text{Equilibrium} = (10 - 5) \times 10 = 50\%$
-   - **Stress Level 8 (High pressure):** $\text{Equilibrium} = (10 - 8) \times 10 = 20\%$
+2. **Stress Balance (Amber/Orange):** Inverted daily stress metric, measuring calm and unburdened cognitive bandwidth. **A higher Stress Balance score indicates a lower reported stress level**:
+   $$\text{Stress Balance (\%)} = (10 - \text{Stress Level}) \times 10$$
+   - **Stress Level 1 (Minimal tension):** $\text{Stress Balance} = (10 - 1) \times 10 = \mathbf{90\%}$
+   - **Stress Level 5 (Moderate stress):** $\text{Stress Balance} = (10 - 5) \times 10 = \mathbf{50\%}$
+   - **Stress Level 8 (High pressure):** $\text{Stress Balance} = (10 - 8) \times 10 = \mathbf{20\%}$
 
-#### B. Metric Card 5: School-Life Equilibrium (`Consistency / Equilibrium`)
-Card 5 displays the student's **Equilibrium Score out of 10.0** (with a balance scale icon), evaluating circadian regularity and daily routine stability:
-$$\text{Equilibrium Rating} = \frac{\text{Sleep Consistency Score}}{10}$$
+#### B. Metric Card 5: Sleep Consistency (`Consistency / Sleep Consistency`)
+Card 5 displays the student's **Sleep Consistency Score out of 10.0** (with a balance scale icon), evaluating circadian regularity and daily sleep routine stability:
+$$\text{Sleep Consistency Rating} = \frac{\text{Sleep Consistency Score}}{10}$$
 
 The underlying **Sleep Consistency Score (0–100)** is computed by the backend `insights_engine.py` using the standard deviation ($\sigma$) of the student's sleep duration over the past 7 days:
 $$\mu = \frac{1}{N} \sum_{i=1}^N \text{duration\_hours}_i$$
 $$\sigma = \sqrt{\frac{1}{N} \sum_{i=1}^N (\text{duration\_hours}_i - \mu)^2}$$
 $$\text{Sleep Consistency Score} = \max\left(50, \min\left(95, \operatorname{round}(100 - (\sigma \times 15))\right)\right)$$
-- If $N = 1$ (single entry), consistency defaults to a stable baseline of **85** (yielding an Equilibrium rating of **8.5**).
-- If $\sigma = 0$ (rock-solid identical bed/wake intervals), score caps at **95** (Equilibrium rating **9.5**).
-- If $\sigma \ge 3.0\text{h}$ (erratic all-nighters mixed with crash days), score floor is **50** (Equilibrium rating **5.0**).
+- If $N = 1$ (single entry), consistency defaults to a stable baseline of **85** (yielding a Sleep Consistency rating of **8.5**).
+- If $\sigma = 0$ (rock-solid identical bed/wake intervals), score caps at **95** (Sleep Consistency rating **9.5**).
+- If $\sigma \ge 3.0\text{h}$ (erratic all-nighters mixed with crash days), score floor is **50** (Sleep Consistency rating **5.0**).
 
 #### C. Composite Weekly Wellbeing Score (0–100 Ring)
 $$\text{Weekly Wellbeing Score} = \operatorname{mean}\left(\text{Mood Valence \%}, \text{Stress Inversion \%}, \text{Sleep Ratio \%}\right)$$
@@ -302,7 +300,7 @@ You can use the **Instant 1-Click Demo Login** buttons on the login screen or na
 | Role | Email | Password | Persona |
 |---|---|---|---|
 | **Student** | `student@mindbridge.edu` | `student123` | Priya Sharma (3rd Year B.Tech CSE, 35 days of history) |
-| **Counsellor** | `nitusingh_b@dau.ac.in` | `counsellor123` | Nitu Singh Bhadouria (SAC I First Floor, Student Counsellor) |
+| **Counsellor** | `nitusingh_b@dau.ac.in` | `counsellor123` | Dr. Nitu Singh Bhadouria (SAC I First Floor, Student Counsellor) |
 | **Administrator** | `admin@mindbridge.edu` | `admin123` | Prof. Rajesh Kumar (Dean of Student Affairs) |
 
 ---
@@ -314,4 +312,4 @@ MindBridge Campus includes persistent crisis intervention triggers and quick-acc
 - **Tele-MANAS (Govt. of India):** 24/7 National Mental Health Helpline at **14416** or **1800-891-4416** (Toll-Free, 20+ Languages).
 - **National Emergency Number:** **112**
 - **KIRAN Mental Health Rehabilitation Helpline:** **1800-599-0019**
-- **Campus Student Wellness Centre:** SAC I, First Floor, Counselling Room (Nitu Singh Bhadouria).
+- **Campus Student Wellness Centre:** SAC I, First Floor, Counselling Room (Dr. Nitu Singh Bhadouria).

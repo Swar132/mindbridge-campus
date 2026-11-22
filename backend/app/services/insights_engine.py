@@ -158,7 +158,7 @@ def calculate_insights(user_id: int, db: Session) -> InsightsSummaryResponse:
                 id="insight-mood-stable",
                 type="pattern",
                 title="Balanced Emotional Baseline",
-                description="Your emotional state has shown steady equilibrium across recent days with minimal volatility.",
+                description="Your emotional state has shown steady emotional balance across recent days with minimal volatility.",
                 category="mood",
                 icon_hint="activity",
                 observed_metric="Balanced distribution"

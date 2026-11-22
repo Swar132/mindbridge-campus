@@ -189,12 +189,12 @@ export default function Counsellors() {
                 <div className="flex items-center gap-3.5 mb-4">
                   <img
                     src={c.user?.avatar_url || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'}
-                    alt={c.user?.full_name || 'Nitu Singh Bhadouria'}
+                    alt={c.user?.full_name || 'Dr. Nitu Singh Bhadouria'}
                     className="w-14 h-14 rounded-2xl object-cover ring-2 ring-sky-300 dark:ring-sky-600 shrink-0"
                   />
                   <div className="min-w-0">
                     <h3 className="font-extrabold text-base text-slate-900 dark:text-white truncate">
-                      {c.user?.full_name || 'Nitu Singh Bhadouria'}
+                      {c.user?.full_name || 'Dr. Nitu Singh Bhadouria'}
                     </h3>
                     <p className="text-xs text-sky-600 dark:text-sky-400 font-bold">{c.title || 'College Student Counsellor'}</p>
                     <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{c.years_experience || 8} yrs campus counselling practice</p>
@@ -273,7 +273,7 @@ export default function Counsellors() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                        {apt.counsellor?.user?.full_name || 'Nitu Singh Bhadouria'}
+                        {apt.counsellor?.user?.full_name || 'Dr. Nitu Singh Bhadouria'}
                       </span>
                       <span
                         className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full capitalize ${
@@ -325,7 +325,7 @@ export default function Counsellors() {
               Confidential Booking
             </span>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              Session with {selectedCounsellor.user?.full_name || 'Nitu Singh Bhadouria'}
+              Session with {selectedCounsellor.user?.full_name || 'Dr. Nitu Singh Bhadouria'}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
               Private, 50-minute student session at Counselling Room, SAC I, First Floor.

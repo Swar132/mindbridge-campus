@@ -546,7 +546,7 @@ export default function AIAssistant({
                         <span>Immediate Human Care is Here for You</span>
                       </div>
                       <p className="text-[11px] leading-relaxed">
-                        If you are experiencing acute distress, call Tele-MANAS toll-free at <strong>14416</strong> (24/7), or visit campus counsellor <strong>Nitu Singh Bhadouria</strong> in <strong>SAC I, First Floor</strong> (Email: <em>nitusingh_b@dau.ac.in</em>). You do not have to carry this alone.
+                        If you are experiencing acute distress, call Tele-MANAS toll-free at <strong>14416</strong> (24/7), or visit campus counsellor <strong>Dr. Nitu Singh Bhadouria</strong> in <strong>SAC I, First Floor</strong> (Email: <em>nitusingh_b@dau.ac.in</em>). You do not have to carry this alone.
                       </p>
                       <button
                         onClick={onOpenEmergency}

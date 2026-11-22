@@ -119,7 +119,7 @@ EMAIL_WELCOME_HTML_TEMPLATE = """<!DOCTYPE html>
           <tr>
             <td style="background-color: #f8fafc; padding: 20px 24px; border-top: 1px solid #f1f5f9; text-align: center;">
               <p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b;">
-                <strong>College Counsellor:</strong> Nitu Singh Bhadouria • Counselling Room, SAC I, First Floor • <a href="mailto:nitusingh_b@dau.ac.in" style="color: #0284c7; text-decoration: none;">nitusingh_b@dau.ac.in</a>
+                <strong>College Counsellor:</strong> Dr. Nitu Singh Bhadouria • Counselling Room, SAC I, First Floor • <a href="mailto:nitusingh_b@dau.ac.in" style="color: #0284c7; text-decoration: none;">nitusingh_b@dau.ac.in</a>
               </p>
               <p style="margin: 0; font-size: 11px; color: #94a3b8;">
                 24/7 Government of India Mental Health Helpline: <strong>Tele-MANAS 14416</strong> (Toll-Free)
@@ -298,7 +298,7 @@ class EmailService:
             f"Hello {full_name},\n\n"
             f"Your MindBridge Campus verification code is: {otp_code}\n\n"
             f"This code is valid for 5 minutes. Never share this code with anyone.\n\n"
-            f"Campus Counselling: Nitu Singh Bhadouria (SAC I, First Floor • nitusingh_b@dau.ac.in)\n"
+            f"Campus Counselling: Dr. Nitu Singh Bhadouria (SAC I, First Floor • nitusingh_b@dau.ac.in)\n"
             f"Tele-MANAS: 14416"
         )
         return EmailService.send_email(to_email, subject, html, text)
@@ -314,7 +314,7 @@ class EmailService:
             f"You can now access your confidential student sanctuary, daily check-ins, "
             f"and speak with Mindy AI anytime:\n"
             f"https://mindbridge-campus-te1l.onrender.com\n\n"
-            f"Campus Counsellor: Nitu Singh Bhadouria (Counselling Room, SAC I, First Floor • nitusingh_b@dau.ac.in)\n"
+            f"Campus Counsellor: Dr. Nitu Singh Bhadouria (Counselling Room, SAC I, First Floor • nitusingh_b@dau.ac.in)\n"
             f"Emergency 24/7 Helpline: Tele-MANAS 14416"
         )
         return EmailService.send_email(to_email, subject, html, text)

@@ -345,7 +345,7 @@ export default function Insights({ onNavigate, onOpenBreathing, onOpenCheckIn })
       <div className="p-4 rounded-3xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-900/60 text-xs text-teal-950 dark:text-teal-200 flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Important Ethical Note:</strong> MindBridge Campus is a student wellbeing support platform. Insights describe observational patterns in your private logs and do not represent clinical diagnoses. For professional support, consult our verified campus counsellor Nitu Singh Bhadouria in SAC I, First Floor, or call Tele-MANAS at <strong>14416</strong>.
+          <strong>Important Ethical Note:</strong> MindBridge Campus is a student wellbeing support platform. Insights describe observational patterns in your private logs and do not represent clinical diagnoses. For professional support, consult our verified campus counsellor Dr. Nitu Singh Bhadouria in SAC I, First Floor, or call Tele-MANAS at <strong>14416</strong>.
         </p>
       </div>
     </div>

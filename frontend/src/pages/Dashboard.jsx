@@ -238,7 +238,7 @@ export default function Dashboard({
                   Start Your Personal Wellbeing Journey
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
-                  MindBridge never populates your private dashboard with fake scores. Log your first 60-second check-in below to unlock your real-time wellbeing rating, weekly stress equilibrium charts, and personalized academic coping strategies.
+                  MindBridge never populates your private dashboard with fake scores. Log your first 60-second check-in below to unlock your real-time wellbeing rating, weekly Stress Balance charts, and personalized academic coping strategies.
                 </p>
 
                 {/* 1-Tap Quick Mood Selector */}
@@ -380,7 +380,7 @@ export default function Dashboard({
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">Campus Counsellor</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Nitu Singh Bhadouria • SAC I</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Dr. Nitu Singh Bhadouria • SAC I</p>
                 </div>
               </button>
 
@@ -473,7 +473,7 @@ export default function Dashboard({
                   </h3>
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                     {loggedDaysInChart > 0
-                      ? `Based on your ${loggedDaysInChart} logged check-in${loggedDaysInChart > 1 ? 's' : ''}`
+                      ? `Based on your ${loggedDaysInChart} logged check-in${loggedDaysInChart > 1 ? 's' : ''} • Higher Stress Balance indicates lower reported stress`
                       : 'Log daily to build your personal rhythm graph'}
                   </p>
                 </div>
@@ -486,7 +486,7 @@ export default function Dashboard({
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="w-2.5 h-2.5 rounded-full bg-orange-400" />
-                      <span>Equilibrium</span>
+                      <span>Stress Balance</span>
                     </span>
                   </div>
 
@@ -556,7 +556,11 @@ export default function Dashboard({
                             <div className="rounded-2xl p-2.5 bg-white/95 dark:bg-slate-800/95 shadow-md border border-slate-200 dark:border-slate-700 text-xs">
                               <p className="font-bold text-slate-800 dark:text-white mb-1">{label}</p>
                               {val1 != null && <p className="text-sky-600 font-semibold">Wellbeing: {val1}%</p>}
-                              {val2 != null && <p className="text-orange-500 font-semibold">Equilibrium: {val2}%</p>}
+                              {val2 != null && (
+                                <p className="text-orange-500 font-semibold">
+                                  Stress Balance: {val2}% <span className="text-[10px] text-slate-400 font-normal">(higher = lower stress)</span>
+                                </p>
+                              )}
                             </div>
                           );
                         }
@@ -694,7 +698,7 @@ export default function Dashboard({
               <CardWaveDecoration color="#3b82f6" opacity={0.25} />
             </div>
 
-            {/* Card 5: School-Life Equilibrium (Soft Lavender) */}
+            {/* Card 5: Sleep Consistency (Soft Lavender) */}
             <div className="col-span-2 sm:col-span-1 rounded-3xl p-5 flex flex-col justify-between relative overflow-hidden bg-purple-50/70 dark:bg-purple-950/30 border border-purple-100/80 dark:border-purple-900/50 min-h-[175px]">
               <div className="flex items-center justify-between z-10">
                 <span className="p-1 rounded-lg bg-purple-100 dark:bg-purple-900/60 text-purple-600 dark:text-purple-400">
@@ -710,7 +714,7 @@ export default function Dashboard({
                   <Scale className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Equilibrium
+                  Sleep Consistency
                 </span>
                 <span className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
                   {metrics?.sleep_consistency_score != null ? `${(metrics.sleep_consistency_score / 10).toFixed(1)}` : '—'}
@@ -778,7 +782,7 @@ export default function Dashboard({
                       </span>
                       <span>SAC I Counsellor Office Hours</span>
                     </td>
-                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 hidden sm:table-cell">Nitu Singh Bhadouria • Room SAC I</td>
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 hidden sm:table-cell">Dr. Nitu Singh Bhadouria • Room SAC I</td>
                     <td className="py-3 pr-4">
                       <span className="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/80 text-[10px] font-bold text-purple-700 dark:text-purple-300">
                         Confidential

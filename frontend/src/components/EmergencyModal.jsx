@@ -62,7 +62,7 @@ export default function EmergencyModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* College Counsellor Nitu Singh Bhadouria */}
+          {/* College Counsellor Dr. Nitu Singh Bhadouria */}
           <div className="p-4 rounded-3xl border border-sky-200 dark:border-sky-800/80 bg-sky-50/70 dark:bg-sky-950/30 flex items-start gap-4 shadow-xs">
             <div className="p-2.5 bg-sky-600 text-white rounded-2xl shrink-0">
               <HeartHandshake className="w-5 h-5" />
@@ -75,7 +75,7 @@ export default function EmergencyModal({ isOpen, onClose }) {
                 </span>
               </div>
               <p className="text-xs font-bold text-sky-800 dark:text-sky-300 mt-0.5">
-                Nitu Singh Bhadouria
+                Dr. Nitu Singh Bhadouria
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                 📍 Location: Counselling Room, SAC I, First Floor
