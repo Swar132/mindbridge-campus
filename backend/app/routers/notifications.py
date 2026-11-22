@@ -1,6 +1,6 @@
 import json
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,7 @@ from app.schemas.notification import NotificationResponse
 from app.schemas.monitoring import (
     WeeklyWellbeingReportResponse,
     WellbeingAnomalyAlertResponse,
+    AlertResponseRequest,
     PushSubscriptionCreate,
     NotificationPreferenceResponse,
     NotificationPreferenceUpdate,
@@ -112,7 +113,11 @@ def get_preferences(
         timezone=getattr(pref, "timezone", "Asia/Kolkata") or "Asia/Kolkata",
         whatsapp_phone=getattr(pref, "whatsapp_phone", None) or current_user.phone_number,
         whatsapp_consent=bool(getattr(pref, "whatsapp_consent", False)),
-        whatsapp_status=WhatsAppService.get_provider_status()
+        whatsapp_status=WhatsAppService.get_provider_status(),
+        counsellor_referral_enabled=bool(getattr(pref, "counsellor_referral_enabled", True)),
+        follow_up_frequency_days=int(getattr(pref, "follow_up_frequency_days", 2) or 2),
+        is_paused=bool(getattr(pref, "is_paused", False)),
+        paused_until=getattr(pref, "paused_until", None)
     )
 
 @router.put("/preferences", response_model=NotificationPreferenceResponse)
@@ -160,6 +165,14 @@ def update_preferences(
         pref.whatsapp_consent = pref_in.whatsapp_consent
         if pref_in.whatsapp_consent:
             pref.whatsapp_consent_at = datetime.now(timezone.utc)
+    if pref_in.counsellor_referral_enabled is not None:
+        pref.counsellor_referral_enabled = pref_in.counsellor_referral_enabled
+    if pref_in.follow_up_frequency_days is not None:
+        pref.follow_up_frequency_days = pref_in.follow_up_frequency_days
+    if pref_in.is_paused is not None:
+        pref.is_paused = pref_in.is_paused
+    if pref_in.paused_until is not None:
+        pref.paused_until = pref_in.paused_until
 
     db.commit()
     db.refresh(pref)
@@ -188,12 +201,6 @@ def get_weekly_reports(
         if new_report:
             reports = [new_report]
 
-    for r in reports:
-        try:
-            r.supportive_feedback = json.loads(r.supportive_feedback) if isinstance(r.supportive_feedback, str) else r.supportive_feedback
-        except Exception:
-            r.supportive_feedback = []
-
     return reports
 
 @router.get("/reports/weekly/{report_id}", response_model=WeeklyWellbeingReportResponse)
@@ -210,11 +217,6 @@ def get_single_weekly_report(
     if not report:
         raise HTTPException(status_code=404, detail="Weekly report not found or access denied")
 
-    try:
-        report.supportive_feedback = json.loads(report.supportive_feedback) if isinstance(report.supportive_feedback, str) else report.supportive_feedback
-    except Exception:
-        report.supportive_feedback = []
-
     return report
 
 @router.post("/reports/weekly/generate", response_model=WeeklyWellbeingReportResponse)
@@ -228,11 +230,6 @@ def generate_weekly_report_on_demand(
     report = WellbeingMonitor.generate_weekly_report(current_user.id, db, force=True)
     if not report:
         raise HTTPException(status_code=500, detail="Could not generate weekly wellbeing report")
-    
-    try:
-        report.supportive_feedback = json.loads(report.supportive_feedback) if isinstance(report.supportive_feedback, str) else report.supportive_feedback
-    except Exception:
-        report.supportive_feedback = []
 
     return report
 
@@ -270,6 +267,64 @@ def acknowledge_alert(
     alert.is_acknowledged = True
     db.commit()
     return {"message": "Alert acknowledged successfully"}
+
+@router.post("/alerts/{alert_id}/respond")
+def respond_to_alert(
+    alert_id: int,
+    payload: AlertResponseRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Records student's 1-tap interactive response and halts further follow-ups for this alert.
+    Options:
+    - 'I'm doing fine.'
+    - 'I've been stressed about placements.'
+    - 'I'm having trouble sleeping.'
+    - 'I'd like some advice.'
+    - 'I'd like to speak with a counsellor.'
+    """
+    res = WellbeingMonitor.record_student_response(alert_id, current_user.id, payload.response, db)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to record response"))
+    return res
+
+@router.post("/pause")
+def pause_notifications(
+    days: int = Query(7, ge=1, le=30),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Temporarily pauses non-critical wellbeing notifications for a selected number of days.
+    """
+    pref = db.query(UserPreference).filter(UserPreference.user_id == current_user.id).first()
+    if not pref:
+        pref = UserPreference(user_id=current_user.id)
+        db.add(pref)
+    pref.is_paused = True
+    pref.paused_until = date.today() + timedelta(days=days)
+    db.commit()
+    return {
+        "message": f"Wellbeing notifications paused until {pref.paused_until}",
+        "is_paused": True,
+        "paused_until": pref.paused_until
+    }
+
+@router.post("/resume")
+def resume_notifications(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Resumes paused wellbeing notifications immediately.
+    """
+    pref = db.query(UserPreference).filter(UserPreference.user_id == current_user.id).first()
+    if pref:
+        pref.is_paused = False
+        pref.paused_until = None
+        db.commit()
+    return {"message": "Wellbeing notifications resumed", "is_paused": False}
 
 # -------------------------------------------------------------
 # 5. Free Browser Push (Web Push & Service Worker)

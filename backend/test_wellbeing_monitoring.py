@@ -29,7 +29,8 @@ from app.services.push_service import PushService
 from app.schemas.monitoring import (
     NotificationPreferenceUpdate,
     PushSubscriptionCreate,
-    WhatsAppOptInRequest
+    WhatsAppOptInRequest,
+    AlertResponseRequest
 )
 from app.routers.notifications import (
     get_preferences,
@@ -44,7 +45,10 @@ from app.routers.notifications import (
     opt_in_whatsapp,
     opt_out_whatsapp,
     get_notification_logs,
-    trigger_monitoring_sweep
+    trigger_monitoring_sweep,
+    respond_to_alert,
+    pause_notifications,
+    resume_notifications
 )
 
 
@@ -230,10 +234,165 @@ def run_tests():
         # 11. Public Scheduled Evaluation Endpoint
         eval_res = trigger_monitoring_sweep(db=db)
         assert eval_res["status"] == "success"
-        print(f"✓ [12/12] Student Isolation & Scheduled Evaluation verified: {eval_res['result']}")
+        print(f"✓ [12/17] Student Isolation & Scheduled Evaluation verified: {eval_res['result']}")
+
+        # 13. Compound Anomaly & Positive Improvement Detection
+        # Ensure student2 has preference enabled
+        pref_s2 = db.query(UserPreference).filter(UserPreference.user_id == student2.id).first()
+        if not pref_s2:
+            pref_s2 = UserPreference(user_id=student2.id, sudden_change_alerts_enabled=True)
+            db.add(pref_s2)
+        else:
+            pref_s2.sudden_change_alerts_enabled = True
+        db.commit()
+
+        # Clear student2 entries to test positive improvement
+        db.query(WellbeingAnomalyAlert).filter(WellbeingAnomalyAlert.user_id == student2.id).delete()
+        db.query(MoodEntry).filter(MoodEntry.user_id == student2.id).delete()
+        db.query(StressEntry).filter(StressEntry.user_id == student2.id).delete()
+        db.query(SleepEntry).filter(SleepEntry.user_id == student2.id).delete()
+        db.commit()
+
+        # Seed baseline with high stress (7.5) and lower sleep (5.5h) for student 2 (days -14 to -4)
+        for i in range(14, 3, -1):
+            past_date = today - timedelta(days=i)
+            dt_past = datetime.combine(past_date, time(20, 0), tzinfo=timezone.utc)
+            db.add(MoodEntry(user_id=student2.id, mood="Stressed", intensity=7, energy_level=3, recorded_at=dt_past))
+            db.add(StressEntry(user_id=student2.id, level=8, category="Placements and Career", recorded_at=dt_past))
+            db.add(SleepEntry(user_id=student2.id, bedtime="01:30", wake_time="07:00", duration_hours=5.5, quality=2, sleep_date=past_date, recorded_at=dt_past))
+        db.commit()
+
+        # Today student 2 experiences positive progress: stress drops to 3, sleep up to 8.5h
+        dt_today2 = datetime.now(timezone.utc)
+        db.add(MoodEntry(user_id=student2.id, mood="Calm", intensity=4, energy_level=5, recorded_at=dt_today2))
+        db.add(StressEntry(user_id=student2.id, level=3, category="Academics", recorded_at=dt_today2))
+        db.add(SleepEntry(user_id=student2.id, bedtime="22:30", wake_time="07:00", duration_hours=8.5, quality=4, sleep_date=today, recorded_at=dt_today2))
+        db.commit()
+
+        alerts_s2 = WellbeingMonitor.evaluate_anomalies(student2.id, db)
+        celebration_alerts = [a for a in alerts_s2 if a.is_positive_celebration]
+        assert len(celebration_alerts) >= 1, "Failed to detect positive stress relief celebration"
+        print(f"✓ [13/17] Positive Improvement Recognition verified: \"{celebration_alerts[0].supportive_message[:60]}...\"")
+
+        # 14. Gradual Multi-Stage Follow-Up Progression (Stages 1 -> 2 -> 3 -> 4)
+        # Create a test alert for student 1 at stage 1, active and unresolved
+        test_alert = WellbeingAnomalyAlert(
+            user_id=student.id,
+            alert_type="stress_spike",
+            metric_name="stress",
+            observed_value=9.0,
+            baseline_value=3.5,
+            severity="moderate",
+            trigger_reason="Stress spiked significantly",
+            supportive_message="We noticed your stress levels have been elevated. Take a gentle breath.",
+            follow_up_stage=1,
+            follow_up_count=0,
+            last_follow_up_at=datetime.now(timezone.utc) - timedelta(days=3),
+            resolution_status="active_monitoring",
+            is_acknowledged=False
+        )
+        db.add(test_alert)
+        db.commit()
+        db.refresh(test_alert)
+
+        # Progression to Stage 2
+        fups_stage2 = WellbeingMonitor.progress_follow_ups(student.id, db)
+        db.refresh(test_alert)
+        assert test_alert.follow_up_stage == 2
+        assert test_alert.follow_up_count == 1
+        print("✓ [14/17] Multi-Stage Follow-up Progression: Advanced to Stage 2 (Gentle Check-in)")
+
+        # Fast forward time to trigger Stage 3
+        test_alert.last_follow_up_at = datetime.now(timezone.utc) - timedelta(days=3)
+        db.commit()
+        fups_stage3 = WellbeingMonitor.progress_follow_ups(student.id, db)
+        db.refresh(test_alert)
+        assert test_alert.follow_up_stage == 3
+        assert test_alert.follow_up_count == 2
+        print("✓ [14/17] Multi-Stage Follow-up Progression: Advanced to Stage 3 (Mindy AI & Resource Offers)")
+
+        # Fast forward time to trigger Stage 4
+        test_alert.last_follow_up_at = datetime.now(timezone.utc) - timedelta(days=3)
+        db.commit()
+        fups_stage4 = WellbeingMonitor.progress_follow_ups(student.id, db)
+        db.refresh(test_alert)
+        assert test_alert.follow_up_stage == 4
+        assert test_alert.follow_up_count == 3
+        print("✓ [14/17] Multi-Stage Follow-up Progression: Advanced to Stage 4 (Confidential Counsellor Connection)")
+
+        # 15. Interactive 1-Tap Student Response Submission & Halting
+        resp_req = AlertResponseRequest(response="I've been stressed about placements.")
+        resp_out = respond_to_alert(alert_id=test_alert.id, payload=resp_req, current_user=student, db=db)
+        assert resp_out["success"] == True
+        assert resp_out["resolution_status"] == "resolved_student_responded"
+        assert "placement" in resp_out["advice"].lower() or "career" in resp_out["advice"].lower()
+        
+        # Verify alert marked acknowledged and resolved
+        db.refresh(test_alert)
+        assert test_alert.is_acknowledged == True
+        assert test_alert.resolution_status == "resolved_student_responded"
+        assert test_alert.student_response == "I've been stressed about placements."
+
+        # Verify follow-up progression immediately halts for resolved alert
+        test_alert.last_follow_up_at = datetime.now(timezone.utc) - timedelta(days=5)
+        db.commit()
+        fups_halted = WellbeingMonitor.progress_follow_ups(student.id, db)
+        assert len(fups_halted) == 0, "Follow-up continued despite student response resolution!"
+        print("✓ [15/17] Interactive 1-Tap Response verified: tailored advice returned, follow-up halted")
+
+        # 16. Natural Indicator Recovery Halting
+        # Create an active alert at stage 1
+        recovery_alert = WellbeingAnomalyAlert(
+            user_id=student.id,
+            alert_type="sleep_drop",
+            metric_name="sleep_hours",
+            observed_value=4.0,
+            baseline_value=8.0,
+            severity="moderate",
+            trigger_reason="Sleep duration dropped",
+            supportive_message="Gentle check on sleep",
+            follow_up_stage=1,
+            follow_up_count=0,
+            last_follow_up_at=datetime.now(timezone.utc) - timedelta(days=3),
+            resolution_status="active_monitoring",
+            is_acknowledged=False
+        )
+        db.add(recovery_alert)
+        db.commit()
+        db.refresh(recovery_alert)
+
+        # Seed fresh calm check-ins showing stress has settled (level 2) and sleep has recovered (8.5h)
+        dt_rec = datetime.now(timezone.utc)
+        db.add(StressEntry(user_id=student.id, level=2, category="General", recorded_at=dt_rec))
+        db.add(SleepEntry(user_id=student.id, bedtime="22:30", wake_time="07:00", duration_hours=8.5, quality=4, sleep_date=today, recorded_at=dt_rec))
+        db.commit()
+
+        recovery_fups = WellbeingMonitor.progress_follow_ups(student.id, db)
+        db.refresh(recovery_alert)
+        assert recovery_alert.resolution_status == "resolved_indicator_recovered"
+        print("✓ [16/17] Natural Indicator Recovery Halting verified: student recovered, alerts concluded")
+
+        # 17. Pause & Resume Notifications Endpoint & Safeguard
+        pause_out = pause_notifications(days=7, current_user=student, db=db)
+        assert pause_out["is_paused"] == True
+        assert pause_out["paused_until"] is not None
+
+        # Verify reminders & follow-ups are skipped when paused
+        paused_rem = WellbeingMonitor.evaluate_daily_reminder(student.id, db, force=True)
+        assert paused_rem is None, "Reminder sent while notifications paused!"
+        paused_fups = WellbeingMonitor.progress_follow_ups(student.id, db)
+        assert len(paused_fups) == 0, "Follow-up ran while notifications paused!"
+
+        # Resume notifications
+        resume_out = resume_notifications(current_user=student, db=db)
+        assert resume_out["is_paused"] == False
+        pref_after = db.query(UserPreference).filter(UserPreference.user_id == student.id).first()
+        assert pref_after.is_paused == False
+        assert pref_after.paused_until is None
+        print("✓ [17/17] Pause & Resume Notifications verified: total mute safeguard operational")
 
         print("\n" + "="*60)
-        print("ALL 12 INTELLIGENT MONITORING TEST SUITE CHECKS PASSED!")
+        print("ALL 17 INTELLIGENT MONITORING TEST SUITE CHECKS PASSED!")
         print("="*60)
 
     finally:

@@ -83,4 +83,10 @@ class UserPreference(Base):
     last_daily_reminder_date = Column(Date, nullable=True)
     last_weekly_report_date = Column(Date, nullable=True)
 
+    # Proactive Wellbeing Support Controls
+    counsellor_referral_enabled = Column(Boolean, default=True)
+    follow_up_frequency_days = Column(Integer, default=2)  # Follow-up frequency in days (1-7)
+    is_paused = Column(Boolean, default=False)            # Pause all non-critical notifications
+    paused_until = Column(Date, nullable=True)
+
     user = relationship("User", back_populates="preferences")

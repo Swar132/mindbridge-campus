@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+import json
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import date, datetime
 
@@ -27,6 +28,21 @@ class WeeklyWellbeingReportResponse(BaseModel):
     is_sufficient_data: bool
     created_at: datetime
 
+    @field_validator('supportive_feedback', mode='before')
+    @classmethod
+    def parse_supportive_feedback(cls, v):
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+                return [str(parsed)]
+            except Exception:
+                return []
+        if isinstance(v, list):
+            return v
+        return []
+
     class Config:
         from_attributes = True
 
@@ -42,10 +58,21 @@ class WellbeingAnomalyAlertResponse(BaseModel):
     supportive_message: str
     mindy_context: Optional[str]
     is_acknowledged: bool
+    follow_up_stage: int = 1
+    follow_up_count: int = 0
+    last_follow_up_at: Optional[datetime] = None
+    resolution_status: str = "active"
+    student_response: Optional[str] = None
+    student_response_at: Optional[datetime] = None
+    is_compound: bool = False
+    is_positive_celebration: bool = False
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+class AlertResponseRequest(BaseModel):
+    response: str  # "I'm doing fine", "I've been stressed about placements", "I'm having trouble sleeping", "I'd like some advice", "I'd like to speak with a counsellor"
 
 class PushSubscriptionCreate(BaseModel):
     endpoint: str
@@ -68,6 +95,10 @@ class NotificationPreferenceResponse(BaseModel):
     whatsapp_phone: Optional[str]
     whatsapp_consent: bool
     whatsapp_status: Dict[str, Any]
+    counsellor_referral_enabled: bool = True
+    follow_up_frequency_days: int = 2
+    is_paused: bool = False
+    paused_until: Optional[date] = None
 
 class NotificationPreferenceUpdate(BaseModel):
     daily_reminder_enabled: Optional[bool] = None
@@ -82,6 +113,10 @@ class NotificationPreferenceUpdate(BaseModel):
     timezone: Optional[str] = None
     whatsapp_phone: Optional[str] = None
     whatsapp_consent: Optional[bool] = None
+    counsellor_referral_enabled: Optional[bool] = None
+    follow_up_frequency_days: Optional[int] = None
+    is_paused: Optional[bool] = None
+    paused_until: Optional[date] = None
 
 class WhatsAppOptInRequest(BaseModel):
     phone_number: str

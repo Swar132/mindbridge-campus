@@ -166,6 +166,12 @@ export const api = {
   generateWeeklyReport: () => request('/notifications/reports/weekly/generate', { method: 'POST' }),
   getAnomalyAlerts: () => request('/notifications/alerts'),
   acknowledgeAnomalyAlert: (id) => request(`/notifications/alerts/${id}/acknowledge`, { method: 'PUT' }),
+  respondToAnomalyAlert: (id, response) =>
+    request(`/notifications/alerts/${id}/respond`, { method: 'POST', body: JSON.stringify({ response }) }),
+  pauseNotifications: (days = 7) =>
+    request(`/notifications/pause?days=${days}`, { method: 'POST' }),
+  resumeNotifications: () =>
+    request('/notifications/resume', { method: 'POST' }),
   getVapidPublicKey: () => request('/notifications/push/vapid-public-key'),
   subscribePush: (subData) => request('/notifications/push/subscribe', { method: 'POST', body: JSON.stringify(subData) }),
   unsubscribePush: (subData) => request('/notifications/push/unsubscribe', { method: 'POST', body: JSON.stringify(subData) }),

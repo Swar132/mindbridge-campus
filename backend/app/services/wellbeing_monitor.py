@@ -359,16 +359,17 @@ class WellbeingMonitor:
         """
         alerts_generated = []
         now_utc = datetime.now(timezone.utc)
-        today = date.today()
+        tz = zoneinfo.ZoneInfo("Asia/Kolkata")
+        today = datetime.now(tz).date()
 
         # Check if student disabled sudden change alerts in preferences
         prefs = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
         if prefs and not prefs.sudden_change_alerts_enabled:
             return []
 
-        # Fetch baseline history: prior 30 days excluding today
-        start_baseline = datetime.combine(today - timedelta(days=30), datetime.min.time(), tzinfo=timezone.utc)
-        end_baseline = datetime.combine(today - timedelta(days=1), datetime.max.time(), tzinfo=timezone.utc)
+        # Fetch baseline history: prior 30 days excluding today (in Asia/Kolkata day boundaries)
+        start_baseline = datetime.combine(today - timedelta(days=30), datetime.min.time(), tzinfo=tz).astimezone(timezone.utc)
+        end_baseline = datetime.combine(today - timedelta(days=1), datetime.max.time(), tzinfo=tz).astimezone(timezone.utc)
 
         hist_stresses = db.query(StressEntry).filter(
             StressEntry.user_id == user_id,
@@ -397,8 +398,8 @@ class WellbeingMonitor:
         baseline_sleep_mean = statistics.mean([s.duration_hours for s in hist_sleeps]) if hist_sleeps else 7.0
         baseline_energy_mean = statistics.mean([m.energy_level for m in hist_moods if m.energy_level is not None]) if hist_moods else 5.0
 
-        # Today's entries
-        today_start_utc = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+        # Today's entries (Asia/Kolkata current day converted to UTC start)
+        today_start_utc = datetime.combine(today, datetime.min.time(), tzinfo=tz).astimezone(timezone.utc)
         today_stress = db.query(StressEntry).filter(
             StressEntry.user_id == user_id,
             StressEntry.recorded_at >= today_start_utc
@@ -592,7 +593,298 @@ class WellbeingMonitor:
                     alerts_generated.append(alert)
                     WellbeingMonitor._dispatch_anomaly_notification(db, user_id, alert)
 
+        # -----------------------------------------------------
+        # D. Compound Co-Occurring Changes (e.g. Stress + Sleep or Stress + Energy)
+        # -----------------------------------------------------
+        if today_stress and today_stress.level >= 7 and (
+            (today_sleep and today_sleep.duration_hours <= 5.5) or
+            (today_mood and today_mood.energy_level is not None and today_mood.energy_level <= 3)
+        ):
+            if not has_recent_alert("compound_stress_sleep_concern", hours=48):
+                co_factor = f"sleep dropped to {today_sleep.duration_hours:.1f} hrs" if (today_sleep and today_sleep.duration_hours <= 5.5) else f"energy dropped to {today_mood.energy_level}/10"
+                reason = f"Co-occurring wellbeing shifts: Stress rose to {today_stress.level}/10 while {co_factor} in {today_stress.category}."
+                msg = "We noticed both your stress levels have been higher and your rest or energy has been strained recently. Navigating multiple pressures at once in college is demanding. How are you holding up today?"
+                mindy_ctx = f"The student is experiencing co-occurring college pressures today: high stress ({today_stress.level}/10) alongside {co_factor}. Greet them with gentle warmth, validate that multiple pressures are exhausting, and offer practical grounding or a calm conversation."
+                
+                alert = WellbeingAnomalyAlert(
+                    user_id=user_id,
+                    alert_type="compound_stress_sleep_concern",
+                    metric_name="compound",
+                    severity="attention",
+                    baseline_value=round(baseline_stress_mean, 1),
+                    observed_value=float(today_stress.level),
+                    trigger_reason=reason,
+                    supportive_message=msg,
+                    mindy_context=mindy_ctx,
+                    is_compound=True,
+                    follow_up_stage=1
+                )
+                db.add(alert)
+                db.commit()
+                db.refresh(alert)
+                alerts_generated.append(alert)
+                WellbeingMonitor._dispatch_anomaly_notification(db, user_id, alert)
+
+        # -----------------------------------------------------
+        # E. Positive Wellbeing Improvements (Recognize Progress & Streaks)
+        # -----------------------------------------------------
+        if baseline_stress_mean >= 5.5 and today_stress and today_stress.level <= 4.0 and (baseline_stress_mean - today_stress.level >= 2.0):
+            if not has_recent_alert("positive_stress_relief", hours=72):
+                reason = f"Stress eased noticeably to {today_stress.level}/10 compared with your prior baseline of {baseline_stress_mean:.1f}/10 (-{baseline_stress_mean - today_stress.level:.1f} points)."
+                msg = "Great progress! Your stress levels have eased noticeably compared with recent days. Celebrate this positive shift and keep practising the habits that seem to be helping you feel more grounded."
+                alert = WellbeingAnomalyAlert(
+                    user_id=user_id,
+                    alert_type="positive_stress_relief",
+                    metric_name="stress",
+                    severity="info",
+                    baseline_value=round(baseline_stress_mean, 1),
+                    observed_value=float(today_stress.level),
+                    trigger_reason=reason,
+                    supportive_message=msg,
+                    mindy_context="The student logged a positive improvement: stress decreased noticeably. Acknowledge their resilience, celebrate their progress, and ask what habits have been working well.",
+                    is_positive_celebration=True,
+                    resolution_status="resolved_improved",
+                    follow_up_stage=1
+                )
+                db.add(alert)
+                db.commit()
+                db.refresh(alert)
+                alerts_generated.append(alert)
+                WellbeingMonitor._dispatch_anomaly_notification(db, user_id, alert)
+
         return alerts_generated
+
+    # ---------------------------------------------------------
+    # 2b. Gradual Multi-Stage Follow-Up Progression Engine
+    # ---------------------------------------------------------
+    @staticmethod
+    def progress_follow_ups(user_id: int, db: Session) -> List[Dict[str, Any]]:
+        """
+        Gradual Follow-up Process:
+        1. First notification: identify the change and suggest an action (Stage 1).
+        2. Second notification: check whether things have improved (Stage 2).
+        3. Continued concern: offer Mindy and relevant wellbeing resources (Stage 3).
+        4. After approximately 4-5 follow-up attempts: offer direct, non-judgmental access to a campus counsellor (Stage 4).
+
+        Halt Conditions:
+        - Student responds with 1-tap quick options -> resolved_student_responded.
+        - Student opts out / pauses notifications -> stopped_opt_out.
+        - Indicators improve back to baseline -> resolved_improved.
+        - Safe Guarantee: Ignored notifications are NEVER flagged as depression or distress.
+        """
+        now_utc = datetime.now(timezone.utc)
+        results = []
+
+        prefs = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
+        if prefs and (prefs.is_paused or not prefs.sudden_change_alerts_enabled):
+            return []
+
+        # Find active unresolved alerts for this student (excluding positive celebrations)
+        active_alerts = (
+            db.query(WellbeingAnomalyAlert)
+            .filter(
+                WellbeingAnomalyAlert.user_id == user_id,
+                WellbeingAnomalyAlert.resolution_status.in_(["active", "active_monitoring"]),
+                WellbeingAnomalyAlert.is_positive_celebration == False
+            )
+            .all()
+        )
+
+        for alert in active_alerts:
+            # Check cooldown since last notification/follow-up (default 48 hours)
+            freq_days = getattr(prefs, "follow_up_frequency_days", 2) or 2
+            min_interval = timedelta(days=freq_days)
+            last_touch = alert.last_follow_up_at or alert.created_at
+
+            # If timezone-naive, make timezone-aware for comparison
+            if last_touch.tzinfo is None:
+                last_touch = last_touch.replace(tzinfo=timezone.utc)
+
+            if now_utc - last_touch < min_interval:
+                continue  # Within cooldown window
+
+            # Check if student's indicators have improved in the meantime!
+            recent_stress = (
+                db.query(StressEntry)
+                .filter(StressEntry.user_id == user_id)
+                .order_by(StressEntry.recorded_at.desc())
+                .first()
+            )
+            recent_sleep = (
+                db.query(SleepEntry)
+                .filter(SleepEntry.user_id == user_id)
+                .order_by(SleepEntry.sleep_date.desc(), SleepEntry.recorded_at.desc())
+                .first()
+            )
+
+            # Indicator improvement check
+            has_improved = False
+            if alert.metric_name in ["stress", "stress_spike"] and recent_stress and recent_stress.level <= 4:
+                has_improved = True
+            elif alert.metric_name in ["sleep", "sleep_hours"] and recent_sleep and recent_sleep.duration_hours >= 7.0:
+                has_improved = True
+
+            if has_improved:
+                alert.resolution_status = "resolved_indicator_recovered"
+                db.commit()
+                # Send gentle closing acknowledgment
+                notif = Notification(
+                    user_id=user_id,
+                    title="Glad to See Your Recent Improvement 🌿",
+                    message="We noticed your recent check-in rhythm looks much more comfortable. Great job taking care of yourself! We're here anytime you need us.",
+                    type="recommendation",
+                    is_read=False,
+                    link="/notifications"
+                )
+                db.add(notif)
+                db.commit()
+                results.append({"alert_id": alert.id, "action": "resolved_improved"})
+                continue
+
+            # Progress to next follow-up stage
+            next_stage = alert.follow_up_stage + 1
+            alert.follow_up_count += 1
+            alert.last_follow_up_at = now_utc
+
+            if next_stage == 2:
+                # Stage 2: Check whether things have improved
+                alert.follow_up_stage = 2
+                title = "Checking in Gently • How Are Things Today?"
+                body = "We noticed things were feeling a little heavy for you earlier. How are you feeling today? Have things settled down a bit, or is it still a busy week?"
+                link = f"/notifications?alert_id={alert.id}"
+            elif next_stage == 3:
+                # Stage 3: Offer Mindy AI and curated resources
+                alert.follow_up_stage = 3
+                title = "Support When You Need It • Mindy is Here"
+                body = "College demands can feel persistent. Mindy is available anytime to talk through placement anxiety, exam pressure, or test quick relaxation exercises."
+                link = f"/ai?alert_id={alert.id}"
+            else:
+                # Stage 4+: After 4-5 attempts, offer direct confidential access to campus counsellor
+                alert.follow_up_stage = 4
+                title = "Campus Counsellor Care • Dr. Nitu Singh Bhadouria"
+                body = "If things are still feeling overwhelming, you don't have to carry it alone. You can request a completely confidential session with campus counsellor Dr. Nitu Singh Bhadouria in SAC I."
+                link = "/counsellors"
+
+            db.commit()
+
+            # Create in-app follow-up notification
+            notif = Notification(
+                user_id=user_id,
+                title=title,
+                message=body,
+                type="checkin",
+                is_read=False,
+                link=link
+            )
+            db.add(notif)
+            db.commit()
+
+            # Push notification if enabled
+            if prefs and prefs.browser_push_enabled:
+                PushService.dispatch_to_user(
+                    db=db,
+                    user_id=user_id,
+                    title=f"{title} 💙",
+                    body="Tap to view gentle support options or respond with one click.",
+                    url=link,
+                    notification_type="follow_up"
+                )
+
+            # Log
+            log_entry = NotificationLog(
+                user_id=user_id,
+                channel="in_app",
+                notification_type="follow_up",
+                title=f"Follow-up Stage {alert.follow_up_stage}",
+                message_preview=body[:100],
+                status="sent"
+            )
+            db.add(log_entry)
+            db.commit()
+
+            results.append({"alert_id": alert.id, "stage": alert.follow_up_stage, "action": "follow_up_sent"})
+
+        return results
+
+    # ---------------------------------------------------------
+    # 2c. Interactive Student 1-Tap Response Handler
+    # ---------------------------------------------------------
+    @staticmethod
+    def record_student_response(alert_id: int, user_id: int, response_text: str, db: Session) -> Dict[str, Any]:
+        """
+        Records the student's 1-tap interactive response to a wellbeing notification.
+        Halts further follow-ups for this alert immediately.
+        Options:
+        - "I'm doing fine."
+        - "I've been stressed about placements."
+        - "I'm having trouble sleeping."
+        - "I'd like some advice."
+        - "I'd like to speak with a counsellor."
+        """
+        alert = (
+            db.query(WellbeingAnomalyAlert)
+            .filter(
+                WellbeingAnomalyAlert.id == alert_id,
+                WellbeingAnomalyAlert.user_id == user_id
+            )
+            .first()
+        )
+        if not alert:
+            return {"error": "Alert not found or access denied", "success": False}
+
+        alert.student_response = response_text
+        alert.student_response_at = datetime.now(timezone.utc)
+        alert.resolution_status = "resolved_student_responded"
+        alert.is_acknowledged = True
+        db.commit()
+
+        # Tailored empathetic feedback and action routing based on chosen response
+        resp_lower = response_text.lower().strip()
+        guidance = ""
+        action_route = "/notifications"
+        mindy_prompt = ""
+
+        if "doing fine" in resp_lower:
+            guidance = "Thank you for letting us know! We're glad to hear you're doing fine. We've closed this check-in thread and will continue supporting your daily rhythm quietly."
+            action_route = "/dashboard"
+        elif "placements" in resp_lower:
+            guidance = "Placement seasons can feel intensely competitive and stressful. Remember that your worth is far greater than any single interview round. Mindy has specialized placement anxiety prompts and mock interview grounding tools ready for you."
+            action_route = "/ai"
+            mindy_prompt = "I'm feeling anxious about campus placements and career preparation. Can you help me break down my preparation into manageable steps and manage the uncertainty?"
+        elif "trouble sleeping" in resp_lower:
+            guidance = "Sleep friction is very common during exam and project phases. We've unlocked practical wind-down soundscapes and 4-7-8 breathing exercises in the Sleep Sanctuary."
+            action_route = "/sleep"
+            mindy_prompt = "I've been having trouble sleeping lately because my mind won't shut off. Can you guide me through a calming wind-down reflection?"
+        elif "advice" in resp_lower:
+            guidance = "Here is a quick reset: break whatever is in front of you into a 15-minute micro-task, step outside for fresh air, and drink a glass of water. Would you like to unpack this in depth with Mindy?"
+            action_route = "/ai"
+            mindy_prompt = "I'd like some practical advice and perspective on navigating college workload and daily routine."
+        elif "counsellor" in resp_lower:
+            guidance = "You can schedule a confidential guidance session with Dr. Nitu Singh Bhadouria in SAC I. Booking takes under 30 seconds and your records remain strictly confidential."
+            action_route = "/counsellors"
+
+        # Log response
+        log_entry = NotificationLog(
+            user_id=user_id,
+            channel="in_app",
+            notification_type="student_response",
+            title=f"Response Recorded: {response_text[:40]}",
+            message_preview=guidance[:100],
+            status="resolved"
+        )
+        db.add(log_entry)
+        db.commit()
+
+        return {
+            "success": True,
+            "alert_id": alert.id,
+            "resolution_status": alert.resolution_status,
+            "response_recorded": response_text,
+            "guidance_message": guidance,
+            "advice": guidance,
+            "action_route": action_route,
+            "mindy_prompt": mindy_prompt
+        }
 
     @staticmethod
     def _dispatch_anomaly_notification(db: Session, user_id: int, alert: WellbeingAnomalyAlert):
@@ -758,6 +1050,7 @@ class WellbeingMonitor:
         students = db.query(User).filter(User.role == "student", User.is_active == True).all()
         reminders_sent = 0
         reports_generated = 0
+        follow_ups_processed = 0
         today = date.today()
 
         for s in students:
@@ -766,7 +1059,15 @@ class WellbeingMonitor:
             if rem:
                 reminders_sent += 1
 
-            # 2. Weekly report check: If Sunday or Monday, generate report for previous 7 days
+            # 2. Gradual follow-up progression check
+            try:
+                fus = WellbeingMonitor.progress_follow_ups(s.id, db)
+                if fus:
+                    follow_ups_processed += len(fus)
+            except Exception as fu_err:
+                logger.warning(f"Error progressing follow-ups for student {s.id}: {fu_err}")
+
+            # 3. Weekly report check: If Sunday or Monday, generate report for previous 7 days
             if today.weekday() in [0, 6]:  # Monday or Sunday
                 prefs = s.preferences
                 if not prefs or prefs.weekly_summary_enabled:
@@ -786,5 +1087,6 @@ class WellbeingMonitor:
             "total_students_evaluated": len(students),
             "reminders_sent": reminders_sent,
             "reports_generated": reports_generated,
+            "follow_ups_processed": follow_ups_processed,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }

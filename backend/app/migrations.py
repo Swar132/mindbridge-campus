@@ -89,6 +89,10 @@ def run_migrations(engine: Engine):
                 "whatsapp_consent_at": ("TIMESTAMP", "DATETIME"),
                 "last_daily_reminder_date": ("DATE", "DATE"),
                 "last_weekly_report_date": ("DATE", "DATE"),
+                "counsellor_referral_enabled": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "follow_up_frequency_days": ("INTEGER DEFAULT 2", "INTEGER DEFAULT 2"),
+                "is_paused": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+                "paused_until": ("DATE", "DATE"),
             }
 
             for col_name, (pg_type, sql_type) in new_pref_cols.items():
@@ -98,6 +102,27 @@ def run_migrations(engine: Engine):
                     else:
                         conn.execute(text(f"ALTER TABLE user_preferences ADD COLUMN {col_name} {sql_type};"))
 
+            conn.commit()
+
+        # Check wellbeing_anomaly_alerts table for proactive follow-up and response columns
+        if "wellbeing_anomaly_alerts" in inspector.get_table_names():
+            alert_cols = [c["name"] for c in inspector.get_columns("wellbeing_anomaly_alerts")]
+            new_alert_cols = {
+                "follow_up_stage": ("INTEGER DEFAULT 1", "INTEGER DEFAULT 1"),
+                "follow_up_count": ("INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
+                "last_follow_up_at": ("TIMESTAMP", "DATETIME"),
+                "resolution_status": ("VARCHAR(50) DEFAULT 'active'", "VARCHAR(50) DEFAULT 'active'"),
+                "student_response": ("VARCHAR(100)", "VARCHAR(100)"),
+                "student_response_at": ("TIMESTAMP", "DATETIME"),
+                "is_compound": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+                "is_positive_celebration": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+            }
+            for col_name, (pg_type, sql_type) in new_alert_cols.items():
+                if col_name not in alert_cols:
+                    if is_postgres:
+                        conn.execute(text(f"ALTER TABLE wellbeing_anomaly_alerts ADD COLUMN IF NOT EXISTS {col_name} {pg_type};"))
+                    else:
+                        conn.execute(text(f"ALTER TABLE wellbeing_anomaly_alerts ADD COLUMN {col_name} {sql_type};"))
             conn.commit()
 
         # Check phone_verifications table for otp_hash and otp_salt

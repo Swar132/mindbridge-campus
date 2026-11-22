@@ -21,7 +21,9 @@ import {
   Minus,
   Info,
   Radio,
-  XCircle
+  XCircle,
+  PauseCircle,
+  PlayCircle
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -66,6 +68,14 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
   const [pushLoading, setPushLoading] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState(null);
 
+  // Proactive Follow-Up & Support Settings states
+  const [followUpFrequencyDays, setFollowUpFrequencyDays] = useState(2);
+  const [counsellorReferralEnabled, setCounsellorReferralEnabled] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pausedUntil, setPausedUntil] = useState(null);
+  const [responseFeedback, setResponseFeedback] = useState({});
+  const [respondingAlertId, setRespondingAlertId] = useState(null);
+
   // WhatsApp state
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState(user?.phone_number || '');
@@ -106,6 +116,10 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
         setWhatsappConsent(p.whatsapp_consent);
         setWhatsappStatus(p.whatsapp_status);
         setPushSubscribed(p.browser_push_enabled);
+        setFollowUpFrequencyDays(p.follow_up_frequency_days || 2);
+        setCounsellorReferralEnabled(p.counsellor_referral_enabled ?? true);
+        setIsPaused(Boolean(p.is_paused));
+        setPausedUntil(p.paused_until || null);
       }
 
       // Check browser push support
@@ -210,6 +224,44 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
     }
   };
 
+  const handleRespondToAlert = async (alertId, responseText) => {
+    try {
+      setRespondingAlertId(alertId);
+      const res = await api.respondToAnomalyAlert(alertId, responseText);
+      setResponseFeedback(prev => ({ ...prev, [alertId]: res }));
+      setAlerts(prev => prev.map(a => a.id === alertId ? {
+        ...a,
+        resolution_status: 'resolved_student_responded',
+        student_response: responseText,
+        is_acknowledged: true
+      } : a));
+    } catch (err) {
+      alert('Error recording response: ' + err.message);
+    } finally {
+      setRespondingAlertId(null);
+    }
+  };
+
+  const handlePauseNotifications = async (days = 7) => {
+    try {
+      const res = await api.pauseNotifications(days);
+      setIsPaused(true);
+      setPausedUntil(res.paused_until);
+    } catch (err) {
+      alert('Failed to pause: ' + err.message);
+    }
+  };
+
+  const handleResumeNotifications = async () => {
+    try {
+      await api.resumeNotifications();
+      setIsPaused(false);
+      setPausedUntil(null);
+    } catch (err) {
+      alert('Failed to resume: ' + err.message);
+    }
+  };
+
   const handleSavePreferences = async (e) => {
     if (e) e.preventDefault();
     try {
@@ -223,7 +275,11 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
         sudden_change_alerts_enabled: suddenChangeAlerts,
         whatsapp_enabled: whatsappEnabled,
         whatsapp_phone: whatsappPhone,
-        whatsapp_consent: whatsappConsent
+        whatsapp_consent: whatsappConsent,
+        counsellor_referral_enabled: counsellorReferralEnabled,
+        follow_up_frequency_days: Number(followUpFrequencyDays),
+        is_paused: isPaused,
+        paused_until: pausedUntil
       });
 
       setSaveSuccess(true);
@@ -283,7 +339,7 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
         {[
           { id: 'notifications', label: 'Notifications & Alerts', icon: Bell, count: unreadCount + activeAlerts.length },
           { id: 'reports', label: 'Weekly Wellbeing Reports', icon: Calendar, count: reports.length },
-          { id: 'settings', label: 'Wellbeing Notification Settings', icon: Sliders }
+          { id: 'settings', label: 'My Wellbeing Support Settings', icon: Sliders }
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -332,55 +388,165 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
               </div>
 
               <div className="space-y-3">
-                {activeAlerts.map(alert => (
-                  <div
-                    key={alert.id}
-                    className="p-5 rounded-3xl bg-gradient-to-br from-amber-50/80 via-orange-50/30 to-transparent dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border border-amber-200 dark:border-amber-900/60 shadow-sm space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                            Pattern Observation: {alert.metric_name}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {new Date(alert.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                {activeAlerts.map(alert => {
+                  const isCelebration = alert.is_positive_celebration;
+                  const isCompound = alert.is_compound;
+                  const stage = alert.follow_up_stage || 1;
+                  const feedback = responseFeedback[alert.id];
+
+                  // Color scheme based on alert nature
+                  const containerBg = isCelebration
+                    ? 'bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-transparent dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border-emerald-300 dark:border-emerald-800'
+                    : isCompound
+                    ? 'bg-gradient-to-br from-purple-50/90 via-indigo-50/40 to-transparent dark:from-purple-950/40 dark:via-slate-900 dark:to-slate-900 border-purple-300 dark:border-purple-800'
+                    : 'bg-gradient-to-br from-amber-50/80 via-orange-50/30 to-transparent dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border-amber-200 dark:border-amber-900/60';
+
+                  const badgeStyle = isCelebration
+                    ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800'
+                    : isCompound
+                    ? 'text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-950 border-purple-200 dark:border-purple-800'
+                    : 'text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 border-amber-200 dark:border-amber-800';
+
+                  const stageLabel = stage === 1
+                    ? 'Stage 1 • Gentle Observation'
+                    : stage === 2
+                    ? 'Stage 2 • Check-In Follow-Up'
+                    : stage === 3
+                    ? 'Stage 3 • Continued Support & Resources'
+                    : 'Stage 4 • Campus Counsellor Referral';
+
+                  return (
+                    <div
+                      key={alert.id}
+                      className={`p-5 rounded-3xl border shadow-sm space-y-3 transition ${containerBg}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${badgeStyle}`}>
+                              {isCelebration ? 'Progress Celebration 🌿' : isCompound ? 'Co-occurring Pattern ⚡' : `Pattern Observation: ${alert.metric_name}`}
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              {stageLabel}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(alert.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+
+                          <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                            {alert.supportive_message}
+                          </p>
+
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                            Why this triggered: {alert.trigger_reason}
+                          </p>
                         </div>
-                        <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
-                          {alert.supportive_message}
-                        </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-                          Why this triggered: {alert.trigger_reason}
-                        </p>
+
+                        <button
+                          onClick={() => handleAcknowledgeAlert(alert.id)}
+                          className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1"
+                          title="Acknowledge & dismiss"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
                       </div>
 
-                      <button
-                        onClick={() => handleAcknowledgeAlert(alert.id)}
-                        className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1"
-                        title="Dismiss alert"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                    </div>
+                      {/* Interactive 1-Tap Quick Responses */}
+                      {!alert.student_response && alert.resolution_status === 'active' && !isCelebration && (
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                              Quick 1-Tap Check-In Response:
+                            </span>
+                            <span className="text-[10px] text-slate-400">Halts recurring follow-ups</span>
+                          </div>
 
-                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-200/60 dark:border-amber-900/40">
-                      <button
-                        onClick={() => handleTalkToMindyAboutAlert(alert)}
-                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-                      >
-                        <Bot className="w-3.5 h-3.5" /> Talk to Mindy about this
-                      </button>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { text: "I'm doing fine", icon: "🌿", color: "hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-300" },
+                              { text: "I've been stressed about placements", icon: "💼", color: "hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300" },
+                              { text: "I'm having trouble sleeping", icon: "🌙", color: "hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300" },
+                              { text: "I'd like some advice", icon: "💡", color: "hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:border-amber-300" },
+                              { text: "I'd like to speak with a counsellor", icon: "🩺", color: "hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-300" }
+                            ].map(opt => (
+                              <button
+                                key={opt.text}
+                                disabled={respondingAlertId === alert.id}
+                                onClick={() => handleRespondToAlert(alert.id, opt.text)}
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer flex items-center gap-1.5 active:scale-95 ${opt.color}`}
+                              >
+                                <span>{opt.icon}</span>
+                                <span>{opt.text}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                      <button
-                        onClick={onOpenCounsellor}
-                        className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                      >
-                        <HeartHandshake className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> Connect with Counsellor
-                      </button>
+                      {/* Immediate Feedback Banner after Response */}
+                      {feedback && (
+                        <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 space-y-2 text-xs animate-fade-in">
+                          <p className="text-sky-900 dark:text-sky-200 font-semibold leading-relaxed">
+                            {feedback.guidance_message}
+                          </p>
+                          {feedback.mindy_prompt && (
+                            <button
+                              onClick={() => {
+                                try {
+                                  sessionStorage.setItem('mindbridge_mindy_context', JSON.stringify({
+                                    type: 'student_response_continuation',
+                                    prompt: feedback.mindy_prompt,
+                                    context: alert.mindy_context
+                                  }));
+                                } catch (e) {}
+                                if (onNavigate) onNavigate('ai');
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                            >
+                              <Bot className="w-3.5 h-3.5" /> Continue with Mindy AI
+                            </button>
+                          )}
+                          {feedback.action_route === '/counsellors' && onOpenCounsellor && (
+                            <button
+                              onClick={onOpenCounsellor}
+                              className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                            >
+                              <HeartHandshake className="w-3.5 h-3.5" /> Request Appointment with Dr. Nitu Singh Bhadouria
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Display Stored Response if already answered */}
+                      {alert.student_response && !feedback && (
+                        <div className="p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                          <span className="font-semibold">You replied: "{alert.student_response}"</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            Follow-up resolved
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Action Bar */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+                        <button
+                          onClick={() => handleTalkToMindyAboutAlert(alert)}
+                          className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                        >
+                          <Bot className="w-3.5 h-3.5" /> Talk to Mindy about this
+                        </button>
+
+                        <button
+                          onClick={onOpenCounsellor}
+                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                        >
+                          <HeartHandshake className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> Connect with Counsellor
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -544,9 +710,69 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
         </div>
       )}
 
-      {/* TAB 3: Wellbeing Notification Settings */}
+      {/* TAB 3: My Wellbeing Support Settings */}
       {activeTab === 'settings' && (
         <form onSubmit={handleSavePreferences} className="space-y-6">
+          {/* Pause / Resume Wellbeing Notifications */}
+          <div className={`p-6 sm:p-7 rounded-3xl border shadow-xs space-y-4 transition-colors ${
+            isPaused
+              ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/80'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    {isPaused ? (
+                      <PauseCircle className="w-5 h-5 text-amber-500" />
+                    ) : (
+                      <PlayCircle className="w-5 h-5 text-emerald-500" />
+                    )}
+                    <span>Notification & Monitoring Status</span>
+                  </h3>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                    isPaused
+                      ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                  }`}>
+                    {isPaused ? 'Currently Paused' : 'Active & Monitoring'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+                  {isPaused ? (
+                    <>
+                      All check-in reminders and proactive follow-ups are temporarily muted{pausedUntil ? ` until ${new Date(pausedUntil).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}. You can resume anytime whenever you wish.
+                    </>
+                  ) : (
+                    'Need quiet time during study sessions or holidays? You can temporarily pause all automated reminders and proactive follow-ups without affecting your check-in logs or dashboard data.'
+                  )}
+                </p>
+              </div>
+
+              <div>
+                {isPaused ? (
+                  <button
+                    type="button"
+                    onClick={handleResumeNotifications}
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+                  >
+                    <PlayCircle className="w-4 h-4" />
+                    <span>Resume Notifications</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handlePauseNotifications(7)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-2 transition cursor-pointer border border-slate-300 dark:border-slate-700 active:scale-95"
+                  >
+                    <PauseCircle className="w-4 h-4 text-amber-500" />
+                    <span>Pause for 7 Days</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Daily Reminders Card */}
           <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -670,6 +896,62 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                   onChange={(e) => setSuddenChangeAlerts(e.target.checked)}
                   className="w-4 h-4 accent-sky-500 cursor-pointer"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Proactive Follow-Up & Support Escalation Card */}
+          <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <HeartHandshake className="w-4 h-4 text-indigo-500" />
+                <span>Proactive Follow-Up & Counsellor Referral</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Configure gradual follow-up frequency and confidential campus counsellor connection.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  Follow-Up Frequency
+                </label>
+                <select
+                  value={followUpFrequencyDays}
+                  onChange={(e) => setFollowUpFrequencyDays(Number(e.target.value))}
+                  className="w-full text-xs font-bold px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value={1}>Every 1 Day (Frequent check-ins)</option>
+                  <option value={2}>Every 2 Days (Recommended default)</option>
+                  <option value={3}>Every 3 Days (Relaxed pace)</option>
+                  <option value={5}>Every 5 Days (Minimal follow-ups)</option>
+                </select>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Interval between progressive follow-up check-ins (Stages 1 through 4) when wellbeing indicators remain elevated.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Counsellor Referral Option (Stage 4)
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      Allow MindBridge to offer direct confidential appointment booking with campus counsellor <strong>Dr. Nitu Singh Bhadouria</strong> in SAC I if stress or sleep concerns persist across 4–5 check-ins.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={counsellorReferralEnabled}
+                    onChange={(e) => setCounsellorReferralEnabled(e.target.checked)}
+                    className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0 mt-0.5"
+                  />
+                </div>
+                <div className="mt-2 text-[10px] text-indigo-700 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-950/60 px-2 py-1 rounded-lg">
+                  Strictly opt-in & confidential: Unanswered alerts are never reported to counsellors.
+                </div>
               </div>
             </div>
           </div>

@@ -65,6 +65,26 @@ class WellbeingAnomalyAlert(Base):
     mindy_context = Column(Text, nullable=True)
     
     is_acknowledged = Column(Boolean, default=False)
+    
+    # Proactive Gradual Follow-Up Architecture
+    # Stage 1: Initial alert with suggested action
+    # Stage 2: Check-in on whether things have improved
+    # Stage 3: Offer Mindy AI and curated resources
+    # Stage 4: After 4-5 attempts, offer direct confidential access to campus counsellor
+    follow_up_stage = Column(Integer, default=1)
+    follow_up_count = Column(Integer, default=0)
+    last_follow_up_at = Column(DateTime, nullable=True)
+    resolution_status = Column(String(50), default="active")  # active, resolved_student_responded, resolved_improved, stopped_opt_out, dismissed
+    
+    # Interactive 1-tap student response
+    # e.g. "I'm doing fine", "I've been stressed about placements", "I'm having trouble sleeping", "I'd like some advice", "I'd like to speak with a counsellor"
+    student_response = Column(String(100), nullable=True)
+    student_response_at = Column(DateTime, nullable=True)
+    
+    # Flags for compound co-occurring changes and positive improvement celebrations
+    is_compound = Column(Boolean, default=False)
+    is_positive_celebration = Column(Boolean, default=False)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     user = relationship("User", backref="anomaly_alerts")
