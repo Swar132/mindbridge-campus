@@ -68,4 +68,19 @@ class UserPreference(Base):
     sms_consent_at = Column(DateTime, nullable=True)
     last_reminder_sent_date = Column(Date, nullable=True)
 
+    # Intelligent Wellbeing Monitoring & Notification Preferences
+    daily_reminder_enabled = Column(Boolean, default=True)
+    weekly_summary_enabled = Column(Boolean, default=True)
+    sudden_change_alerts_enabled = Column(Boolean, default=True)
+    browser_push_enabled = Column(Boolean, default=False)
+    whatsapp_enabled = Column(Boolean, default=False)
+    preferred_days = Column(Text, default='["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]')
+    quiet_hours_start = Column(String(10), default="22:00")
+    quiet_hours_end = Column(String(10), default="07:00")
+    whatsapp_phone = Column(String(30), nullable=True)
+    whatsapp_consent = Column(Boolean, default=False)
+    whatsapp_consent_at = Column(DateTime, nullable=True)
+    last_daily_reminder_date = Column(Date, nullable=True)
+    last_weekly_report_date = Column(Date, nullable=True)
+
     user = relationship("User", back_populates="preferences")

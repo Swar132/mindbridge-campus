@@ -136,6 +136,18 @@ export default function AIAssistant({
 
   useEffect(() => {
     loadData();
+    const storedContext = sessionStorage.getItem('mindbridge_mindy_context');
+    if (storedContext) {
+      try {
+        const parsed = JSON.parse(storedContext);
+        sessionStorage.removeItem('mindbridge_mindy_context');
+        if (parsed.prompt) {
+          setInputText(parsed.prompt);
+        }
+      } catch (e) {
+        sessionStorage.removeItem('mindbridge_mindy_context');
+      }
+    }
   }, []);
 
   const selectConversation = async (id) => {

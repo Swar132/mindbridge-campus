@@ -7,6 +7,7 @@ from app.models.resource import WellbeingResource
 from app.models.notification import Notification
 from app.models.sms import PhoneVerification, SMSLog
 from app.models.registration import PendingRegistration
+from app.models.monitoring import WeeklyWellbeingReport, WellbeingAnomalyAlert, PushSubscription, NotificationLog
 
 __all__ = [
     "User",
@@ -24,4 +25,8 @@ __all__ = [
     "PhoneVerification",
     "SMSLog",
     "PendingRegistration",
+    "WeeklyWellbeingReport",
+    "WellbeingAnomalyAlert",
+    "PushSubscription",
+    "NotificationLog",
 ]

@@ -82,3 +82,52 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// 4. Web Push Event Handling (Free Browser Push Notifications)
+self.addEventListener('push', (event) => {
+  let data = { title: 'MindBridge Campus', body: 'New wellbeing update', url: '/' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/favicon.svg',
+    badge: data.badge || '/favicon.svg',
+    tag: data.tag || 'mindbridge-notification',
+    renotify: true,
+    data: {
+      url: data.url || '/'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// 5. Push Notification Click Handling -> Focus or open window
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          if (client.url && client.url.includes(self.location.origin)) {
+            client.navigate(targetUrl);
+            return client.focus();
+          }
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

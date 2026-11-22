@@ -46,11 +46,16 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
-    # Start persistent SMS background reminder worker
-    scheduler_task = asyncio.create_task(start_sms_reminder_scheduler())
+    # Start persistent SMS background reminder worker unless in testing mode
+    scheduler_task = None
+    if not os.getenv("TESTING"):
+        scheduler_task = asyncio.create_task(start_sms_reminder_scheduler())
+
     yield
-    stop_sms_reminder_scheduler()
-    scheduler_task.cancel()
+
+    if scheduler_task:
+        stop_sms_reminder_scheduler()
+        scheduler_task.cancel()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

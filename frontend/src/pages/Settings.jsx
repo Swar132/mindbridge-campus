@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import confetti from 'canvas-confetti';
 
-export default function Settings() {
+export default function Settings({ onNavigate }) {
   const { user, updateUser, logout } = useAuth();
   const [preferences, setPreferences] = useState(null);
   const [fullName, setFullName] = useState(user?.full_name || '');
@@ -160,6 +160,33 @@ export default function Settings() {
             </div>
           </div>
         </div>
+
+        {/* Intelligent Wellbeing Monitoring Hub Shortcut */}
+        {onNavigate && (
+          <div className="rounded-3xl bg-gradient-to-r from-sky-500/10 via-teal-500/10 to-blue-500/10 border border-sky-200 dark:border-sky-800/60 p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-xl bg-sky-500 text-white">
+                  <Bell className="w-4 h-4" />
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Wellbeing Monitoring, Push & Reports Hub
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl">
+                Configure your personalized weekly report summaries, sudden stress/sleep spike alerts, Web Push notifications, quiet hours, and delivery schedules.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('notifications')}
+              className="px-4 py-2.5 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Manage Notifications</span>
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Browser & Bedtime In-App Reminders */}
         <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4">

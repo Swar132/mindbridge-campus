@@ -23,6 +23,16 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
 
+    # Web Push / VAPID Keys (Free Browser Push Notifications)
+    VAPID_PUBLIC_KEY: str = os.getenv("VAPID_PUBLIC_KEY", "BCGGhMgS9-rTDZwMhoAyseaTgVTnNV4_q_C1QKdtZLDR5GSG2LqSH7GvEWr1JdAdlOceySLK5XYfuW7FbmrcIB4")
+    VAPID_PRIVATE_KEY: str = os.getenv("VAPID_PRIVATE_KEY", "Gch5-s3r6tgT7zc2-LAefoRC3PZ7nZ-p-PhgU4NAtzY")
+    VAPID_CLAIMS_EMAIL: str = os.getenv("VAPID_CLAIMS_EMAIL", "mailto:wellness@mindbridge.campus")
+
+    # Meta WhatsApp Cloud API (Optional official provider, free tier capable)
+    WHATSAPP_PHONE_NUMBER_ID: str = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
+    WHATSAPP_ACCESS_TOKEN: str = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
+    WHATSAPP_BUSINESS_ACCOUNT_ID: str = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
+
     class Config:
         env_file = ".env"
         extra = "ignore"

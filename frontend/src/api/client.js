@@ -153,12 +153,27 @@ export const api = {
   deleteResource: (id) => request(`/resources/${id}`, { method: 'DELETE' }),
 
   // Notifications & Preferences
-  getNotifications: () => request('/notifications/'),
+  getNotifications: (limit = 30) => request(`/notifications/?limit=${limit}`),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PUT' }),
   getPreferences: () => request('/notifications/preferences'),
   updatePreferences: (prefData) =>
     request('/notifications/preferences', { method: 'PUT', body: JSON.stringify(prefData) }),
+
+  // Intelligent Wellbeing Reports & Anomalies
+  getWeeklyReports: () => request('/notifications/reports/weekly'),
+  getWeeklyReport: (id) => request(`/notifications/reports/weekly/${id}`),
+  generateWeeklyReport: () => request('/notifications/reports/weekly/generate', { method: 'POST' }),
+  getAnomalyAlerts: () => request('/notifications/alerts'),
+  acknowledgeAnomalyAlert: (id) => request(`/notifications/alerts/${id}/acknowledge`, { method: 'PUT' }),
+  getVapidPublicKey: () => request('/notifications/push/vapid-public-key'),
+  subscribePush: (subData) => request('/notifications/push/subscribe', { method: 'POST', body: JSON.stringify(subData) }),
+  unsubscribePush: (subData) => request('/notifications/push/unsubscribe', { method: 'POST', body: JSON.stringify(subData) }),
+  testPushNotification: () => request('/notifications/test-push', { method: 'POST' }),
+  optInWhatsApp: (data) => request('/notifications/whatsapp/opt-in', { method: 'POST', body: JSON.stringify(data) }),
+  optOutWhatsApp: () => request('/notifications/whatsapp/opt-out', { method: 'POST' }),
+  getNotificationLogs: (limit = 20) => request(`/notifications/logs?limit=${limit}`),
+  triggerMonitoringEvaluation: () => request('/notifications/evaluate', { method: 'POST' }),
 
   // Admin
   getPlatformStats: () => request('/admin/stats'),

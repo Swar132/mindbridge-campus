@@ -181,6 +181,13 @@ def submit_daily_checkin(
     db.refresh(stress_entry)
     db.refresh(sleep_entry)
 
+    # 4. Trigger real-time sudden-change anomaly detection
+    try:
+        from app.services.wellbeing_monitor import WellbeingMonitor
+        WellbeingMonitor.evaluate_anomalies(current_user.id, db)
+    except Exception as ex:
+        print(f"[CHECKIN] Anomaly evaluation notice: {ex}")
+
     # Decode JSON tags for response
     mood_entry.tags = json.loads(mood_entry.tags) if isinstance(mood_entry.tags, str) else mood_entry.tags
     stress_entry.tags = json.loads(stress_entry.tags) if isinstance(stress_entry.tags, str) else stress_entry.tags

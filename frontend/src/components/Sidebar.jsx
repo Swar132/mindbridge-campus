@@ -16,7 +16,8 @@ import {
   Flame,
   Shield,
   Activity,
-  Compass
+  Compass,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
@@ -32,6 +33,7 @@ export default function Sidebar({ activeTab, onSelectTab, isMobileOpen, onCloseM
     { id: 'journal', label: 'Private Journal', icon: BookOpen, badge: 'Private' },
     { id: 'ai', label: 'Mindy AI', icon: Bot, badge: 'AI' },
     { id: 'insights', label: 'Insights & Trends', icon: TrendingUp },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'resources', label: 'Resource Library', icon: Library },
     { id: 'counsellors', label: 'Campus Counsellors', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -39,6 +41,7 @@ export default function Sidebar({ activeTab, onSelectTab, isMobileOpen, onCloseM
 
   const counsellorNavItems = [
     { id: 'counsellor-portal', label: 'Counsellor Portal', icon: Stethoscope },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'counsellors', label: 'Staff Directory', icon: Users },
     { id: 'resources', label: 'Resource Guides', icon: Library },
     { id: 'insights', label: 'Campus Analytics', icon: TrendingUp },
@@ -48,6 +51,7 @@ export default function Sidebar({ activeTab, onSelectTab, isMobileOpen, onCloseM
   const adminNavItems = [
     { id: 'admin-portal', label: 'Governance Command', icon: ShieldCheck },
     { id: 'dashboard', label: 'Student View', icon: LayoutDashboard },
+    { id: 'notifications', label: 'Notifications Hub', icon: Bell },
     { id: 'counsellor-portal', label: 'Counsellor View', icon: Stethoscope },
     { id: 'resources', label: 'Resource Editor', icon: Library },
     { id: 'insights', label: 'Campus Trends', icon: TrendingUp },

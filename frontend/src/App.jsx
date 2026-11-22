@@ -13,6 +13,7 @@ import Counsellors from './pages/Counsellors';
 import CounsellorPortal from './pages/CounsellorPortal';
 import AdminPortal from './pages/AdminPortal';
 import Settings from './pages/Settings';
+import NotificationsPage from './pages/NotificationsPage';
 
 // Shared Components & Modals
 import Sidebar from './components/Sidebar';
@@ -98,12 +99,19 @@ export default function App() {
         );
       case 'counsellors':
         return <Counsellors />;
+      case 'notifications':
+        return (
+          <NotificationsPage
+            onNavigate={setActiveTab}
+            onOpenCounsellor={() => setActiveTab('counsellors')}
+          />
+        );
       case 'counsellor-portal':
         return <CounsellorPortal />;
       case 'admin-portal':
         return <AdminPortal />;
       case 'settings':
-        return <Settings />;
+        return <Settings onNavigate={setActiveTab} />;
       default:
         return (
           <Dashboard

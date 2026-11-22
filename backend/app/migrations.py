@@ -74,6 +74,30 @@ def run_migrations(engine: Engine):
                 else:
                     conn.execute(text("ALTER TABLE user_preferences ADD COLUMN last_reminder_sent_date DATE;"))
 
+            # Monitoring & Notification Extensions
+            new_pref_cols = {
+                "daily_reminder_enabled": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "weekly_summary_enabled": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "sudden_change_alerts_enabled": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "browser_push_enabled": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+                "whatsapp_enabled": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+                "preferred_days": ("TEXT DEFAULT '[\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]'", "TEXT DEFAULT '[\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]'"),
+                "quiet_hours_start": ("VARCHAR(10) DEFAULT '22:00'", "VARCHAR(10) DEFAULT '22:00'"),
+                "quiet_hours_end": ("VARCHAR(10) DEFAULT '07:00'", "VARCHAR(10) DEFAULT '07:00'"),
+                "whatsapp_phone": ("VARCHAR(30)", "VARCHAR(30)"),
+                "whatsapp_consent": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+                "whatsapp_consent_at": ("TIMESTAMP", "DATETIME"),
+                "last_daily_reminder_date": ("DATE", "DATE"),
+                "last_weekly_report_date": ("DATE", "DATE"),
+            }
+
+            for col_name, (pg_type, sql_type) in new_pref_cols.items():
+                if col_name not in pref_cols:
+                    if is_postgres:
+                        conn.execute(text(f"ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS {col_name} {pg_type};"))
+                    else:
+                        conn.execute(text(f"ALTER TABLE user_preferences ADD COLUMN {col_name} {sql_type};"))
+
             conn.commit()
 
         # Check phone_verifications table for otp_hash and otp_salt

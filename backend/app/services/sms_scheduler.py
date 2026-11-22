@@ -96,6 +96,13 @@ async def start_sms_reminder_scheduler():
                 sent = check_and_send_due_reminders(db, force_all=False)
                 if sent:
                     print(f"[SMS-SCHEDULER] Dispatched {len(sent)} scheduled wellbeing reminders.")
+                
+                # Run intelligent wellbeing monitoring cycle (in-app reminders, weekly reports)
+                try:
+                    from app.services.wellbeing_monitor import WellbeingMonitor
+                    WellbeingMonitor.run_monitoring_cycle(db)
+                except Exception as mon_err:
+                    print(f"[WELLBEING-MONITOR] Sweep notice: {mon_err}")
             finally:
                 db.close()
         except Exception as e:

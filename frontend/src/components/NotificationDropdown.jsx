@@ -160,6 +160,21 @@ export default function NotificationDropdown({ onNavigate }) {
               ))
             )}
           </div>
+
+          {onNavigate && (
+            <div className="p-2.5 px-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 text-center">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onNavigate('notifications');
+                }}
+                className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-100/70 dark:hover:bg-sky-950/50 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>View all notifications, weekly reports & settings</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
