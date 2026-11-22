@@ -1,11 +1,17 @@
 """
-Update wellbeing_resources table with 12 comprehensive, actionable college guides
-covering all 6 official categories.
+Update wellbeing_resources table with 12 rewritten, highly engaging, practical student guides
+covering all 6 official categories following the 6-part framework:
+1. The situation
+2. What you should know
+3. Try this now
+4. Quick challenge
+5. Remember this
+6. Learn more
 """
 import sys
 import json
 import os
-sys.path.insert(0, 'backend')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__))))
 
 from app.database import SessionLocal
 from app.models.resource import WellbeingResource
@@ -16,35 +22,39 @@ GUIDES = [
         "title": "The 80/20 Academic Triage for Finals: Surviving Heavy Syllabus Overload",
         "category": "Academic Life",
         "content_type": "guide",
-        "summary": "How to identify high-yield exam topics using past papers, active recall, and strategic prioritization when time is running out.",
-        "read_time_minutes": 5,
+        "summary": "Identify high-yield exam topics using past papers, active recall, and strategic prioritization when time is running out.",
+        "read_time_minutes": 4,
         "tags": ["Academic Life", "Exam Preparation", "Time Management", "Study Techniques"],
         "is_featured": True,
-        "content": """### The Problem & College Context
-Midterm and end-term examination schedules frequently pack 4 to 5 dense engineering or university papers into a 6-day window. When faced with 500+ lecture slides per subject, students often panic, attempt to read everything line-by-line, and succumb to cognitive fatigue by 2:00 AM. Trying to master everything equally leads to mastering nothing thoroughly.
+        "content": """### 1. The Situation
+Exams are approaching, your syllabus is unfinished, and you don't know where to begin without burning out by 2:00 AM?
 
-### Practical Action Steps
-1. **Analyze Past 5-Year Question Papers (PYQs):** 70% of exam questions in university curricula originate from the same 20% core conceptual clusters. Before reading unit 1, cross-reference the last 5 years' papers and list the recurring question themes.
-2. **Implement Blank-Sheet Active Recall:** Passive highlighting gives an illusion of competence. Read a core derivation or algorithm, close your laptop, and write the key steps on a blank sheet of paper from memory.
-3. **Execute Three 90-Minute Focus Blocks:** Do not linger in the library for 10 unfocused hours. Schedule three distinct 90-minute Pomodoro sprints (Morning: High Complexity Math/Algo; Afternoon: Theory/Definitions; Evening: Problem Sets).
-4. **Enforce a Hard Midnight Cutoff:** Cognitive neuroimaging proves that sleep deprivation impairs memory retrieval by up to 40%. Stop studying by midnight so your brain can consolidate synaptic connections into long-term memory.
+### 2. What You Should Know
+- **The 80/20 Rule:** 70% of exam marks consistently come from 20% of core recurring concepts across previous semesters.
+- **Active Recall vs. Passive Reading:** Highlighting slides feels comforting but builds zero recall under actual exam pressure.
+- **Cognitive Sprints:** Your brain retains vastly more in two 90-minute deep blocks than 10 exhausting, unfocused library hours.
+- **Sleep Locks Memory:** Studying past midnight cuts memory retrieval speed by up to 40% during morning exams.
 
-### 2-Minute Micro-Activity
-Grab a blank piece of paper right now. Divide it into three columns:
-- **Column A (Must Master - 60% of marks):** Top 3 recurring exam topics.
-- **Column B (Should Know - 30% of marks):** Moderate likelihood concepts.
-- **Column C (Skip or Skim - 10% of marks):** Low-yield, high-effort outliers.
-Commit to finishing Column A before touching anything else.
+### 3. Try This Now
+1. **Audit Past 5-Year Question Papers (PYQs):** Skim the last 5 years' papers first; list the 3 most recurring question themes before opening unit 1.
+2. **Execute Blank-Sheet Active Recall:** Read a core derivation or algorithm once, close all tabs, and write down the key steps from memory on blank paper.
+3. **Schedule Two 90-Minute Focus Sprints:** Dedicate Block 1 (morning) to high-weight derivations/algorithms, and Block 2 (afternoon) to practice problems.
+4. **Enforce a Strict Midnight Cutoff:** Step away from study screens by 12:00 AM to allow your brain to consolidate facts into long-term memory.
 
-### Realistic College Life Example
-A 3rd-year engineering student in the hostel has both Operating Systems and Computer Networks exams scheduled 24 hours apart in SAC-I. Instead of panicking over 18 syllabus chapters, she filters for the top 5 recurring questions (Process Synchronization, Paging, TCP/IP handshake, Distance Vector routing) and completes active recall drills on them, securing 75% of the syllabus in 4 hours.
+### 4. Quick Challenge
+**The 3-Column Triage (3 mins):** Take a blank sheet right now and write:
+- **Must Master (60% marks):** Top 3 topics guaranteed to appear.
+- **Should Know (30% marks):** Moderate-frequency concepts.
+- **Skip for Now (10% marks):** Low-yield, high-effort outliers.
+Commit to finishing Must Master before touching anything else.
 
-### Quick Takeaway Mental Anchor
-*"Retrieval builds memory; passive reading only builds familiarity."*
+### 5. Remember This
+You don't need to finish everything today. You just need to know what to do next.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Study Planner, Pomodoro Focus Timer, Exam Countdown Planner.
-- **Academic Sources:** Dunlosky et al. (2013), *Improving Students' Learning With Effective Learning Techniques*; Stanford Learning Lab."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Launch the [Study Planner](#study-planner), [Pomodoro Focus Timer](#pomodoro), or [Exam Countdown](#exam-countdown).
+- **Verified Sources:** Dunlosky et al. (2013), *Improving Students' Learning With Effective Learning Techniques*; Stanford Learning Lab.
+- **Campus Academic Support:** Schedule a confidential session with campus counsellor Dr. Nitu Singh Bhadouria in SAC I, First Floor."""
     },
     {
         "title": "Defeating Chronic Academic Procrastination & Blank Screen Paralysis",
@@ -54,26 +64,29 @@ A 3rd-year engineering student in the hostel has both Operating Systems and Comp
         "read_time_minutes": 4,
         "tags": ["Academic Life", "Procrastination", "Concentration", "Assignment Planning"],
         "is_featured": False,
-        "content": """### The Problem & College Context
-Procrastination is rarely about laziness; it is almost always an emotional regulation issue driven by the fear of imperfect execution. When faced with a 20-page lab report, capstone proposal, or tricky coding project, the brain treats the assignment as a threat and flees to low-friction dopamine hits (reels, gaming, snacking).
+        "content": """### 1. The Situation
+A major assignment or lab submission is due soon, but you keep opening social media, checking reels, and staring helplessly at a blank screen?
 
-### Practical Action Steps
-1. **The 5-Minute Permission Rule:** Tell yourself: "I only have to work on this code or essay for exactly 5 minutes. If I still want to stop after 5 minutes, I have full permission to walk away." In 80% of cases, breaking the activation barrier keeps you going.
-2. **Lower Activation Friction to Zero:** Open the IDE or Word document, write your name, title, and three placeholder comments. Do not attempt to write brilliant prose or optimized code initially.
-3. **Separate Drafting From Editing:** When writing code or reports, turn off autocorrect or linter warnings during initial brainstorming. Produce a 'messy first draft' without self-censorship.
-4. **Relocate to High-Accountability Environments:** Study in the campus library or quiet reading room where the ambient social proof of other students working inhibits frivolous phone checking.
+### 2. What You Should Know
+- **Procrastination is Emotional Regulation:** You aren't lazy; your brain is fleeing the discomfort and fear of producing an imperfect first attempt.
+- **The Activation Barrier Drops Fast:** Once you push past the first 300 seconds of friction, cognitive resistance drops by over 80%.
+- **Drafting & Editing Must Be Separated:** Demanding polished, error-free work on your very first line paralyzes working memory.
+- **Environment Dictates Action:** A comfortable hostel bed invites sleep and entertainment; a quiet library desk invites immediate focus.
 
-### 2-Minute Micro-Activity
-Open the document or code file you have been postponing the longest. Type 3 rough, unpolished bullet points stating what the final submission should contain. Do not edit them.
+### 3. Try This Now
+1. **Apply the 5-Minute Permission Rule:** Tell yourself: "I only have to work on this code or report for exactly 5 minutes. If I still want to stop, I can."
+2. **Write an Intentionally Messy First Draft:** Type out raw bullet points or rough placeholder functions without checking grammar or formatting.
+3. **Clear Your Digital Workspace:** Close all unrelated browser tabs, silence notifications, and place your phone inside your backpack out of sight.
+4. **Relocate to High-Accountability Environments:** Study in the campus library or quiet reading room where the ambient focus of peers anchors your own.
 
-### Realistic College Life Example
-A student has delayed starting their semester database mini-project for 2 weeks because they felt they didn't know how to architect the schema perfectly. By applying the 5-minute rule, they simply wrote the `CREATE TABLE` statements for two basic entities. The psychological friction vanished, and they finished the entire schema within 45 minutes.
+### 4. Quick Challenge
+**The Ugly First Bullet (2 mins):** Open your stalled assignment right now. Type 3 rough, unpolished bullet points stating what the final submission will contain. Do not edit them.
 
-### Quick Takeaway Mental Anchor
-*"Action precedes motivation. You do not need to feel like starting in order to start."*
+### 5. Remember This
+Action precedes motivation. You do not need to feel like starting in order to start.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Pomodoro Focus Timer, Study Planner.
+### 6. Learn More
+- **Interactive Mini-Tools:** Open the [Pomodoro Focus Timer](#pomodoro) or [Study Planner](#study-planner) to time your 5-minute jumpstart.
 - **Academic Sources:** Dr. Tim Pychyl, Procrastination Research Group (Carleton University); Dr. Piers Steel, *The Procrastination Equation*."""
     },
 
@@ -83,59 +96,67 @@ A student has delayed starting their semester database mini-project for 2 weeks 
         "category": "Placement & Career",
         "content_type": "guide",
         "summary": "How to decouple your identity from corporate shortlists, handle peer comparisons, and maintain resilience throughout recruitment drives.",
-        "read_time_minutes": 6,
+        "read_time_minutes": 5,
         "tags": ["Placement & Career", "Placement Anxiety", "Rejection Handling", "Imposter Syndrome"],
         "is_featured": True,
-        "content": """### The Problem & College Context
-Campus placement season is one of the most psychologically taxing periods of higher education. High-visibility WhatsApp notifications, batchmate LinkedIn updates, and sudden rejections after multiple rounds of technical assessments trigger intense imposter syndrome, self-doubt, and panic.
+        "content": """### 1. The Situation
+You got eliminated from an on-campus recruitment drive while classmates are celebrating their offers, and you're questioning your entire capability?
 
-### Practical Action Steps
-1. **Decouple Assessment Outcomes From Personal Worth:** A company shortlist is not a verdict on your intellect or lifelong capability. It is a noisy data point influenced by company hiring headcounts, resume keyword algorithms, and interviewer subjectivity.
-2. **Enforce the 24-Hour Emotional Processing Rule:** Give yourself 24 hours to feel disappointed or vent to a close friend. After 24 hours, shift from emotion to objective retrospection: Which DSA topic or behavioral question created friction? Refactor that specific skill.
-3. **Focus on Process Metrics Over Outcome Metrics:** You cannot control whether an interviewer gives an offer today. You can completely control whether you solved 2 LeetCode problems, practiced 1 mock interview, and slept 7.5 hours.
-4. **Mute High-Stress Peer Channels:** Temporarily mute batchmate celebration threads or competitive groups during heavy drive weeks if they trigger obsessive downward comparisons.
+### 2. What You Should Know
+- **Shortlists are Noisy Data Points:** Selection depends on hiring quotas, keyword parsers, and interviewer subjectivity—never your lifelong capability.
+- **Peer Comparison is Distorted:** Batchmate LinkedIn and WhatsApp posts highlight victories while hiding dozens of previous silent rejections.
+- **Process Metrics Trump Outcome Metrics:** You cannot control interviewer decisions today; you can fully control whether you solved 2 problems and revised core CS topics.
+- **Burnout is Cumulative:** Ignoring rejection fatigue leads to emotional depletion in subsequent company tests.
 
-### 2-Minute Micro-Activity
-Write down three non-academic, non-resume challenges you successfully navigated during your college life (e.g., adapting to hostel life, learning to budget, handling difficult professors). Remind yourself of your adaptability.
+### 3. Try This Now
+1. **Enforce the 24-Hour Emotional Processing Rule:** Give yourself 24 hours to feel disappointed or vent to a close friend. No self-judgment allowed.
+2. **Conduct an Objective Post-Mortem:** After 24 hours, identify the exact friction point: Was it DSA speed, system design, or HR communication?
+3. **Temporarily Mute High-Stress Placement Groups:** Take a 48-hour break from competitive student chat threads that trigger anxious spirals.
+4. **Log One Controllable Technical Win Daily:** Solve one familiar LeetCode problem or revise one core DBMS concept to restore your momentum.
 
-### Realistic College Life Example
-A student clears three rounds of tests for a marquee recruitment drive but gets eliminated in the managerial HR interview. Feeling devastated while classmates celebrate in the hostel corridor, he implements the 24-hour rule, identifies that his project architecture explanation lacked clarity, practices the STAR framework using the Placement Tracker, and secures an offer with another company two weeks later.
+### 4. Quick Challenge
+**The Resilience Inventory (3 mins):** Write down 3 non-academic challenges you navigated successfully in college (e.g., adapting to hostel life, mastering a tough subject, handling a difficult viva). Remind yourself of your adaptability.
 
-### Quick Takeaway Mental Anchor
-*"Rejection is redirection towards environments that match your authentic strengths."*
+### 5. Remember This
+Placement rejection is simply redirection towards an environment that matches your authentic strengths.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Placement Preparation Tracker, Mood Journaling Prompts.
-- **Academic Sources:** Dr. Carol Dweck (Mindset & Resilience Research); American Psychological Association (APA)."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Launch the [Placement Tracker](#placement-tracker) to log your DSA counts, or open [Mood Journaling](#mood-journal) to process interview emotions.
+- **Academic Sources:** Dr. Carol Dweck (Mindset & Resilience Research); American Psychological Association (APA).
+- **Campus Placement Counselling:** Visit campus counsellor Dr. Nitu Singh Bhadouria in SAC I, First Floor."""
     },
     {
         "title": "Technical Interview Anxiety: Mastering Whiteboard & Live Coding Rounds",
         "category": "Placement & Career",
         "content_type": "article",
         "summary": "Overcome mind-blanks, communicate effectively with interviewers, and tackle unexpected coding problems with composure.",
-        "read_time_minutes": 5,
+        "read_time_minutes": 4,
         "tags": ["Placement & Career", "Interview Preparation", "Career Uncertainty", "Job-Search Burnout"],
         "is_featured": False,
-        "content": """### The Problem & College Context
-During live coding rounds or whiteboard interviews, anxiety triggers the sympathetic nervous system, draining blood flow from the prefrontal cortex. This causes students to freeze, experience 'mind blanks' on familiar algorithms, and jump straight into buggy code without thinking through constraints.
+        "content": """### 1. The Situation
+The interviewer pastes a difficult coding question into the shared editor, your mind goes completely blank, and your hands start trembling?
 
-### Practical Action Steps
-1. **Verbalize Your Mental Stream Immediately:** The moment the question is posted, start talking: "Let me restate the problem to make sure I understand the constraints and edge cases." Speaking activates language centers and halts panic spirals.
-2. **Clarify Inputs, Outputs, and Scale:** Always ask 2 clarifying questions: "Can the array contain negative numbers?" "What is the upper bound on N?" This demonstrates engineering maturity and buys valuable thinking time.
-3. **Write the Brute-Force Solution First:** Never stress about writing an optimal O(N) solution in minute one. State the brute force O(N^2) approach, calculate its complexity, and explain where the bottleneck lies.
-4. **Treat the Interviewer as a Teammate:** Interviewers want to see how you collaborate. When stuck, state your hypothesis clearly: "I am considering a two-pointer approach, but I am evaluating whether sorting the array first violates time limits."
+### 2. What You Should Know
+- **Mind-Blanks are Physiological:** Anxiety diverts blood flow away from your prefrontal cortex; vocalizing your thoughts immediately restores cognitive control.
+- **Collaboration Beats Silent Brilliance:** Companies hire engineers who communicate through ambiguity, not silent code dispensers who freeze under pressure.
+- **Brute Force is a Valid First Step:** Stating an unoptimized approach first builds composure and buys crucial thinking time.
+- **Clarifying Questions Signal Maturity:** Top candidates ask about edge cases and constraints before typing a single line of code.
 
-### 2-Minute Micro-Activity
-Pick a simple coding problem (e.g., Valid Palindrome or Two Sum). Stand up and explain the solution out loud for 2 minutes to your room as if you were teaching a beginner, without writing code.
+### 3. Try This Now
+1. **Verbalize Your Mental Stream Immediately:** Say aloud: "Let me restate the problem and confirm the expected inputs, outputs, and constraints."
+2. **Ask Two Edge-Case Questions:** Clarify array length limits, negative values, duplicates, and null inputs before writing logic.
+3. **Outline the Brute Force Approach First:** State the obvious solution, calculate its Big-O time and space complexity, and pinpoint where the bottleneck lies.
+4. **Treat the Interviewer as a Teammate:** If stuck, say: "I am evaluating two approaches—a hash map versus a two-pointer technique. Let me analyze the trade-offs."
 
-### Realistic College Life Example
-During an online interview with a tech company, a student is asked a tricky binary search variation and feels their mind go blank. Instead of typing silently, they pause, take a deep belly breath, and say: "I am observing that the array is rotated. Let me identify which half is strictly sorted." The interviewer nods, provides a gentle nudge, and the student successfully solves the problem.
+### 4. Quick Challenge
+**The 2-Minute Vocal Walkthrough (2 mins):** Pick any coding problem (e.g., Two Sum or Valid Palindrome). Stand up and explain the solution out loud to the room as if teaching a beginner, without writing code.
 
-### Quick Takeaway Mental Anchor
-*"Interviewers do not look for code dispensers; they look for engineers who communicate through ambiguity."*
+### 5. Remember This
+Interviewers aren't grading you on knowing the answer instantly. They are observing how you think when you don't know the answer.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Placement Preparation Tracker, Pomodoro Focus Timer.
+### 6. Learn More
+- **Interactive Mini-Tools:** Practice timed focus sprints with the [Pomodoro Focus Timer](#pomodoro) and log DSA progress in [Placement Tracker](#placement-tracker).
+- **Recommended Practice Platforms:** [LeetCode](https://leetcode.com/) and [GeeksforGeeks](https://www.geeksforgeeks.org/).
 - **Academic Sources:** Gayle Laakmann McDowell, *Cracking the Coding Interview*; MIT Global Education & Career Development Center."""
     },
 
@@ -148,58 +169,66 @@ During an online interview with a tech company, a student is asked a tricky bina
         "read_time_minutes": 3,
         "tags": ["Mental & Emotional Wellbeing", "Anxiety Management", "Emotional Regulation", "Grounding"],
         "is_featured": True,
-        "content": """### The Problem & College Context
-Acute anxiety often strikes right before oral vivas, project presentations, or when opening grade portals. The body releases cortisol and adrenaline, causing shallow breathing, rapid heartbeats, trembling hands, and catastrophic looping thoughts ("I'm going to fail, everyone will see").
+        "content": """### 1. The Situation
+Your heart is pounding, your chest feels tight before an exam or presentation, and your mind is spiraling into worst-case catastrophe?
 
-### Practical Action Steps
-1. **5 Things You Can SEE:** Look around your immediate environment. Name 5 specific items: the wood grain on the desk, a blue notebook, dust motes in the window light, a ceiling fan blade, a water bottle cap.
-2. **4 Things You Can TOUCH:** Feel 4 physical textures: your feet pressed into the floor, the rough cotton of your jeans, the cool edge of your phone, the smoothness of your pen.
-3. **3 Things You Can HEAR:** Listen beyond the room. Notice 3 distinct sounds: the distant hum of traffic outside the hostel, keyboard keys clicking, a bird chirping.
-4. **2 Things You Can SMELL:** Inhale through your nose. Notice the faint scent of coffee, paper, or fresh air.
-5. **1 Thing You Can TASTE:** Notice the lingering taste of mint, water, or simply bring awareness to your tongue resting in your mouth.
+### 2. What You Should Know
+- **Anxiety Traps You in the Future:** Anxiety lives in hypothetical future disasters; your physical senses anchor you firmly in the present moment.
+- **Somatic Grounding Bypasses Mental Loops:** You cannot think your way out of a physiological fight-or-flight response; you must ground the body first.
+- **Sensory Scanning Regulates Heart Rate:** Engaging five distinct sensory circuits activates the parasympathetic rest-and-digest response.
+- **Everyday Practice Builds Automatic Reflexes:** Practicing grounding during low-stress moments makes it effortless to trigger during acute exam panic.
 
-### 2-Minute Micro-Activity
-Stop right now. Rest both feet flat on the floor, unclench your jaw, drop your shoulders away from your ears, and name three green or blue objects in your room.
+### 3. Try This Now
+1. **5 Things You SEE:** Look around your room. Name 5 specific items (e.g. desk grain, blue pen cap, window shadow, ceiling fan, water droplet).
+2. **4 Things You TOUCH:** Feel 4 physical textures (e.g. your feet flat on the floor, your cotton sleeve, the cold metal desk, the rough paper edge).
+3. **3 Things You HEAR:** Listen closely for 3 distinct sounds (e.g. fan hum, distant campus footsteps, birds outside).
+4. **2 Things You SMELL:** Inhale deeply through your nose and detect 2 subtle scents (e.g. pencil wood, coffee, fresh air).
+5. **1 Thing You TASTE:** Notice the lingering taste of mint or water, or relax your tongue against the floor of your mouth.
 
-### Realistic College Life Example
-A 2nd-year student waiting in line outside the SAC-I seminar hall for an external viva feels her heart pounding violently and palms sweating. She executes the 5-4-3-2-1 scan, focusing on the tile pattern on the floor and the texture of her ID card lanyard. Her heart rate slows from 125 bpm to normal, allowing her to answer questions clearly.
+### 4. Quick Challenge
+**The 60-Second Physical Unclench (2 mins):** Drop your shoulders away from your ears, unclench your jaw, uncross your legs, and place both feet flat on the floor. Take two slow, deep 4-second belly breaths.
 
-### Quick Takeaway Mental Anchor
-*"Your senses are your anchors: anxiety lives in the future, but your senses live in the present."*
+### 5. Remember This
+Anxiety is a physical sensation, not a forecast of the future. You are safe in this present moment.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Interactive Breathing & Grounding Exercises, Mood Journaling Prompts.
-- **Academic Sources:** National Institute of Mental Health (NIMH); Tele-MANAS (Ministry of Health & Family Welfare, Govt of India)."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Launch the [Breathing & Grounding Tool](#breathing-grounding) for an animated 4-7-8 pacer, or reflect in [Mood Journaling](#mood-journal).
+- **Free 24/7 National Mental Health Helpline:** Call **Tele-MANAS** toll-free at **14416** or **1800-891-4416** (Govt of India).
+- **Campus Counsellor:** Visit Dr. Nitu Singh Bhadouria in SAC I, First Floor (Confidential student support)."""
     },
     {
         "title": "Untangling Cognitive Distortions: Halting the 'I am Going to Fail' Spiral",
         "category": "Mental & Emotional Wellbeing",
         "content_type": "article",
         "summary": "Identify common thinking traps like catastrophizing, black-and-white thinking, and mind-reading, and replace them with cognitive balance.",
-        "read_time_minutes": 5,
+        "read_time_minutes": 4,
         "tags": ["Mental & Emotional Wellbeing", "Overthinking", "Confidence", "Motivation"],
         "is_featured": False,
-        "content": """### The Problem & College Context
-Under chronic academic pressure, the brain develops cognitive distortions—faulty thinking patterns that warp reality. A 5/10 on one quiz gets magnified into "I will lose my GPA, fail campus placements, and ruin my future." Recognising these traps is the first step toward emotional resilience.
+        "content": """### 1. The Situation
+One poor quiz score or difficult viva happens, and suddenly your brain convinces you that your semester GPA is ruined and your future is over?
 
-### Practical Action Steps
-1. **Spot All-or-Nothing Thinking:** Replace "If I don't get an A, I am completely useless" with "A B+ is still a strong result that reflects real effort."
-2. **Examine the Courtroom Evidence:** Put your catastrophic thought on trial. What verifiable facts prove your fear? What facts contradict it? You will find that catastrophic thoughts almost never hold up under cross-examination.
-3. **Decatastrophize: What is the Most Likely Scenario?** Ask yourself: What is the worst-case scenario? What is the best-case scenario? What is the realistic, 80% likely outcome?
-4. **Use Compassionate Third-Person Reframing:** If your closest hostel friend came to you with this exact mistake, what would you say to them? You would never insult them the way your inner critic insults you.
+### 2. What You Should Know
+- **Thoughts are Hypotheses, Not Facts:** Your anxious mind generates catastrophic narratives that feel intensely true but have zero factual proof.
+- **The All-or-Nothing Trap:** Believing that anything less than 100% is an absolute failure is a distorted cognitive lens that paralyzes effort.
+- **Emotional Reasoning Distorts Reality:** Feeling overwhelmed about a subject does not mean you lack the intellect to master it.
+- **The Best-Friend Test:** You would never speak to a struggling hostel friend with the brutal criticism your inner voice directs at yourself.
 
-### 2-Minute Micro-Activity
-Write down the single most stressful thought you have had today. Below it, write one balanced, fact-based sentence that counters it without toxic positivity.
+### 3. Try This Now
+1. **Spot Absolute Words:** Catch yourself using catastrophic terms like "always", "never", "ruined", or "completely impossible".
+2. **Cross-Examine the Evidence:** Ask: What verifiable facts support this fear? What verifiable facts prove I have handled tough situations before?
+3. **Calculate the Realistic Likely Outcome:** Ask yourself: What is the worst-case scenario? What is the best-case? What is the realistic 80% outcome?
+4. **Reframe with Third-Person Compassion:** Address yourself by name and state one objective, balanced sentence about the situation.
 
-### Realistic College Life Example
-After receiving a lower-than-expected grade on a midterm test, a student begins catastrophizing that their professor dislikes them and they won't graduate. Writing down the evidence, they realize this test was only worth 10% of the course grade and that 3 high-weight assignments remain, completely restoring their motivation.
+### 4. Quick Challenge
+**The Thought on Trial (3 mins):** Write down your single most stressful thought today. Below it, write one balanced, factual sentence that counters it without toxic positivity.
 
-### Quick Takeaway Mental Anchor
-*"Thoughts are mental hypotheses, not proven courtroom facts."*
+### 5. Remember This
+You don't have to believe everything your anxious brain tells you. Thoughts are suggestions, not verdicts.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Mood Journaling Prompts, Goal Planner.
-- **Academic Sources:** Dr. David D. Burns, *Feeling Good: The New Mood Therapy*; Beck Institute for Cognitive Behavior Therapy."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Use [Mood Journaling Prompts](#mood-journal) to untangle distorted thoughts, and set micro-steps in [Goal Planner](#goal-planner).
+- **Academic Sources:** Dr. David D. Burns, *Feeling Good: The New Mood Therapy*; Beck Institute for Cognitive Behavior Therapy.
+- **Campus Support:** Connect with campus counsellor Dr. Nitu Singh Bhadouria in SAC I, First Floor."""
     },
 
     # 4. Sleep & Physical Health
@@ -208,35 +237,34 @@ After receiving a lower-than-expected grade on a midterm test, a student begins 
         "category": "Sleep & Physical Health",
         "content_type": "guide",
         "summary": "A practical roadmap to repair erratic college sleep schedules, eliminate morning brain fog, and align with natural sleep architecture.",
-        "read_time_minutes": 6,
+        "read_time_minutes": 5,
         "tags": ["Sleep & Physical Health", "Sleep Routines", "Managing Fatigue", "Healthy Habits"],
         "is_featured": True,
-        "content": """### The Problem & College Context
-Late-night hostel culture, discord chats, and midnight study sprints routinely push sleep onset to 2:00–4:00 AM. When 8:30 AM lectures arrive, students experience chronic sleep debt, circadian desynchrony, and extreme cognitive fatigue. Weekend 'binge sleeping' only makes Monday mornings worse.
+        "content": """### 1. The Situation
+You fall asleep at 3:30 AM browsing your phone, dread your 8:30 AM lectures, and struggle with heavy brain fog throughout every afternoon?
 
-### Practical Action Steps
-1. **Anchor Your Morning Wake Time First:** Do not try to force yourself to fall asleep at 10 PM if you normally sleep at 3 AM. Instead, wake up at the same hour every single morning (+/- 30 minutes). Your sleep drive will naturally build by bedtime.
-2. **Get 10 Minutes of Morning Sunlight:** Viewing outdoor sunlight within 60 minutes of waking sets a 14-hour timer in the suprachiasmatic nucleus for evening melatonin production.
-3. **Adopt the 10-3-2-1-0 Sleep Architecture:**
-   - **10 hours before bed:** No more caffeine (coffee/energy drinks).
-   - **3 hours before bed:** No heavy mess dinners or spicy snacks.
-   - **2 hours before bed:** Stop intensive coding or problem-solving.
-   - **1 hour before bed:** Turn off high-intensity blue light screens.
-   - **0:** Hit snooze 0 times in the morning.
-4. **Cool Down Your Sleep Environment:** Core body temperature must drop by 1 to 2 degrees Celsius to initiate deep sleep. Open the window or use a fan to keep the room cool.
+### 2. What You Should Know
+- **Wake Time Anchors the Circadian Clock:** You cannot force sleep onset, but waking up at a fixed hour sets an automatic 14-hour timer for evening melatonin.
+- **Morning Sunlight is Non-Negotiable:** Viewing natural outdoor light within 60 minutes of waking halts melatonin and triggers daytime alertness.
+- **Caffeine Has a 6-Hour Half-Life:** An afternoon coffee at 4:00 PM leaves 50% of the stimulant active in your bloodstream at 10:00 PM.
+- **Weekend Binge Sleeping Worsens Jetlag:** Sleeping in until 1:00 PM on Sunday causes social jetlag, making Monday morning feel excruciating.
 
-### 2-Minute Micro-Activity
-Set a recurring alarm on your phone for 10:30 PM named: *"Digital Sunset: Close IDE & Dim Lights."*
+### 3. Try This Now
+1. **Lock in Your Wake-Up Time:** Set a consistent wake alarm for the next 7 days (+/- 30 mins), even on weekends.
+2. **Get 10 Minutes of Outdoor Morning Light:** Step outside to the campus quad or hostel balcony before heading to your first lecture.
+3. **Enforce the 2:00 PM Caffeine Cutoff:** Switch to water or herbal tea after lunch so caffeine does not disrupt slow-wave deep sleep.
+4. **Cool Down Your Sleep Environment:** Lowering your core body temperature by just 1°C is a primary biological trigger for falling asleep quickly.
 
-### Realistic College Life Example
-A student constantly sleeping from 3:30 AM to 7:45 AM felt exhausted during morning programming labs. By anchoring his wake time at 7:30 AM every day and cutting off caffeine after 2:00 PM, his body began naturally feeling tired by 11:30 PM, restoring 8 hours of restorative deep sleep within one week.
+### 4. Quick Challenge
+**The Digital Sunset Alarm (2 mins):** Set a daily recurring alarm on your phone for 11:00 PM titled: *"Screen Dim & Wind Down"*. Place your phone across your room away from your bed.
 
-### Quick Takeaway Mental Anchor
-*"Consistency in wake-up time is the anchor that pulls sleep onset into alignment."*
+### 5. Remember This
+Consistency in your morning wake-up time is the anchor that naturally brings bedtime into healthy alignment.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Daily Habit Tracker, Pomodoro Focus Timer.
-- **Academic Sources:** Dr. Matthew Walker, *Why We Sleep* (UC Berkeley Sleep Center); NHS Sleep and Tiredness Guidance."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Track your sleep consistency and bedtime habits with the [Daily Habit Tracker](#habit-tracker).
+- **External Resources:** [NHS Sleep and Tiredness Guidance](https://www.nhs.uk/live-well/sleep-and-tiredness/).
+- **Academic Sources:** Dr. Matthew Walker, *Why We Sleep* (UC Berkeley Sleep Center); Harvard Medical School Division of Sleep Medicine."""
     },
     {
         "title": "Managing Hostel Fatigue, Hydration & Screen Exhaustion",
@@ -246,26 +274,29 @@ A student constantly sleeping from 3:30 AM to 7:45 AM felt exhausted during morn
         "read_time_minutes": 4,
         "tags": ["Sleep & Physical Health", "Screen-Time Management", "Exercise", "Hydration"],
         "is_featured": False,
-        "content": """### The Problem & College Context
-Sitting in a cramped hostel chair staring at backlit code editors for 8 hours without drinking water causes a specific kind of physical fatigue known as 'sedentary brain fog'. Students often confuse dehydration and eye strain with academic burnout.
+        "content": """### 1. The Situation
+You've spent 7 hours hunched over a laptop in a cramped hostel room, your eyes burn, your neck aches, and you feel completely drained of energy?
 
-### Practical Action Steps
-1. **The 20-20-20 Rule for Digital Eye Strain:** Every 20 minutes of screen work, look at an object at least 20 feet away for 20 seconds. This relaxes the ciliary muscles in your eyes.
-2. **The 2-Bottle Hydration Anchor:** Keep a 1-liter bottle at your study desk. Make a rule: you cannot leave for lunch until bottle 1 is empty, and you cannot sleep until bottle 2 is finished.
-3. **Take a 15-Minute Sunlight Walk:** A brisk 15-minute walk around the campus sports complex or academic quad clears adenosine and boosts dopamine more effectively than an extra cup of instant coffee.
-4. **Decompress the Hip Flexors & Thoracic Spine:** Every 90 minutes of studying, do 60 seconds of doorway chest openers and hip flexor lunges to undo the hunched desk posture.
+### 2. What You Should Know
+- **Sedentary Brain Fog is Physical:** Continuous sitting reduces cerebral blood flow, causing physical sluggishness often mistaken for academic burnout.
+- **Mild Dehydration Destroys Concentration:** A 2% drop in body water volume reduces working memory and cognitive processing speed by up to 20%.
+- **The 20-20-20 Rule Relaxes Eye Muscles:** Staring at close-range screens cramps your ciliary eye muscles; long-distance gaze resets them.
+- **Movement Clears Adenosine:** A quick 10-minute campus walk clears sleep pressure and boosts alertness faster than an extra cup of coffee.
 
-### 2-Minute Micro-Activity
-Stand up right now. Drink a full glass of water, look out a window into the far distance for 20 seconds, and roll your shoulders backward 10 times.
+### 3. Try This Now
+1. **Deploy the 20-20-20 Eye Protocol:** Every 20 minutes, look at an object at least 20 feet away (out the window) for 20 seconds.
+2. **Use the 2-Bottle Desk Anchor:** Keep a 1-liter water bottle on your desk; finish Bottle 1 before lunch and Bottle 2 before dinner.
+3. **Take a 10-Minute Campus Sunlight Walk:** Stride briskly around the academic complex or sports ground between lectures to restore circulation.
+4. **Decompress Your Desk Posture:** Perform 60 seconds of doorway chest openers and hip flexor stretches after every 90 minutes of study.
 
-### Realistic College Life Example
-A student spending entire weekends preparing for competitive coding contests noticed heavy afternoon headaches and lethargy. After instituting the 20-20-20 rule and keeping a 1-liter water bottle on his desk, his afternoon headaches disappeared and his focus endurance doubled.
+### 4. Quick Challenge
+**The 60-Second Physical Reboot (2 mins):** Stand up right now. Drink a full glass of water, look out the window into the far distance, and roll your shoulders backward 10 times.
 
-### Quick Takeaway Mental Anchor
-*"Your cognitive stamina is only as strong as your physical baseline."*
+### 5. Remember This
+Your cognitive stamina can never outperform your physical baseline. Protect your body to sharpen your mind.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Daily Habit Tracker, Interactive Breathing & Grounding Exercises.
+### 6. Learn More
+- **Interactive Mini-Tools:** Log daily water intake and movement streaks in the [Daily Habit Tracker](#habit-tracker).
 - **Academic Sources:** American Academy of Ophthalmology; Mayo Clinic Health System."""
     },
 
@@ -275,60 +306,68 @@ A student spending entire weekends preparing for competitive coding contests not
         "category": "Relationships & Social Life",
         "content_type": "guide",
         "summary": "How to communicate assertively, resolve late-night noise disputes, and establish peaceful boundaries in shared student living spaces.",
-        "read_time_minutes": 5,
+        "read_time_minutes": 4,
         "tags": ["Relationships & Social Life", "Hostel Adjustment", "Boundaries", "Conflict Resolution"],
         "is_featured": True,
-        "content": """### The Problem & College Context
-Sharing a 12x14 foot hostel room with one or two roommates who have completely different sleep schedules, hygiene habits, and guest preferences can generate intense, silent friction. Many students suffer silently or explode in anger rather than communicating constructively.
+        "content": """### 1. The Situation
+Your roommate plays loud audio, keeps lights on until 3 AM, or invites friends over without asking, and you dread going back to your room?
 
-### Practical Action Steps
-1. **Use 'I-Statements' Instead of Accusatory 'You-Statements':** Say: "I have a tough 8 AM exam tomorrow and need to sleep by midnight, so I'd appreciate keeping the overhead lights off" instead of "You are always keeping the lights on and making noise."
-2. **Propose Win-Win Logistics:** If your roommate is a late-night gamer or study enthusiast, invest in or agree on practical compromises: desk lamps with directional hoods, headphones mandatory after 11 PM, and quiet phone calls taken in the corridor.
-3. **Address Issues Early While Emotional Temperature is Low:** Do not wait until you have accumulated 3 weeks of resentment. Mention small habits casually: "Hey, could we agree to take old food containers down to the mess trash every evening so the room stays fresh?"
-4. **Know When to Seek Neutral Campus Mediation:** If basic sleep, safety, or academic boundaries are repeatedly violated despite respectful conversations, seek confidential advice from your floor senior, hostel warden, or campus counsellor.
+### 2. What You Should Know
+- **Silent Resentment Guarantees Conflict:** Tolerating boundary violations in silence guarantees eventual emotional explosions over minor issues.
+- **'I-Statements' Defuse Defensiveness:** Framing requests around your schedule ("I need quiet to sleep") prevents roommates from feeling attacked.
+- **Specific Logistics Beat General Complaints:** Agreeing on concrete rules (e.g. desk lamps after 11 PM) resolves 90% of living space tensions.
+- **Shared Living Requires Mutual Compromise:** Neither roommate gets 100% of their preferences; peace comes from agreed-upon practical compromises.
 
-### 2-Minute Micro-Activity
-Think of one recurring friction point in your shared living space. Draft a calm, polite 2-sentence request using an 'I-statement' that you can share with your roommate today.
+### 3. Try This Now
+1. **Have the Conversation When Calm:** Never raise an issue during a tense midnight moment; talk casually during the day over tea or lunch.
+2. **Use the 'I-Statement' Formula:** Say: "I have an 8 AM lab tomorrow and need to sleep by midnight, so could we switch off the overhead light at 11:30 PM?"
+3. **Establish Practical Night Logistics:** Agree that phone calls after 11 PM happen in the corridor and study lamps replace main room lights.
+4. **Know When to Seek Campus Mediation:** If basic safety, hygiene, or academic boundaries are ignored repeatedly, consult your hostel warden or floor senior.
 
-### Realistic College Life Example
-Two roommates in a 2-seater hostel room were constantly clashing over late-night study lights. After a calm 5-minute conversation over tea, they agreed that the overhead light would be switched off at 11:30 PM and the student staying up would use a personal clip-on reading lamp and headphones. Both preserved their academic performance and their friendship.
+### 4. Quick Challenge
+**Draft One Respectful Request (3 mins):** Identify your single biggest living space friction point. Write a polite, two-sentence 'I-statement' request that you can share with your roommate today.
 
-### Quick Takeaway Mental Anchor
-*"Clear, respectful boundaries are the kindest way to preserve long-term friendships."*
+### 5. Remember This
+Clear, kind boundaries are the foundation of healthy relationships, not a sign of hostility.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Mood Journaling Prompts, Goal Planner.
-- **Academic Sources:** Dr. Marshall Rosenberg, *Nonviolent Communication*; Harvard Division of Student Life."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Journal through social frustration using [Mood Journaling](#mood-journal) or set actionable communication goals in [Goal Planner](#goal-planner).
+- **Academic Sources:** Dr. Marshall Rosenberg, *Nonviolent Communication*; Harvard Division of Student Life.
+- **Campus Mediation Support:** Confidential assistance is available with Dr. Nitu Singh Bhadouria in SAC I, First Floor."""
     },
     {
         "title": "Navigating Homesickness & Building Your Authentic Campus Tribe",
         "category": "Relationships & Social Life",
         "content_type": "article",
         "summary": "Overcome campus loneliness, bridge cultural transitions, and create meaningful, low-pressure connections in university.",
-        "read_time_minutes": 5,
+        "read_time_minutes": 4,
         "tags": ["Relationships & Social Life", "Homesickness", "Friendships", "Peer Pressure"],
         "is_featured": False,
-        "content": """### The Problem & College Context
-Moving away from family to campus brings sudden independence accompanied by unfamiliar mess food, regional cultural differences, and an absence of familiar support systems. Seeing large, boisterous friend groups on campus can make students feel uniquely isolated and defective.
+        "content": """### 1. The Situation
+You feel out of place in your hostel, miss home cooking and your family, and worry that everyone else has already found their lifelong friend group?
 
-### Practical Action Steps
-1. **Engage in Low-Pressure 'Parallel Play':** You do not need deep conversational eloquence to connect. Ask a classmate: "Hey, do you want to head to the central library and work on the lab assignment together?" Studying side-by-side provides low-stakes social nourishment.
-2. **Join Niche Campus Clubs Over Generic Crowds:** Broad batch groups can feel overwhelming. Join 1 or 2 specialized clubs based on genuine interests (astronomy, debate, open-source coding, music, trekking) where shared passion removes awkward small talk.
-3. **Structure Calls Home Strategically:** Calling home for 15 minutes at a set time (e.g., 8:00 PM every other day) provides comfort without keeping you mentally tethered to your bedroom back home.
-4. **Remember the Transition Curve:** Research proves that weeks 3 through 8 of a new semester are the peak of transition distress. Adaptation takes between 6 to 12 weeks; feeling awkward initially is completely normal.
+### 2. What You Should Know
+- **The Adaptation Curve is Universal:** Research shows the first 6 to 10 weeks of university are the hardest; feeling disconnected initially is completely normal.
+- **Large Social Groups Often Lack Depth:** Those large, loud groups you see on campus are often just as superficial and insecure as you feel.
+- **Parallel Routine Builds Natural Friendships:** You don't need charismatic small talk; simply inviting someone to study side-by-side in the library creates connection.
+- **Niche Interests Beat Broad Crowds:** Joining one club that matches your authentic hobby introduces you to peers with whom you already share real common ground.
 
-### 2-Minute Micro-Activity
-Send a short WhatsApp message to one classmate you haven't spoken to recently: *"Hey, are you heading to the afternoon lecture? Want to grab a quick tea before it starts?"*
+### 3. Try This Now
+1. **Practice Low-Pressure 'Study Buddy' Invites:** Ask a classmate: "Hey, are you heading to the library to work on the lab assignment? Want to sit together?"
+2. **Join One Technical or Cultural Club:** Attend a meeting for robotics, open-source coding, debate, photography, or music where shared projects remove awkwardness.
+3. **Schedule Structured Calls Home:** Call family at a set hour (e.g. 8:00 PM for 20 minutes) so you stay connected without withdrawing from campus life.
+4. **Establish One Daily Campus Routine:** Eat meals at consistent times or visit the student center regularly; familiar faces quickly become casual acquaintances.
 
-### Realistic College Life Example
-A 1st-year student from another state felt intensely lonely during his first month, eating meals alone in the hostel mess. He attended a weekend workshop hosted by the college robotics club, volunteered to help solder a sensor circuit, and formed a close circle of 3 friends who now study and dine together daily.
+### 4. Quick Challenge
+**The 1-Tap Connection (2 mins):** Send a short message to a classmate: *"Hey, are you heading to the afternoon lecture? Want to grab a quick tea before it starts?"*
 
-### Quick Takeaway Mental Anchor
-*"Belonging is built through repeated micro-moments of shared routine, not instant fairy-tale friendships."*
+### 5. Remember This
+Belonging is not something you discover instantly; it is something you build through repeated micro-moments of shared everyday life.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Mood Journaling Prompts, Daily Habit Tracker.
-- **Academic Sources:** Journal of College Student Development; National Center for Higher Education."""
+### 6. Learn More
+- **Interactive Mini-Tools:** Reflect on campus transitions in [Mood Journaling Prompts](#mood-journal) or track social habits in [Daily Habit Tracker](#habit-tracker).
+- **Academic Sources:** Journal of College Student Development; National Center for Higher Education.
+- **Campus Support:** Connect with campus counsellor Dr. Nitu Singh Bhadouria in SAC I, First Floor."""
     },
 
     # 6. Productivity & Personal Growth
@@ -337,29 +376,33 @@ A 1st-year student from another state felt intensely lonely during his first mon
         "category": "Productivity & Personal Growth",
         "content_type": "guide",
         "summary": "Master single-tasking, eliminate phone distractions, and achieve 3x output in half the study time with structured intervals.",
-        "read_time_minutes": 5,
+        "read_time_minutes": 4,
         "tags": ["Productivity & Personal Growth", "Discipline", "Daily Planning", "Time Management"],
         "is_featured": True,
-        "content": """### The Problem & College Context
-Constant smartphone notifications, group chat memes, and open browser tabs fragment student attention into tiny 90-second shards. When students attempt to study while multitasking, attention residue prevents the brain from entering 'Deep Work', turning a 2-hour assignment into an agonizing 6-hour slog.
+        "content": """### 1. The Situation
+You sit down to code or study for 4 hours, but end up checking notifications every 5 minutes and make almost zero real progress?
 
-### Practical Action Steps
-1. **The Single-Tasking Contract:** Before starting your timer, choose exactly ONE unambiguous deliverable: "Solve question 3 and 4 of the tutorial sheet." Do not allow secondary tasks to sneak in.
-2. **The Distraction Capture Sheet:** Keep a physical sticky note next to your keyboard. When a random intrusive thought occurs ("check placement portal", "look at shoes", "reply to friend"), write it on the sheet and return immediately to your task.
-3. **Execute 25/5 or 50/10 Cycles:** Focus completely for 25 minutes, then take a strict 5-minute break. After 4 completed cycles, take a long 20-minute restorative walk.
-4. **Protect the Break from Digital Dopamine:** In your 5-minute break, stand up, stretch, look out the window, or drink water. Do NOT open short-form video reels, which hijack attention and ruin focus for the next session.
+### 2. What You Should Know
+- **Attention Residue Ruins Focus:** Every quick glance at your phone leaves cognitive residue in working memory that takes up to 20 minutes to clear.
+- **25 Minutes Has Low Activation Friction:** Committing to 25 minutes of single-tasking feels manageable to your brain and breaks task avoidance.
+- **Breaks Must Be Screen-Free:** Scrolling short-form videos during breaks floods dopamine receptors and destroys focus for your next session.
+- **Deep Work Trumps Long Hours:** Two hours of intense, distraction-free concentration achieves more than eight hours of fragmented multi-tasking.
 
-### 2-Minute Micro-Activity
-Pick up your phone right now. Turn on 'Do Not Disturb' or place the phone across the room face down for the next 25 minutes.
+### 3. Try This Now
+1. **Choose Exactly ONE Tangible Goal:** Before starting your timer, write: "Solve questions 3 and 4 of the tutorial sheet." Do not switch tasks mid-session.
+2. **Keep a Physical 'Distraction Pad':** When an urge to check something strikes ("look at WhatsApp", "buy shoes"), write it on the pad and return to work.
+3. **Run 25-Minute Work / 5-Minute Break Cycles:** Set the timer, work with zero interruptions, and step away immediately when the chime sounds.
+4. **Take True Rest Breaks:** During your 5-minute break, stand up, drink water, stretch, or look out the window—keep your phone face down.
 
-### Realistic College Life Example
-A student spending 6 hours in the library was only producing 20 lines of code due to constant phone notifications. After adopting the Pomodoro timer, placing his phone inside his backpack, and using a distraction sheet, he finished his compiler design assignment in two 50-minute deep work blocks and had the entire evening free.
+### 4. Quick Challenge
+**Phone Lockdown Sprint (2 mins):** Turn on Do Not Disturb, place your phone out of arm's reach inside your backpack, and start your first 25-minute Pomodoro session.
 
-### Quick Takeaway Mental Anchor
-*"Two hours of distraction-free deep focus outperforms eight hours of fragmented lingering."*
+### 5. Remember This
+Two hours of pure single-tasking focus will always outperform eight hours of distracted lingering.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Pomodoro Focus Timer, Study Planner.
+### 6. Learn More
+- **Interactive Mini-Tools:** Launch the [Pomodoro Focus Timer](#pomodoro) right now or plan your blocks in [Study Planner](#study-planner).
+- **External Resources:** [Notion for Education](https://www.notion.com/product/notion-for-education) for organizing course wikis.
 - **Academic Sources:** Cal Newport, *Deep Work: Rules for Focused Success in a Distracted World*; Francesco Cirillo, *The Pomodoro Technique*."""
     },
     {
@@ -367,29 +410,32 @@ A student spending 6 hours in the library was only producing 20 lines of code du
         "category": "Productivity & Personal Growth",
         "content_type": "guide",
         "summary": "Transform overwhelming ambitions like landing a marquee placement or maintaining an 8.5 CGPA into frictionless daily micro-actions.",
-        "read_time_minutes": 5,
+        "read_time_minutes": 4,
         "tags": ["Productivity & Personal Growth", "Goal Setting", "Habit Building", "Self-Reflection"],
         "is_featured": False,
-        "content": """### The Problem & College Context
-Students frequently set massive, intimidating goals ("I will solve 300 LeetCode problems", "I will get a 9.0 GPA", "I will master Machine Learning"). Because the goal is so far away and colossal, the brain becomes paralyzed by the gap between today and the finish line, resulting in inaction.
+        "content": """### 1. The Situation
+You set ambitious goals at the start of the semester ("Crack 300 DSA questions", "Get a 9.0 GPA"), but feel so overwhelmed that you don't do anything?
 
-### Practical Action Steps
-1. **Decompose the Mountain into 14-Day Sprints:** Break a 6-month goal down into two-week milestones. If you want to solve 100 problems this semester, that is simply 8 problems a week, or 1 problem a day with a rest day.
-2. **Focus on Lead Measures Over Lag Measures:** A lag measure is "Get placed at a top company." You cannot execute on a lag measure today. A lead measure is "Solve 1 DSA problem before 10 AM every morning." Focus 100% of your energy on the lead measure.
-3. **The 2-Minute Rule for Habit Stacking:** Attach your new habit to an existing routine: "Right after I finish morning coffee, I will write 5 lines of code." Make the entry barrier under 2 minutes.
-4. **Conduct a 10-Minute Sunday Retrospective:** Every Sunday evening, spend 10 minutes reviewing what worked, what slipped, and setting the top 3 micro-goals for the coming week.
+### 2. What You Should Know
+- **Big Goals Paralyze the Brain:** Giant goals trigger intimidation; breaking them into 14-day sprints restores executive control.
+- **Lead Measures Beat Lag Measures:** "Get placed at a top company" is a lag measure you can't control today; "Solve 1 DSA problem before noon" is a lead measure you own.
+- **Habit Stacking Lowers Resistance:** Attaching a new habit to an existing routine (e.g. "After morning tea, revise 1 page of notes") makes consistency automatic.
+- **Systems Outlast Willpower:** Relying on inspiration fails during exam week; having a daily recurring checklist guarantees steady execution.
 
-### 2-Minute Micro-Activity
-Choose your biggest ambition for this semester. Write down the single smallest physical action you can take in the next 15 minutes to advance that goal.
+### 3. Try This Now
+1. **Deconstruct Your Semester Goal into 14-Day Sprints:** If your goal is 60 coding problems this term, that is simply 1 problem a day with rest days.
+2. **Define One Non-Negotiable Lead Measure:** Choose one specific action you will complete every single day before checking social media.
+3. **Use the 2-Minute Entry Rule:** Make the starting step so easy it is impossible to say no (e.g. open the textbook and read 1 definition).
+4. **Run a 10-Minute Sunday Retrospective:** Every Sunday night, review your habit tracker, celebrate wins, and set 3 micro-goals for next week.
 
-### Realistic College Life Example
-A 3rd-year student felt overwhelmed by placement preparation and didn't know where to start. Using the Goal Planner, she broke down "Crack Placements" into 3 daily micro-steps: (1) 1 medium DSA problem, (2) 15 minutes of OS revision, (3) 1 behavioral question answered using the STAR framework. By sticking to this daily sprint, she solved 90 problems over the semester with zero panic.
+### 4. Quick Challenge
+**The 1-Micro Step Definition (3 mins):** Pick your biggest academic or placement ambition right now. Write down the single smallest physical action you can complete in the next 10 minutes to move it forward.
 
-### Quick Takeaway Mental Anchor
-*"You do not rise to the level of your goals; you fall to the level of your daily systems."*
+### 5. Remember This
+You do not rise to the level of your goals; you fall to the level of your daily systems.
 
-### Related Tools & Source References
-- **Related Interactive Tools:** Goal Planner, Daily Habit Tracker, Placement Preparation Tracker.
+### 6. Learn More
+- **Interactive Mini-Tools:** Launch the [Goal Planner](#goal-planner) to decompose your ambitions and sync with Mindy AI, or track daily streaks in [Daily Habit Tracker](#habit-tracker).
 - **Academic Sources:** James Clear, *Atomic Habits*; Stephen Covey & Chris McChesney, *The 4 Disciplines of Execution*."""
     }
 ]
@@ -397,9 +443,8 @@ A 3rd-year student felt overwhelmed by placement preparation and didn't know whe
 def update_resources():
     db = SessionLocal()
     try:
-        # Clear old resources or update existing ones
         existing = db.query(WellbeingResource).all()
-        print(f"Found {len(existing)} existing resources.")
+        print(f"Found {len(existing)} existing resources in local database.")
         
         # Delete existing to replace with our 12 comprehensive guides
         db.query(WellbeingResource).delete()
@@ -420,7 +465,7 @@ def update_resources():
         
         db.commit()
         count = db.query(WellbeingResource).count()
-        print(f"Successfully seeded {count} comprehensive resources across all 6 categories!")
+        print(f"Successfully seeded {count} comprehensive resources across all 6 categories in local DB!")
         for r in db.query(WellbeingResource).all():
             print(f"- [{r.id}] ({r.category}) {r.title}")
     except Exception as e:

@@ -41,6 +41,7 @@ import DailyHabitTrackerTool from '../components/resources/DailyHabitTrackerTool
 import MoodJournalingTool from '../components/resources/MoodJournalingTool';
 import BreathingGroundingTool from '../components/resources/BreathingGroundingTool';
 import GoalPlannerTool from '../components/resources/GoalPlannerTool';
+import GuideReaderModal from '../components/resources/GuideReaderModal';
 
 const CATEGORIES = [
   'All',
@@ -580,16 +581,26 @@ export default function Resources({ onOpenBreathing, onOpenGrounding, onNavigate
                 const isBookmarked = bookmarkedIds.includes(guide.id);
                 const isCompleted = completedGuideIds.includes(guide.id);
 
+                // Extract relatable situation hook if available
+                const situationHook = guide.content?.match(/###\s*(?:1\.\s*)?The Situation\n([^\n]+)/i)?.[1];
+
+                // Check completed steps
+                let stepsDone = 0;
+                try {
+                  const savedSteps = localStorage.getItem(`mindbridge_guide_steps_${userId}_${guide.id}`);
+                  if (savedSteps) stepsDone = JSON.parse(savedSteps).length;
+                } catch (e) {}
+
                 return (
                   <div
                     key={guide.id}
                     onClick={() => setSelectedResource(guide)}
-                    className="group rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between relative"
+                    className="group rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 p-5 sm:p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between relative"
                   >
                     <div>
                       {/* Top Badges */}
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+                        <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
                           {guide.category}
                         </span>
 
@@ -616,20 +627,30 @@ export default function Resources({ onOpenBreathing, onOpenGrounding, onNavigate
                         {guide.title}
                       </h3>
 
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 line-clamp-3 leading-relaxed">
-                        {guide.summary}
-                      </p>
+                      {situationHook ? (
+                        <div className="mt-2.5 p-2.5 rounded-xl bg-sky-50/60 dark:bg-slate-800/60 border border-sky-100/60 dark:border-slate-700/60 text-[11px] text-slate-700 dark:text-slate-300 italic line-clamp-2">
+                          "{situationHook}"
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 line-clamp-2 leading-relaxed">
+                          {guide.summary}
+                        </p>
+                      )}
                     </div>
 
                     {/* Bottom Status Row */}
-                    <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1 text-[11px] font-semibold">
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold">
                         {isCompleted ? (
-                          <span className="text-teal-600 dark:text-teal-400 flex items-center gap-1">
+                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 fill-current" /> Completed
                           </span>
+                        ) : stepsDone > 0 ? (
+                          <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> {stepsDone} steps done
+                          </span>
                         ) : (
-                          <span className="text-slate-400">Not read yet</span>
+                          <span className="text-slate-400">Not started</span>
                         )}
                       </div>
 
@@ -719,125 +740,18 @@ export default function Resources({ onOpenBreathing, onOpenGrounding, onNavigate
         </div>
       )}
 
-      {/* Reader Modal (Displays Complete Structured Guide) */}
+      {/* Reader Modal (Displays Engaging 6-Part Structured Guide with Interactive Checklist, Timer & Reflection) */}
       {selectedResource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-scale-up max-h-[90vh] overflow-y-auto space-y-5">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
-                    {selectedResource.category}
-                  </span>
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {selectedResource.read_time_minutes} min read
-                  </span>
-                </div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                  {selectedResource.title}
-                </h2>
-              </div>
-
-              <button
-                onClick={() => setSelectedResource(null)}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition cursor-pointer shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Quick Summary Pill */}
-            <div className="p-4 rounded-2xl bg-sky-50/70 dark:bg-slate-800/80 border border-sky-100 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-              <span className="font-bold text-sky-800 dark:text-sky-300 block mb-0.5 uppercase tracking-wider text-[10px]">Protocol Summary</span>
-              {selectedResource.summary}
-            </div>
-
-            {/* Structured Content Body */}
-            <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-4 whitespace-pre-line">
-              {selectedResource.content || selectedResource.summary}
-            </div>
-
-            {/* Modal Actions Footer */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
-                  onClick={(e) => toggleCompletedGuide(selectedResource.id, e)}
-                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
-                    completedGuideIds.includes(selectedResource.id)
-                      ? 'bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                  }`}
-                >
-                  {completedGuideIds.includes(selectedResource.id) ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 text-teal-500 fill-current" /> Marked Completed
-                    </>
-                  ) : (
-                    <>
-                      <Circle className="w-4 h-4 text-slate-400" /> Mark as Read
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={(e) => toggleBookmark(selectedResource.id, e)}
-                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition cursor-pointer"
-                  title="Bookmark"
-                >
-                  {bookmarkedIds.includes(selectedResource.id) ? (
-                    <BookmarkCheck className="w-4 h-4 text-amber-500 fill-current" />
-                  ) : (
-                    <Bookmark className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                {/* Related tool launch buttons based on category */}
-                {selectedResource.category.includes('Academic') && (
-                  <button
-                    onClick={() => handleLaunchRelatedTool('study-planner')}
-                    className="px-3.5 py-2 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" /> Launch Study Planner
-                  </button>
-                )}
-                {selectedResource.category.includes('Placement') && (
-                  <button
-                    onClick={() => handleLaunchRelatedTool('placement-tracker')}
-                    className="px-3.5 py-2 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 hover:bg-teal-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <Target className="w-3.5 h-3.5" /> Open Placement Tracker
-                  </button>
-                )}
-                {selectedResource.category.includes('Sleep') && (
-                  <button
-                    onClick={() => handleLaunchRelatedTool('habit-tracker')}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <Activity className="w-3.5 h-3.5" /> Open Habit Tracker
-                  </button>
-                )}
-                {selectedResource.category.includes('Mental') && (
-                  <button
-                    onClick={() => handleLaunchRelatedTool('breathing-grounding')}
-                    className="px-3.5 py-2 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 hover:bg-teal-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <Wind className="w-3.5 h-3.5" /> Open Breathing Tool
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setSelectedResource(null)}
-                  className="px-5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:opacity-90 transition cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <GuideReaderModal
+          guide={selectedResource}
+          userId={userId}
+          isBookmarked={bookmarkedIds.includes(selectedResource.id)}
+          isCompleted={completedGuideIds.includes(selectedResource.id)}
+          onToggleBookmark={(id, e) => toggleBookmark(id, e)}
+          onToggleCompleted={(id, e) => toggleCompletedGuide(id, e)}
+          onLaunchTool={handleLaunchRelatedTool}
+          onClose={() => setSelectedResource(null)}
+        />
       )}
     </div>
   );
