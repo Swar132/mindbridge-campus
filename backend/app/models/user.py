@@ -89,4 +89,14 @@ class UserPreference(Base):
     is_paused = Column(Boolean, default=False)            # Pause all non-critical notifications
     paused_until = Column(Date, nullable=True)
 
+    # Granular Category Consents for WhatsApp Business Channel
+    whatsapp_reminders_consent = Column(Boolean, default=True)
+    whatsapp_weekly_summary_consent = Column(Boolean, default=True)
+    whatsapp_alerts_consent = Column(Boolean, default=True)
+    whatsapp_followup_consent = Column(Boolean, default=True)
+    whatsapp_counsellor_consent = Column(Boolean, default=True)
+    whatsapp_mindy_consent = Column(Boolean, default=True)
+    whatsapp_verified = Column(Boolean, default=False)
+    whatsapp_verification_code = Column(String(20), nullable=True)
+
     user = relationship("User", back_populates="preferences")

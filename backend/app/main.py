@@ -27,6 +27,7 @@ from app.routers import (
     admin,
     checkin,
     reminders,
+    whatsapp,
 )
 
 @asynccontextmanager
@@ -43,6 +44,8 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+        from app.services.seed_data import seed_whatsapp_templates
+        seed_whatsapp_templates(db)
     finally:
         db.close()
 
@@ -88,6 +91,7 @@ app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(checkin.router, prefix=settings.API_V1_STR)
 app.include_router(reminders.router, prefix=settings.API_V1_STR)
+app.include_router(whatsapp.router, prefix=settings.API_V1_STR)
 
 @app.get("/api/health")
 def health_check():

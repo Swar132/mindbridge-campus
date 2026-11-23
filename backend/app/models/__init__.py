@@ -8,6 +8,7 @@ from app.models.notification import Notification
 from app.models.sms import PhoneVerification, SMSLog
 from app.models.registration import PendingRegistration
 from app.models.monitoring import WeeklyWellbeingReport, WellbeingAnomalyAlert, PushSubscription, NotificationLog
+from app.models.whatsapp import WhatsAppMessage, WhatsAppConversation, WhatsAppTemplate
 
 __all__ = [
     "User",
@@ -29,4 +30,7 @@ __all__ = [
     "WellbeingAnomalyAlert",
     "PushSubscription",
     "NotificationLog",
+    "WhatsAppMessage",
+    "WhatsAppConversation",
+    "WhatsAppTemplate",
 ]

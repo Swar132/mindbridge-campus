@@ -28,10 +28,13 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: str = os.getenv("VAPID_PRIVATE_KEY", "Gch5-s3r6tgT7zc2-LAefoRC3PZ7nZ-p-PhgU4NAtzY")
     VAPID_CLAIMS_EMAIL: str = os.getenv("VAPID_CLAIMS_EMAIL", "mailto:wellness@mindbridge.campus")
 
-    # Meta WhatsApp Cloud API (Optional official provider, free tier capable)
+    # Meta WhatsApp Cloud API (Official Business Platform)
     WHATSAPP_PHONE_NUMBER_ID: str = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
     WHATSAPP_ACCESS_TOKEN: str = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
     WHATSAPP_BUSINESS_ACCOUNT_ID: str = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
+    WHATSAPP_APP_SECRET: str = os.getenv("WHATSAPP_APP_SECRET", "")
+    WHATSAPP_VERIFY_TOKEN: str = os.getenv("WHATSAPP_VERIFY_TOKEN", "mindbridge_campus_webhook_verify_token_2026")
+    WHATSAPP_API_VERSION: str = os.getenv("WHATSAPP_API_VERSION", "v21.0")
 
     class Config:
         env_file = ".env"

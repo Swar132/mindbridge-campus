@@ -331,6 +331,32 @@ class WellbeingMonitor:
                 notification_type="weekly_report"
             )
 
+        # Dispatch WhatsApp Weekly Report if enabled and consented
+        if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_weekly_summary_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
+            user = db.query(User).filter(User.id == user_id).first()
+            student_name = user.full_name if user else "Student"
+            wa_body = (
+                f"🌿 *MindBridge 7-Day Wellbeing Summary*\n"
+                f"Hi {student_name}! Here is your comparative rhythm for the week:\n\n"
+                f"• *Avg Stress:* {avg_stress}/10 ({report.stress_trend})\n"
+                f"• *Avg Sleep:* {avg_sleep} hrs ({report.sleep_trend})\n"
+                f"• *Avg Energy:* {avg_energy}/10\n"
+                f"• *Dominant Mood:* {dominant_mood}\n\n"
+                f"💬 *Takeaway:* {summary[:240]}"
+            )
+            buttons = [
+                {"id": "checkin_start", "title": "Log Today 🌿"},
+                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
+            ]
+            WhatsAppService.send_interactive_buttons_sync(
+                phone_number=prefs.whatsapp_phone,
+                body_text=wa_body,
+                buttons=buttons,
+                db=db,
+                user_id=user_id,
+                context="weekly_report"
+            )
+
         # Log notification dispatch
         log_entry = NotificationLog(
             user_id=user_id,
@@ -790,6 +816,28 @@ class WellbeingMonitor:
                     notification_type="follow_up"
                 )
 
+            # WhatsApp Multi-Stage Follow-up if enabled & consented
+            if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_followup_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
+                fup_buttons = [
+                    {"id": "anomaly_doing_fine", "title": "Doing Fine 👍"},
+                    {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
+                ]
+                if alert.follow_up_stage == 2:
+                    fup_buttons.append({"id": "pause_notifications", "title": "Pause Alerts ⏸️"})
+                elif alert.follow_up_stage == 3:
+                    fup_buttons.append({"id": "anomaly_advice", "title": "Quick Reset 💡"})
+                elif alert.follow_up_stage >= 4:
+                    fup_buttons.insert(0, {"id": "anomaly_counsellor", "title": "Counsellor Contact 🤝"})
+
+                WhatsAppService.send_interactive_buttons_sync(
+                    phone_number=prefs.whatsapp_phone,
+                    body_text=f"💙 *{title}*\n\n{body}",
+                    buttons=fup_buttons[:3],
+                    db=db,
+                    user_id=user_id,
+                    context=f"follow_up_stage_{alert.follow_up_stage}"
+                )
+
             # Log
             log_entry = NotificationLog(
                 user_id=user_id,
@@ -915,6 +963,32 @@ class WellbeingMonitor:
                 notification_type="sudden_change_alert"
             )
 
+        # WhatsApp Interactive Anomaly Alert if enabled & consented
+        if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_alerts_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
+            btn_options = [
+                {"id": "anomaly_doing_fine", "title": "I'm doing fine 👍"},
+                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"},
+                {"id": "anomaly_advice", "title": "Quick Reset 💡"}
+            ]
+            if alert.is_positive_celebration:
+                btn_options = [
+                    {"id": "talk_to_mindy", "title": "Keep it up! ✨"},
+                    {"id": "anomaly_doing_fine", "title": "All Good 👍"}
+                ]
+            elif "placement" in (alert.trigger_reason or "").lower():
+                btn_options[2] = {"id": "anomaly_placements", "title": "Placements 💼"}
+            elif "sleep" in (alert.metric_name or "").lower():
+                btn_options[2] = {"id": "anomaly_sleep", "title": "Sleep Tips 🌙"}
+
+            WhatsAppService.send_interactive_buttons_sync(
+                phone_number=prefs.whatsapp_phone,
+                body_text=f"🌿 *MindBridge Campus Check-in*\n\n{alert.supportive_message}",
+                buttons=btn_options,
+                db=db,
+                user_id=user_id,
+                context="anomaly_alert"
+            )
+
         # Log notification dispatch
         log_entry = NotificationLog(
             user_id=user_id,
@@ -991,7 +1065,7 @@ class WellbeingMonitor:
             MoodEntry.recorded_at >= start_of_day_utc
         ).first()
 
-        if already_checked_in:
+        if not force and already_checked_in:
             logger.info(f"[MONITOR] User {user_id} already checked in today. Suppressing reminder.")
             return None
 
@@ -1020,6 +1094,24 @@ class WellbeingMonitor:
                 body="Take a minute to reflect on your mood, stress, and sleep balance today.",
                 url="/mood-tracker",
                 notification_type="daily_reminder"
+            )
+
+        # WhatsApp Daily Reminder if enabled & consented
+        if prefs.whatsapp_enabled and getattr(prefs, "whatsapp_reminders_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
+            user = db.query(User).filter(User.id == user_id).first()
+            student_name = user.full_name if user else "Student"
+            buttons = [
+                {"id": "checkin_start", "title": "Log Check-in 🌿"},
+                {"id": "anomaly_doing_fine", "title": "Doing Fine 👍"},
+                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
+            ]
+            WhatsAppService.send_interactive_buttons_sync(
+                phone_number=prefs.whatsapp_phone,
+                body_text=f"Hi {student_name}! 🌿 Gentle evening reminder from MindBridge Campus.\n\nTaking 60 seconds to reflect on your day helps maintain your sleep and stress balance. How has your day been?",
+                buttons=buttons,
+                db=db,
+                user_id=user_id,
+                context="daily_reminder"
             )
 
         # Log

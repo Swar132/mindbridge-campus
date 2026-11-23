@@ -116,6 +116,34 @@ def update_appointment_status(
     )
     db.add(notif)
     db.commit()
+
+    # Dispatch WhatsApp appointment update if student has consented
+    student_user = db.query(User).filter(User.id == apt.student_id).first()
+    if student_user and student_user.preferences and student_user.preferences.whatsapp_enabled:
+        pref = student_user.preferences
+        if getattr(pref, "whatsapp_counsellor_consent", True) and pref.whatsapp_phone and not pref.is_paused:
+            from app.services.whatsapp_service import WhatsAppService
+            c_name = counsellor_profile.user.full_name if (counsellor_profile and counsellor_profile.user) else "Dr. Nitu Singh Bhadouria"
+            room_info = apt.meeting_room or "Counselling Room, SAC I, First Floor"
+            wa_text = (
+                f"🤝 *Campus Counselling Appointment {status_label}*\n\n"
+                f"Hi {student_user.full_name}! Your counselling session with *{c_name}* for *{apt.appointment_date}* at *{apt.time_slot}* has been *{status_in.status}*.\n\n"
+                f"📍 *Location:* {room_info}\n\n"
+                "Please arrive 5 minutes before your scheduled slot. If you need to reschedule or have questions, you can reply directly here."
+            )
+            buttons = [
+                {"id": "anomaly_doing_fine", "title": "Confirmed 👍"},
+                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
+            ]
+            WhatsAppService.send_interactive_buttons_sync(
+                phone_number=pref.whatsapp_phone,
+                body_text=wa_text,
+                buttons=buttons,
+                db=db,
+                user_id=student_user.id,
+                context="appointment_update"
+            )
+
     db.refresh(apt)
 
     return _format_appointment(apt, is_counsellor=True)

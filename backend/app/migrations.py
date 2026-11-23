@@ -93,6 +93,14 @@ def run_migrations(engine: Engine):
                 "follow_up_frequency_days": ("INTEGER DEFAULT 2", "INTEGER DEFAULT 2"),
                 "is_paused": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
                 "paused_until": ("DATE", "DATE"),
+                "whatsapp_reminders_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_weekly_summary_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_alerts_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_followup_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_counsellor_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_mindy_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_verified": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+                "whatsapp_verification_code": ("VARCHAR(20)", "VARCHAR(20)"),
             }
 
             for col_name, (pg_type, sql_type) in new_pref_cols.items():
@@ -190,5 +198,121 @@ def run_migrations(engine: Engine):
                         is_active BOOLEAN DEFAULT 1
                     );
                     CREATE INDEX IF NOT EXISTS ix_student_memories_user_id ON student_memories(user_id);
+                """))
+            conn.commit()
+
+        # Check whatsapp_messages table
+        if "whatsapp_messages" not in inspector.get_table_names():
+            if is_postgres:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        wa_message_id VARCHAR(100) UNIQUE,
+                        phone_number VARCHAR(30) NOT NULL,
+                        direction VARCHAR(15) NOT NULL DEFAULT 'outbound',
+                        message_type VARCHAR(30) DEFAULT 'text',
+                        body TEXT,
+                        payload TEXT,
+                        status VARCHAR(25) DEFAULT 'sent',
+                        error_code VARCHAR(50),
+                        error_message TEXT,
+                        conversation_context VARCHAR(50),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_messages_user_id ON whatsapp_messages(user_id);
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_messages_phone ON whatsapp_messages(phone_number);
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_messages_status ON whatsapp_messages(status);
+                """))
+            else:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        wa_message_id VARCHAR(100) UNIQUE,
+                        phone_number VARCHAR(30) NOT NULL,
+                        direction VARCHAR(15) NOT NULL DEFAULT 'outbound',
+                        message_type VARCHAR(30) DEFAULT 'text',
+                        body TEXT,
+                        payload TEXT,
+                        status VARCHAR(25) DEFAULT 'sent',
+                        error_code VARCHAR(50),
+                        error_message TEXT,
+                        conversation_context VARCHAR(50),
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_messages_user_id ON whatsapp_messages(user_id);
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_messages_phone ON whatsapp_messages(phone_number);
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_messages_status ON whatsapp_messages(status);
+                """))
+            conn.commit()
+
+        # Check whatsapp_conversations table
+        if "whatsapp_conversations" not in inspector.get_table_names():
+            if is_postgres:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS whatsapp_conversations (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        phone_number VARCHAR(30) NOT NULL,
+                        last_user_message_at TIMESTAMP,
+                        current_state VARCHAR(50) DEFAULT 'idle',
+                        state_data TEXT,
+                        ai_conversation_id INTEGER REFERENCES ai_conversations(id) ON DELETE SET NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_conversations_user_id ON whatsapp_conversations(user_id);
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_conversations_phone ON whatsapp_conversations(phone_number);
+                """))
+            else:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS whatsapp_conversations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        phone_number VARCHAR(30) NOT NULL,
+                        last_user_message_at DATETIME,
+                        current_state VARCHAR(50) DEFAULT 'idle',
+                        state_data TEXT,
+                        ai_conversation_id INTEGER REFERENCES ai_conversations(id) ON DELETE SET NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_conversations_user_id ON whatsapp_conversations(user_id);
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_conversations_phone ON whatsapp_conversations(phone_number);
+                """))
+            conn.commit()
+
+        # Check whatsapp_templates table
+        if "whatsapp_templates" not in inspector.get_table_names():
+            if is_postgres:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS whatsapp_templates (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(100) UNIQUE NOT NULL,
+                        category VARCHAR(50) DEFAULT 'UTILITY',
+                        language VARCHAR(10) DEFAULT 'en',
+                        status VARCHAR(30) DEFAULT 'APPROVED',
+                        components_json TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_templates_name ON whatsapp_templates(name);
+                """))
+            else:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS whatsapp_templates (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name VARCHAR(100) UNIQUE NOT NULL,
+                        category VARCHAR(50) DEFAULT 'UTILITY',
+                        language VARCHAR(10) DEFAULT 'en',
+                        status VARCHAR(30) DEFAULT 'APPROVED',
+                        components_json TEXT NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_whatsapp_templates_name ON whatsapp_templates(name);
                 """))
             conn.commit()

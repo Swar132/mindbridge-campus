@@ -197,4 +197,16 @@ export const api = {
   updateReminderPreferences: (prefData) => request('/reminders/preferences', { method: 'PUT', body: JSON.stringify(prefData) }),
   optOutReminders: () => request('/reminders/opt-out', { method: 'POST' }),
   getSMSLogs: () => request('/reminders/logs'),
+
+  // Meta WhatsApp Business Cloud API & Mindy Support
+  getWhatsAppStatus: () => request('/whatsapp/status'),
+  getWhatsAppPreferences: () => request('/whatsapp/preferences'),
+  updateWhatsAppPreferences: (prefData) => request('/whatsapp/preferences', { method: 'PUT', body: JSON.stringify(prefData) }),
+  connectWhatsApp: (connData) => request('/whatsapp/connect', { method: 'POST', body: JSON.stringify(connData) }),
+  verifyWhatsAppCode: (verifyData) => request('/whatsapp/verify-code', { method: 'POST', body: JSON.stringify(verifyData) }),
+  disconnectWhatsApp: () => request('/whatsapp/disconnect', { method: 'POST' }),
+  sendTestWhatsAppMessage: (testData) => request('/whatsapp/send-test', { method: 'POST', body: JSON.stringify(testData) }),
+  getWhatsAppMessages: (limit = 30) => request(`/whatsapp/messages?limit=${limit}`),
+  simulateIncomingWhatsApp: (simData) => request('/whatsapp/simulate-incoming', { method: 'POST', body: JSON.stringify(simData) }),
+  triggerWhatsAppCronSweep: () => request('/whatsapp/cron/dispatch-due', { method: 'POST' }),
 };

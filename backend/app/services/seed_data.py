@@ -347,4 +347,140 @@ def seed_database(db: Session):
         db.add(n)
 
     db.commit()
+
+    # 7. Seed Official Meta WhatsApp Templates
+    seed_whatsapp_templates(db)
+
     print("Database seeding completed successfully!")
+
+
+def seed_whatsapp_templates(db: Session):
+    """Seeds standard pre-approved WhatsApp Business message templates."""
+    from app.models.whatsapp import WhatsAppTemplate
+    existing_cnt = db.query(WhatsAppTemplate).count()
+    if existing_cnt > 0:
+        return
+
+    templates = [
+        WhatsAppTemplate(
+            name="mindbridge_daily_reminder",
+            category="UTILITY",
+            language="en",
+            status="APPROVED",
+            components_json=json.dumps([
+                {
+                    "type": "BODY",
+                    "text": "Hi {{1}}, gentle evening check-in from MindBridge Campus. Taking 60 seconds to log how you are feeling helps track your wellbeing balance. How has your day been?"
+                },
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"type": "QUICK_REPLY", "text": "Log Check-in 🌿"},
+                        {"type": "QUICK_REPLY", "text": "Doing Fine 👍"},
+                        {"type": "QUICK_REPLY", "text": "Talk to Mindy 💬"}
+                    ]
+                }
+            ])
+        ),
+        WhatsAppTemplate(
+            name="mindbridge_weekly_summary",
+            category="UTILITY",
+            language="en",
+            status="APPROVED",
+            components_json=json.dumps([
+                {
+                    "type": "BODY",
+                    "text": "Hi {{1}}, your MindBridge weekly wellbeing comparative summary is ready! Over the past 7 days: Avg Stress {{2}}/10, Avg Sleep {{3}}h. {{4}}"
+                },
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"type": "QUICK_REPLY", "text": "View Full Report 📊"},
+                        {"type": "QUICK_REPLY", "text": "Talk to Mindy 💬"}
+                    ]
+                }
+            ])
+        ),
+        WhatsAppTemplate(
+            name="mindbridge_anomaly_alert",
+            category="UTILITY",
+            language="en",
+            status="APPROVED",
+            components_json=json.dumps([
+                {
+                    "type": "BODY",
+                    "text": "Hi {{1}}, we noticed a shift in your recent {{2}} rhythm: {{3}}. MindBridge is checking in gently to support you."
+                },
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"type": "QUICK_REPLY", "text": "I'm doing fine 👍"},
+                        {"type": "QUICK_REPLY", "text": "Talk to Mindy 💬"},
+                        {"type": "QUICK_REPLY", "text": "Quick Reset 💡"}
+                    ]
+                }
+            ])
+        ),
+        WhatsAppTemplate(
+            name="mindbridge_followup_checkin",
+            category="UTILITY",
+            language="en",
+            status="APPROVED",
+            components_json=json.dumps([
+                {
+                    "type": "BODY",
+                    "text": "Hi {{1}}, gentle follow-up from MindBridge. {{2}}. We are here to support your college journey anytime."
+                },
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"type": "QUICK_REPLY", "text": "Doing Fine 👍"},
+                        {"type": "QUICK_REPLY", "text": "Talk to Mindy 💬"},
+                        {"type": "QUICK_REPLY", "text": "Counsellor Contact 🤝"}
+                    ]
+                }
+            ])
+        ),
+        WhatsAppTemplate(
+            name="mindbridge_appointment_reminder",
+            category="UTILITY",
+            language="en",
+            status="APPROVED",
+            components_json=json.dumps([
+                {
+                    "type": "BODY",
+                    "text": "Hi {{1}}, reminder for your confidential counselling session with {{2}} on {{3}} at {{4}} in {{5}}. Reply to confirm or reschedule."
+                },
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"type": "QUICK_REPLY", "text": "Confirmed 👍"},
+                        {"type": "QUICK_REPLY", "text": "Talk to Mindy 💬"}
+                    ]
+                }
+            ])
+        ),
+        WhatsAppTemplate(
+            name="mindbridge_welcome_optin",
+            category="UTILITY",
+            language="en",
+            status="APPROVED",
+            components_json=json.dumps([
+                {
+                    "type": "BODY",
+                    "text": "Welcome to MindBridge Campus on WhatsApp, {{1}}! You will receive gentle check-in reminders, wellbeing insights, and 24/7 access to Mindy AI."
+                },
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"type": "QUICK_REPLY", "text": "Log Check-in 🌿"},
+                        {"type": "QUICK_REPLY", "text": "Talk to Mindy 💬"}
+                    ]
+                }
+            ])
+        )
+    ]
+
+    for t in templates:
+        db.add(t)
+    db.commit()
