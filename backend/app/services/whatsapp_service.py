@@ -227,6 +227,7 @@ class WhatsAppService:
                 if pref:
                     pref.whatsapp_last_delivery_status = "failed"
                     pref.whatsapp_last_error = err_msg
+                    pref.whatsapp_verified = False
             db.commit()
 
             return {

@@ -1223,11 +1223,19 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs shrink-0 ${
-                      waPreferences?.whatsapp_verified
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-amber-500 text-white'
+                      !waProviderStatus?.is_configured
+                        ? 'bg-slate-700 text-white'
+                        : waPreferences?.whatsapp_last_delivery_status === 'failed'
+                          ? 'bg-rose-600 text-white'
+                          : (waPreferences?.whatsapp_verified && waPreferences?.whatsapp_last_delivery_status === 'delivered')
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-amber-500 text-white'
                     }`}>
-                      {waPreferences?.whatsapp_verified ? (
+                      {!waProviderStatus?.is_configured ? (
+                        <AlertCircle className="w-5 h-5" />
+                      ) : waPreferences?.whatsapp_last_delivery_status === 'failed' ? (
+                        <XCircle className="w-5 h-5" />
+                      ) : (waPreferences?.whatsapp_verified && waPreferences?.whatsapp_last_delivery_status === 'delivered') ? (
                         <CheckCircle2 className="w-5 h-5" />
                       ) : (
                         <Clock className="w-5 h-5" />
@@ -1242,19 +1250,31 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                           {waPreferences?.whatsapp_phone || whatsappPhone}
                         </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          waPreferences?.whatsapp_verified
-                            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                            : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                          !waProviderStatus?.is_configured
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                            : waPreferences?.whatsapp_last_delivery_status === 'failed'
+                              ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                              : (waPreferences?.whatsapp_verified && waPreferences?.whatsapp_last_delivery_status === 'delivered')
+                                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                                : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                         }`}>
-                          {waPreferences?.whatsapp_verified
-                            ? 'Verified & Active'
-                            : 'Pending Delivery Verification'}
+                          {!waProviderStatus?.is_configured
+                            ? 'Twilio Setup Required'
+                            : waPreferences?.whatsapp_last_delivery_status === 'failed'
+                              ? 'Delivery Failed'
+                              : (waPreferences?.whatsapp_verified && waPreferences?.whatsapp_last_delivery_status === 'delivered')
+                                ? 'Verified & Active'
+                                : 'Pending Delivery Verification'}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                        {waPreferences?.whatsapp_verified
-                          ? 'Real Twilio delivery has been confirmed. Scheduled wellbeing and academic updates are active.'
-                          : 'Number is registered. Complete verification by sending a test notification below or await your first delivery.'}
+                        {!waProviderStatus?.is_configured
+                          ? 'Twilio credentials (TWILIO_ACCOUNT_SID & TWILIO_AUTH_TOKEN) must be added to Render to enable WhatsApp message delivery.'
+                          : waPreferences?.whatsapp_last_delivery_status === 'failed'
+                            ? 'The latest notification attempt could not be delivered. Check the notice below for error details.'
+                            : (waPreferences?.whatsapp_verified && waPreferences?.whatsapp_last_delivery_status === 'delivered')
+                              ? 'Real Twilio delivery has been confirmed. Scheduled wellbeing and academic updates are active.'
+                              : 'Number is registered. Complete verification by sending a test notification below or await your first delivery.'}
                       </p>
                     </div>
                   </div>
