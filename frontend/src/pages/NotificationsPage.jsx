@@ -1336,10 +1336,23 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                   </div>
                 </div>
 
-                {waPreferences?.whatsapp_last_error && (
+                {waPreferences?.whatsapp_last_error && !(waProviderStatus?.is_configured && waPreferences.whatsapp_last_error.includes("not configured")) && (
                   <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                    <span><strong>Twilio Notice:</strong> {waPreferences.whatsapp_last_error}</span>
+                    <div className="space-y-1">
+                      <div><strong>Twilio Notice:</strong> {waPreferences.whatsapp_last_error}</div>
+                      {(waPreferences.whatsapp_last_error.includes('Sandbox') || waPreferences.whatsapp_last_error.includes('572002') || waPreferences.whatsapp_last_error.includes('21608')) && (
+                        <a
+                          href={waProviderStatus?.sandbox_join_url || "https://wa.me/14155238886"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 mt-1 text-amber-700 dark:text-amber-300 hover:underline font-bold text-[11px]"
+                        >
+                          <span>Open WhatsApp to Text Join Code</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1568,9 +1581,24 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                     </p>
                   )}
                   {waTestResult.error && (
-                    <p className="text-[11px] leading-relaxed">
-                      {waTestResult.error}
-                    </p>
+                    <div className="space-y-2 pt-1">
+                      <p className="text-[11px] leading-relaxed">
+                        {waTestResult.error}
+                      </p>
+                      {(waTestResult.error.includes('Sandbox') || waTestResult.error.includes('572002') || waTestResult.error.includes('21608')) && (
+                        <div>
+                          <a
+                            href={waProviderStatus?.sandbox_join_url || "https://wa.me/14155238886"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-xs transition active:scale-95"
+                          >
+                            <span>Open WhatsApp to Text Sandbox Join Code</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

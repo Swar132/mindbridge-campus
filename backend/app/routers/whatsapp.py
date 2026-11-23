@@ -280,75 +280,87 @@ def send_test_whatsapp_notification(
     Dispatches a real WhatsApp notification via Twilio Programmable Messaging.
     Builds realistic, personalized student content using actual database records
     (daily reminder, weekly summary, wellbeing notification, academic reminder, or standard test).
+    Guarantees clean JSON output with zero unhandled 500 crashes.
     """
-    pref = db.query(UserPreference).filter(UserPreference.user_id == current_user.id).first()
-    target_phone = payload.phone_number or (pref.whatsapp_phone if pref else None) or current_user.phone_number
+    try:
+        pref = db.query(UserPreference).filter(UserPreference.user_id == current_user.id).first()
+        target_phone = payload.phone_number or (pref.whatsapp_phone if pref else None) or current_user.phone_number
 
-    if not target_phone:
-        raise HTTPException(status_code=400, detail="No WhatsApp phone number is connected or provided.")
+        if not target_phone:
+            raise HTTPException(status_code=400, detail="No WhatsApp phone number is connected or provided.")
 
-    cleaned = WhatsAppService.clean_phone_number(
-        target_phone,
-        getattr(pref, "whatsapp_country_code", "+91") if pref else "+91"
-    )
-    if not WhatsAppService.validate_phone(cleaned):
-        raise HTTPException(status_code=400, detail=f"Invalid phone number format: {target_phone}")
-
-    category = payload.notification_category or "daily_reminder"
-
-    # Build genuine notification body based on real student data
-    if payload.custom_text:
-        body = payload.custom_text
-    elif category == "daily_reminder":
-        body = WhatsAppService.build_daily_reminder_message(current_user, db)
-    elif category == "weekly_summary":
-        body = WhatsAppService.build_weekly_summary_message(current_user, db)
-    elif category == "wellbeing_alert":
-        body = WhatsAppService.build_anomaly_alert_message(
-            current_user,
-            anomaly_type="high_stress",
-            details={"current_stress": 7.5, "previous_stress": 5.0}
+        cleaned = WhatsAppService.clean_phone_number(
+            target_phone,
+            getattr(pref, "whatsapp_country_code", "+91") if pref else "+91"
         )
-    elif category == "academic_reminder":
-        body = WhatsAppService.build_academic_reminder_message(current_user, db)
-    else:
-        student_name = current_user.full_name or "Student"
-        body = (
-            f"🌿 *MindBridge Campus — WhatsApp Notification Test*\n\n"
-            f"Hi {student_name}! This is a live test from MindBridge Campus. "
-            f"Your personal WhatsApp notifications are successfully configured.\n\n"
-            f"You will receive gentle daily check-in reminders, personalized weekly wellbeing reports, "
-            f"and timely academic reminders.\n\n"
-            f"Reply STOP anytime to opt out."
+        if not WhatsAppService.validate_phone(cleaned):
+            raise HTTPException(status_code=400, detail=f"Invalid phone number format: {target_phone}")
+
+        category = payload.notification_category or "daily_reminder"
+
+        # Build genuine notification body based on real student data
+        if payload.custom_text:
+            body = payload.custom_text
+        elif category == "daily_reminder":
+            body = WhatsAppService.build_daily_reminder_message(current_user, db)
+        elif category == "weekly_summary":
+            body = WhatsAppService.build_weekly_summary_message(current_user, db)
+        elif category == "wellbeing_alert":
+            body = WhatsAppService.build_anomaly_alert_message(
+                current_user,
+                anomaly_type="high_stress",
+                details={"current_stress": 7.5, "previous_stress": 5.0}
+            )
+        elif category == "academic_reminder":
+            body = WhatsAppService.build_academic_reminder_message(current_user, db)
+        else:
+            student_name = current_user.full_name or "Student"
+            body = (
+                f"🌿 *MindBridge Campus — WhatsApp Notification Test*\n\n"
+                f"Hi {student_name}! This is a live test from MindBridge Campus. "
+                f"Your personal WhatsApp notifications are successfully configured.\n\n"
+                f"You will receive gentle daily check-in reminders, personalized weekly wellbeing reports, "
+                f"and timely academic reminders.\n\n"
+                f"Reply STOP anytime to opt out."
+            )
+
+        result = WhatsAppService.send_notification(
+            phone_number=cleaned,
+            message_body=body,
+            db=db,
+            user_id=current_user.id,
+            notification_type=f"test_{category}"
         )
 
-    result = WhatsAppService.send_notification(
-        phone_number=cleaned,
-        message_body=body,
-        db=db,
-        user_id=current_user.id,
-        notification_type=f"test_{category}"
-    )
+        if not result.get("success"):
+            return {
+                "success": False,
+                "status": result.get("status", "failed"),
+                "error": result.get("error", "Dispatch failed"),
+                "recipient": cleaned,
+                "category": category,
+                "provider_status": WhatsAppService.get_provider_status()
+            }
 
-    if not result.get("success"):
         return {
-            "success": False,
-            "status": result.get("status"),
-            "error": result.get("error"),
+            "success": True,
+            "message": f"Real test notification ({category}) dispatched successfully via Twilio.",
             "recipient": cleaned,
             "category": category,
+            "status": result.get("status"),
+            "twilio_sid": result.get("twilio_sid") or result.get("message_sid") or result.get("wa_message_id"),
+            "body_preview": body[:120] + "..." if len(body) > 120 else body
+        }
+    except HTTPException:
+        raise
+    except Exception as ex:
+        logger.exception(f"[WHATSAPP TEST ERROR] Unexpected error during test dispatch: {ex}")
+        return {
+            "success": False,
+            "status": "failed",
+            "error": f"Dispatch error: {str(ex)}",
             "provider_status": WhatsAppService.get_provider_status()
         }
-
-    return {
-        "success": True,
-        "message": f"Real test notification ({category}) dispatched successfully via Twilio.",
-        "recipient": cleaned,
-        "category": category,
-        "status": result.get("status"),
-        "twilio_sid": result.get("twilio_sid") or result.get("message_sid") or result.get("wa_message_id"),
-        "body_preview": body[:120] + "..." if len(body) > 120 else body
-    }
 
 
 # -----------------------------------------------------------------------------

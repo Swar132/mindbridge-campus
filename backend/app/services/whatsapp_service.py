@@ -296,25 +296,29 @@ class WhatsAppService:
             tw_sid = created_message.sid
             tw_status = created_message.status or "queued"
 
-            msg_record = WhatsAppMessage(
-                user_id=user_id,
-                wa_message_id=tw_sid,
-                phone_number=cleaned,
-                direction="outbound",
-                message_type="content_sid" if content_sid else "text",
-                body=message_body,
-                status=tw_status,
-                conversation_context=notification_type
-            )
-            db.add(msg_record)
+            try:
+                msg_record = WhatsAppMessage(
+                    user_id=user_id,
+                    wa_message_id=tw_sid,
+                    phone_number=cleaned,
+                    direction="outbound",
+                    message_type="content_sid" if content_sid else "text",
+                    body=message_body,
+                    status=tw_status,
+                    conversation_context=notification_type
+                )
+                db.add(msg_record)
 
-            if user_id:
-                pref = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
-                if pref:
-                    pref.whatsapp_last_delivery_status = tw_status
-                    pref.whatsapp_last_delivery_at = datetime.now(timezone.utc)
-                    pref.whatsapp_last_error = None
-            db.commit()
+                if user_id:
+                    pref = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
+                    if pref:
+                        pref.whatsapp_last_delivery_status = tw_status
+                        pref.whatsapp_last_delivery_at = datetime.now(timezone.utc)
+                        pref.whatsapp_last_error = None
+                db.commit()
+            except Exception as db_err:
+                logger.error(f"[WHATSAPP DB ERROR] Failed to record created message: {db_err}")
+                db.rollback()
 
             logger.info(f"[TWILIO WHATSAPP] Message {tw_sid} queued/sent to {cleaned} (Status: {tw_status})")
             return {
@@ -348,25 +352,29 @@ class WhatsAppService:
             else:
                 friendly_error = f"Twilio Error {error_code}: {raw_err[:220]}"
 
-            msg_record = WhatsAppMessage(
-                user_id=user_id,
-                phone_number=cleaned,
-                direction="outbound",
-                message_type="text",
-                body=message_body,
-                status="failed",
-                error_code=str(error_code),
-                error_message=friendly_error,
-                conversation_context=notification_type
-            )
-            db.add(msg_record)
+            try:
+                msg_record = WhatsAppMessage(
+                    user_id=user_id,
+                    phone_number=cleaned,
+                    direction="outbound",
+                    message_type="text",
+                    body=message_body,
+                    status="failed",
+                    error_code=str(error_code),
+                    error_message=friendly_error,
+                    conversation_context=notification_type
+                )
+                db.add(msg_record)
 
-            if user_id:
-                pref = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
-                if pref:
-                    pref.whatsapp_last_delivery_status = "failed"
-                    pref.whatsapp_last_error = friendly_error
-            db.commit()
+                if user_id:
+                    pref = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
+                    if pref:
+                        pref.whatsapp_last_delivery_status = "failed"
+                        pref.whatsapp_last_error = friendly_error
+                db.commit()
+            except Exception as db_err:
+                logger.error(f"[WHATSAPP DB ERROR] Failed to record failed message: {db_err}")
+                db.rollback()
 
             return {
                 "success": False,

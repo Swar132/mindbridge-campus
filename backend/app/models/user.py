@@ -101,6 +101,6 @@ class UserPreference(Base):
     whatsapp_verification_code = Column(String(20), nullable=True)
     whatsapp_last_delivery_status = Column(String(50), nullable=True)
     whatsapp_last_delivery_at = Column(DateTime, nullable=True)
-    whatsapp_last_error = Column(String(255), nullable=True)
+    whatsapp_last_error = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="preferences")

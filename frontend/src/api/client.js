@@ -39,15 +39,35 @@ async function request(endpoint, options = {}) {
     return null;
   }
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  let data;
+  if (contentType.includes('application/json')) {
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+  }
+
+  if (data === null || data === undefined) {
+    const rawText = await response.text();
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = { detail: rawText || response.statusText || `Request failed (${response.status})` };
+    }
+  }
+
   if (!response.ok) {
-    let errorMsg = 'API Request Failed';
+    let errorMsg = `Request failed (${response.status})`;
     if (typeof data.detail === 'string') {
       errorMsg = data.detail;
     } else if (Array.isArray(data.detail)) {
       errorMsg = data.detail.map(d => d.msg || (typeof d === 'string' ? d : JSON.stringify(d))).join(', ');
     } else if (data.detail && typeof data.detail === 'object') {
       errorMsg = data.detail.msg || JSON.stringify(data.detail);
+    } else if (data.error) {
+      errorMsg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
     } else if (data.message) {
       errorMsg = data.message;
     } else if (typeof data === 'string') {
