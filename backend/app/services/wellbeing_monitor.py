@@ -17,6 +17,7 @@ from app.models.monitoring import (
 )
 from app.services.push_service import PushService
 from app.services.whatsapp_service import WhatsAppService
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -335,26 +336,15 @@ class WellbeingMonitor:
         if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_weekly_summary_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
             user = db.query(User).filter(User.id == user_id).first()
             student_name = user.full_name if user else "Student"
-            wa_body = (
-                f"🌿 *MindBridge 7-Day Wellbeing Summary*\n"
-                f"Hi {student_name}! Here is your comparative rhythm for the week:\n\n"
-                f"• *Avg Stress:* {avg_stress}/10 ({report.stress_trend})\n"
-                f"• *Avg Sleep:* {avg_sleep} hrs ({report.sleep_trend})\n"
-                f"• *Avg Energy:* {avg_energy}/10\n"
-                f"• *Dominant Mood:* {dominant_mood}\n\n"
-                f"💬 *Takeaway:* {summary[:240]}"
-            )
-            buttons = [
-                {"id": "checkin_start", "title": "Log Today 🌿"},
-                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
-            ]
-            WhatsAppService.send_interactive_buttons_sync(
+            wa_body = WhatsAppService.build_weekly_summary_message(student_name, report)
+            content_sid = getattr(settings, "TWILIO_CONTENT_SID_WEEKLY_SUMMARY", None) or None
+            WhatsAppService.send_notification(
                 phone_number=prefs.whatsapp_phone,
-                body_text=wa_body,
-                buttons=buttons,
+                message_body=wa_body,
                 db=db,
                 user_id=user_id,
-                context="weekly_report"
+                notification_type="weekly_report",
+                content_sid=content_sid
             )
 
         # Log notification dispatch
@@ -818,24 +808,20 @@ class WellbeingMonitor:
 
             # WhatsApp Multi-Stage Follow-up if enabled & consented
             if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_followup_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
-                fup_buttons = [
-                    {"id": "anomaly_doing_fine", "title": "Doing Fine 👍"},
-                    {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
-                ]
-                if alert.follow_up_stage == 2:
-                    fup_buttons.append({"id": "pause_notifications", "title": "Pause Alerts ⏸️"})
-                elif alert.follow_up_stage == 3:
-                    fup_buttons.append({"id": "anomaly_advice", "title": "Quick Reset 💡"})
-                elif alert.follow_up_stage >= 4:
-                    fup_buttons.insert(0, {"id": "anomaly_counsellor", "title": "Counsellor Contact 🤝"})
-
-                WhatsAppService.send_interactive_buttons_sync(
+                user = db.query(User).filter(User.id == user_id).first()
+                student_name = user.full_name if user else "Student"
+                wa_body = (
+                    f"🌿 *MindBridge Campus • Follow-Up*\n\n"
+                    f"Hi {student_name},\n\n{body}\n\n"
+                    "👉 Explore Student Wellbeing Hub: https://mindbridge-campus-te1l.onrender.com/resources\n"
+                    "Reply STOP to mute notifications."
+                )
+                WhatsAppService.send_notification(
                     phone_number=prefs.whatsapp_phone,
-                    body_text=f"💙 *{title}*\n\n{body}",
-                    buttons=fup_buttons[:3],
+                    message_body=wa_body,
                     db=db,
                     user_id=user_id,
-                    context=f"follow_up_stage_{alert.follow_up_stage}"
+                    notification_type=f"follow_up_stage_{alert.follow_up_stage}"
                 )
 
             # Log
@@ -963,30 +949,19 @@ class WellbeingMonitor:
                 notification_type="sudden_change_alert"
             )
 
-        # WhatsApp Interactive Anomaly Alert if enabled & consented
+        # WhatsApp Anomaly Alert if enabled & consented
         if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_alerts_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
-            btn_options = [
-                {"id": "anomaly_doing_fine", "title": "I'm doing fine 👍"},
-                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"},
-                {"id": "anomaly_advice", "title": "Quick Reset 💡"}
-            ]
-            if alert.is_positive_celebration:
-                btn_options = [
-                    {"id": "talk_to_mindy", "title": "Keep it up! ✨"},
-                    {"id": "anomaly_doing_fine", "title": "All Good 👍"}
-                ]
-            elif "placement" in (alert.trigger_reason or "").lower():
-                btn_options[2] = {"id": "anomaly_placements", "title": "Placements 💼"}
-            elif "sleep" in (alert.metric_name or "").lower():
-                btn_options[2] = {"id": "anomaly_sleep", "title": "Sleep Tips 🌙"}
-
-            WhatsAppService.send_interactive_buttons_sync(
+            user = db.query(User).filter(User.id == user_id).first()
+            student_name = user.full_name if user else "Student"
+            wa_body = WhatsAppService.build_anomaly_alert_message(student_name, alert)
+            content_sid = getattr(settings, "TWILIO_CONTENT_SID_WELLBEING_ALERT", None) or None
+            WhatsAppService.send_notification(
                 phone_number=prefs.whatsapp_phone,
-                body_text=f"🌿 *MindBridge Campus Check-in*\n\n{alert.supportive_message}",
-                buttons=btn_options,
+                message_body=wa_body,
                 db=db,
                 user_id=user_id,
-                context="anomaly_alert"
+                notification_type="wellbeing_alert",
+                content_sid=content_sid
             )
 
         # Log notification dispatch
@@ -1097,21 +1072,18 @@ class WellbeingMonitor:
             )
 
         # WhatsApp Daily Reminder if enabled & consented
-        if prefs.whatsapp_enabled and getattr(prefs, "whatsapp_reminders_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
+        if prefs and prefs.whatsapp_enabled and getattr(prefs, "whatsapp_reminders_consent", True) and prefs.whatsapp_phone and not prefs.is_paused:
             user = db.query(User).filter(User.id == user_id).first()
             student_name = user.full_name if user else "Student"
-            buttons = [
-                {"id": "checkin_start", "title": "Log Check-in 🌿"},
-                {"id": "anomaly_doing_fine", "title": "Doing Fine 👍"},
-                {"id": "talk_to_mindy", "title": "Talk to Mindy 💬"}
-            ]
-            WhatsAppService.send_interactive_buttons_sync(
+            wa_body = WhatsAppService.build_daily_reminder_message(student_name)
+            content_sid = getattr(settings, "TWILIO_CONTENT_SID_DAILY_REMINDER", None) or None
+            WhatsAppService.send_notification(
                 phone_number=prefs.whatsapp_phone,
-                body_text=f"Hi {student_name}! 🌿 Gentle evening reminder from MindBridge Campus.\n\nTaking 60 seconds to reflect on your day helps maintain your sleep and stress balance. How has your day been?",
-                buttons=buttons,
+                message_body=wa_body,
                 db=db,
                 user_id=user_id,
-                context="daily_reminder"
+                notification_type="daily_reminder",
+                content_sid=content_sid
             )
 
         # Log
@@ -1129,6 +1101,73 @@ class WellbeingMonitor:
         return notif
 
     # ---------------------------------------------------------
+    # 3b. Academic & Placement Reminders (Real Data Only)
+    # ---------------------------------------------------------
+    @staticmethod
+    def evaluate_academic_reminders(user_id: int, db: Session, force: bool = False) -> Optional[Dict[str, Any]]:
+        """
+        Sends genuine WhatsApp academic & placement preparation reminders based on real student data:
+        - Active StudentMemory entries in categories 'academic', 'placement', or 'goal'
+        - Exam/assignment stressors in StressEntry
+        - Strictly respects whatsapp_academic_consent, quiet hours, and daily cooldown
+        - Never fabricates fake tasks or deadlines if no student data exists.
+        """
+        from app.models.ai import StudentMemory
+        prefs = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
+        if not prefs or not prefs.whatsapp_enabled or not getattr(prefs, "whatsapp_academic_consent", True) or not prefs.whatsapp_phone or prefs.is_paused:
+            return None
+
+        # Fetch real active goals or commitments from student memories
+        memories = (
+            db.query(StudentMemory)
+            .filter(
+                StudentMemory.user_id == user_id,
+                StudentMemory.is_active == True,
+                StudentMemory.category.in_(["academic", "placement", "goal"])
+            )
+            .order_by(StudentMemory.updated_at.desc())
+            .limit(3)
+            .all()
+        )
+
+        task_descriptions = []
+        if memories:
+            for m in memories:
+                task_descriptions.append(f"{m.topic}: {m.key_point}")
+        else:
+            # Check recent stress domain for academic/placement focus
+            recent_stress = (
+                db.query(StressEntry)
+                .filter(
+                    StressEntry.user_id == user_id,
+                    StressEntry.category.in_(["Academic", "Placement", "Exams", "Career"])
+                )
+                .order_by(StressEntry.recorded_at.desc())
+                .first()
+            )
+            if recent_stress and (recent_stress.notes or recent_stress.category):
+                domain_desc = recent_stress.notes if recent_stress.notes else f"{recent_stress.category} preparation"
+                task_descriptions.append(f"Focus Priority: {domain_desc}")
+            else:
+                # No actual student academic/placement data recorded yet: do not generate fake reminder!
+                return None
+
+        user = db.query(User).filter(User.id == user_id).first()
+        student_name = user.full_name if user else "Student"
+        wa_body = WhatsAppService.build_academic_reminder_message(student_name, task_descriptions)
+        content_sid = getattr(settings, "TWILIO_CONTENT_SID_ACADEMIC_REMINDER", None) or None
+
+        res = WhatsAppService.send_notification(
+            phone_number=prefs.whatsapp_phone,
+            message_body=wa_body,
+            db=db,
+            user_id=user_id,
+            notification_type="academic_reminder",
+            content_sid=content_sid
+        )
+        return res
+
+    # ---------------------------------------------------------
     # 4. Global Monitoring Cycle (Scheduler / Cron Execution)
     # ---------------------------------------------------------
     @staticmethod
@@ -1136,13 +1175,16 @@ class WellbeingMonitor:
         """
         Executes one sweep of monitoring across all registered students:
         1. Checks daily reminders for students whose local target time matches now.
-        2. Generates weekly reports on Sundays/Mondays if not yet generated this week.
+        2. Progresses multi-stage gradual follow-ups (Stages 1–4).
+        3. Generates weekly reports on Sundays/Mondays if not yet generated this week.
+        4. Checks academic and placement reminders based on real student goals.
         Idempotent and safe for periodic cron or background worker.
         """
         students = db.query(User).filter(User.role == "student", User.is_active == True).all()
         reminders_sent = 0
         reports_generated = 0
         follow_ups_processed = 0
+        academic_reminders_sent = 0
         today = date.today()
 
         for s in students:
@@ -1163,7 +1205,6 @@ class WellbeingMonitor:
             if today.weekday() in [0, 6]:  # Monday or Sunday
                 prefs = s.preferences
                 if not prefs or prefs.weekly_summary_enabled:
-                    # Check if already generated within past 5 days
                     cutoff_date = today - timedelta(days=5)
                     last_rep = (
                         db.query(WeeklyWellbeingReport)
@@ -1175,10 +1216,19 @@ class WellbeingMonitor:
                         if rep:
                             reports_generated += 1
 
+            # 4. Academic & placement reminders check
+            try:
+                acad_res = WellbeingMonitor.evaluate_academic_reminders(s.id, db, force=False)
+                if acad_res and acad_res.get("success"):
+                    academic_reminders_sent += 1
+            except Exception as acad_err:
+                logger.warning(f"Error evaluating academic reminders for student {s.id}: {acad_err}")
+
         return {
             "total_students_evaluated": len(students),
             "reminders_sent": reminders_sent,
             "reports_generated": reports_generated,
             "follow_ups_processed": follow_ups_processed,
+            "academic_reminders_sent": academic_reminders_sent,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }

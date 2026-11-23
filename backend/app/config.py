@@ -28,13 +28,17 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: str = os.getenv("VAPID_PRIVATE_KEY", "Gch5-s3r6tgT7zc2-LAefoRC3PZ7nZ-p-PhgU4NAtzY")
     VAPID_CLAIMS_EMAIL: str = os.getenv("VAPID_CLAIMS_EMAIL", "mailto:wellness@mindbridge.campus")
 
-    # Meta WhatsApp Cloud API (Official Business Platform)
-    WHATSAPP_PHONE_NUMBER_ID: str = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
-    WHATSAPP_ACCESS_TOKEN: str = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
-    WHATSAPP_BUSINESS_ACCOUNT_ID: str = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
-    WHATSAPP_APP_SECRET: str = os.getenv("WHATSAPP_APP_SECRET", "")
-    WHATSAPP_VERIFY_TOKEN: str = os.getenv("WHATSAPP_VERIFY_TOKEN", "mindbridge_campus_webhook_verify_token_2026")
-    WHATSAPP_API_VERSION: str = os.getenv("WHATSAPP_API_VERSION", "v21.0")
+    # Twilio Programmable Messaging for WhatsApp
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
+    TWILIO_WHATSAPP_FROM: str = os.getenv("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886")
+    TWILIO_STATUS_CALLBACK_URL: str = os.getenv("TWILIO_STATUS_CALLBACK_URL", "")
+    TWILIO_SANDBOX_KEYWORD: str = os.getenv("TWILIO_SANDBOX_KEYWORD", "join mindbridge")
+    # Approved WhatsApp Content SIDs for production outside 24h window
+    TWILIO_CONTENT_SID_DAILY_REMINDER: str = os.getenv("TWILIO_CONTENT_SID_DAILY_REMINDER", "")
+    TWILIO_CONTENT_SID_WEEKLY_SUMMARY: str = os.getenv("TWILIO_CONTENT_SID_WEEKLY_SUMMARY", "")
+    TWILIO_CONTENT_SID_WELLBEING_ALERT: str = os.getenv("TWILIO_CONTENT_SID_WELLBEING_ALERT", "")
+    TWILIO_CONTENT_SID_ACADEMIC_REMINDER: str = os.getenv("TWILIO_CONTENT_SID_ACADEMIC_REMINDER", "")
 
     class Config:
         env_file = ".env"

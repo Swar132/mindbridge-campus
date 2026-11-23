@@ -83,20 +83,18 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
   const [responseFeedback, setResponseFeedback] = useState({});
   const [respondingAlertId, setRespondingAlertId] = useState(null);
 
-  // Dedicated Meta WhatsApp Business Cloud API & Mindy states
+  // Dedicated Twilio WhatsApp Programmable Messaging states
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState('+91');
   const [whatsappPhone, setWhatsappPhone] = useState(user?.phone_number || '');
   const [whatsappConsent, setWhatsappConsent] = useState(false);
-  const [whatsappStatus, setWhatsappStatus] = useState(null);
+  const [whatsappCategoryTest, setWhatsappCategoryTest] = useState('daily_reminder');
   const [waPreferences, setWaPreferences] = useState(null);
   const [waProviderStatus, setWaProviderStatus] = useState(null);
   const [waMessages, setWaMessages] = useState([]);
   const [waConnecting, setWaConnecting] = useState(false);
   const [waTestSending, setWaTestSending] = useState(false);
   const [waTestResult, setWaTestResult] = useState(null);
-  const [waSimulatorInput, setWaSimulatorInput] = useState('');
-  const [waSimulatorSending, setWaSimulatorSending] = useState(false);
-  const [showSimulator, setShowSimulator] = useState(false);
 
   // Feedback states
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -112,6 +110,9 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
       if (prefRes.status === 'fulfilled' && prefRes.value) {
         setWaPreferences(prefRes.value);
         setWhatsappEnabled(Boolean(prefRes.value.whatsapp_enabled));
+        if (prefRes.value.whatsapp_country_code) {
+          setWhatsappCountryCode(prefRes.value.whatsapp_country_code);
+        }
         if (prefRes.value.whatsapp_phone) {
           setWhatsappPhone(prefRes.value.whatsapp_phone);
         }
@@ -306,35 +307,40 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
 
   const handleConnectWhatsApp = async (e) => {
     if (e) e.preventDefault();
-    if (!whatsappPhone || whatsappPhone.trim().length < 8) {
-      alert('Please enter a valid phone number with country code, e.g. +919876543210');
+    if (!whatsappPhone || whatsappPhone.trim().length < 6) {
+      alert('Please enter your personal WhatsApp mobile number.');
+      return;
+    }
+    if (!whatsappConsent) {
+      alert('Please check the opt-in consent box to authorize WhatsApp notifications.');
       return;
     }
     try {
       setWaConnecting(true);
       await api.connectWhatsApp({
         phone_number: whatsappPhone.trim(),
+        country_code: whatsappCountryCode,
         consent: true
       });
       setWhatsappEnabled(true);
-      setWhatsappConsent(true);
       await loadWhatsAppDetails();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      alert('Could not connect WhatsApp: ' + (err.message || 'Error'));
+      alert('Could not register WhatsApp number: ' + (err.message || 'Error'));
     } finally {
       setWaConnecting(false);
     }
   };
 
   const handleDisconnectWhatsApp = async () => {
-    if (!window.confirm('Disconnect your WhatsApp number and revoke all messaging consents?')) return;
+    if (!window.confirm('Disconnect your WhatsApp number and revoke all notification consents?')) return;
     try {
       setWaConnecting(true);
       await api.disconnectWhatsApp();
       setWhatsappEnabled(false);
       setWhatsappConsent(false);
+      setWhatsappPhone('');
       await loadWhatsAppDetails();
     } catch (err) {
       alert('Failed to disconnect WhatsApp: ' + (err.message || 'Error'));
@@ -347,51 +353,30 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
     try {
       const updated = await api.updateWhatsAppPreferences({ [field]: value });
       setWaPreferences(updated);
+      if (field === 'whatsapp_enabled') {
+        setWhatsappEnabled(Boolean(value));
+      }
     } catch (err) {
       console.error('Failed to update consent:', err);
     }
   };
 
-  const handleSendTestWaMessage = async (type = 'interactive_buttons') => {
+  const handleSendTestWaMessage = async () => {
     try {
       setWaTestSending(true);
       setWaTestResult(null);
+      const targetPhone = whatsappPhone || waPreferences?.whatsapp_phone;
       const res = await api.sendTestWhatsAppMessage({
-        phone_number: whatsappPhone || user?.phone_number || '+919876543210',
-        message_type: type
+        phone_number: targetPhone,
+        notification_category: whatsappCategoryTest
       });
       setWaTestResult(res);
       await loadWhatsAppDetails();
-      setTimeout(() => setWaTestResult(null), 8000);
+      setTimeout(() => setWaTestResult(null), 12000);
     } catch (err) {
       setWaTestResult({ success: false, error: err.message });
     } finally {
       setWaTestSending(false);
-    }
-  };
-
-  const handleSimulateInbound = async (text, buttonId = null, buttonTitle = null) => {
-    try {
-      setWaSimulatorSending(true);
-      const payload = buttonId
-        ? {
-            phone_number: whatsappPhone || user?.phone_number || '+919876543210',
-            message_type: 'button_reply',
-            button_id: buttonId,
-            button_title: buttonTitle || buttonId
-          }
-        : {
-            phone_number: whatsappPhone || user?.phone_number || '+919876543210',
-            message_type: 'text',
-            text: text || 'Hello Mindy!'
-          };
-      await api.simulateIncomingWhatsApp(payload);
-      setWaSimulatorInput('');
-      await loadWhatsAppDetails();
-    } catch (err) {
-      alert('Simulation error: ' + (err.message || 'Error'));
-    } finally {
-      setWaSimulatorSending(false);
     }
   };
 
@@ -1149,154 +1134,280 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
             </div>
           </div>
 
-          {/* Delivery Channels: WhatsApp (Official Meta Business Cloud API & Mindy Companion) */}
-          <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs space-y-6 relative overflow-hidden">
+          {/* Delivery Channels: WhatsApp (Twilio Programmable Messaging) */}
+          <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-6 relative overflow-hidden">
             {/* Top decorative accent */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-sky-500 to-indigo-600" />
 
+            {/* Header with Provider Mode */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-2xl bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center">
                     <MessageCircle className="w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>WhatsApp Notifications & Mindy AI</span>
-                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
-                        Official Meta Cloud API
+                      <span>WhatsApp Notifications</span>
+                      <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 bg-teal-100/80 dark:bg-teal-950/80 px-2.5 py-0.5 rounded-full border border-teal-300 dark:border-teal-800">
+                        Twilio Programmable Messaging
                       </span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Receive reminders, weekly reports, anomaly alerts, and talk with Mindy directly on WhatsApp.
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Genuine notifications delivered directly to your personal WhatsApp number. Notifications only.
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* Twilio Mode Badge */}
               <div className="flex items-center gap-2">
                 <span className={`text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                  waProviderStatus?.is_active
+                  waProviderStatus?.mode === 'production'
                     ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                    : 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800'
+                    : waProviderStatus?.mode === 'sandbox'
+                      ? 'bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${waProviderStatus?.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-sky-500'}`} />
-                  <span>{waProviderStatus?.is_active ? 'Meta API Connected (Live)' : 'Interactive Simulator Active'}</span>
+                  <span className={`w-2 h-2 rounded-full ${
+                    waProviderStatus?.is_configured
+                      ? waProviderStatus?.mode === 'production' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'
+                      : 'bg-slate-400'
+                  }`} />
+                  <span>
+                    {waProviderStatus?.mode === 'production'
+                      ? 'Twilio Production Active'
+                      : waProviderStatus?.mode === 'sandbox'
+                        ? 'Twilio Sandbox Testing'
+                        : 'Twilio Setup Required'}
+                  </span>
                 </span>
               </div>
             </div>
 
-            {/* Account Connection Card */}
-            {(waPreferences?.is_connected || (whatsappEnabled && whatsappPhone)) ? (
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border border-emerald-500/30 dark:border-emerald-500/20 space-y-4">
+            {/* Twilio Sandbox Setup Instructions (Shown when in Sandbox Mode) */}
+            {waProviderStatus?.mode === 'sandbox' && (
+              <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
+                    <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>Twilio Sandbox 1-Time Join Requirement</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded">
+                    Testing Mode
+                  </span>
+                </div>
+                <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                  During sandbox testing, WhatsApp security requires your number to send a 1-time message to the Twilio Sandbox sender before it can receive notifications:
+                </p>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-xs font-mono font-bold bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-200 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700">
+                    Text <strong>join {waProviderStatus?.sandbox_keyword || 'mindbridge'}</strong> to <strong>+1 415 523 8886</strong>
+                  </span>
+                  <a
+                    href={waProviderStatus?.sandbox_join_url || `https://wa.me/14155238886?text=join%20${waProviderStatus?.sandbox_keyword || 'mindbridge'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition active:scale-95"
+                  >
+                    <span>1-Click Join on WhatsApp</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Account Registration & Connection Status */}
+            {(waPreferences?.whatsapp_phone || (whatsappEnabled && whatsappPhone)) ? (
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                      <CheckCircle2 className="w-6 h-6" />
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs shrink-0 ${
+                      waPreferences?.whatsapp_verified
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-amber-500 text-white'
+                    }`}>
+                      {waPreferences?.whatsapp_verified ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : (
+                        <Clock className="w-5 h-5" />
+                      )}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                        <span>Connected WhatsApp Account:</span>
-                        <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-900">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          Registered Number:
+                        </span>
+                        <span className="font-mono text-xs font-bold bg-white dark:bg-slate-900 px-2.5 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200">
                           {waPreferences?.whatsapp_phone || whatsappPhone}
                         </span>
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Opt-in verified • 1-tap interactive buttons & Mindy conversational chat enabled
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          waPreferences?.whatsapp_verified
+                            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                            : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                        }`}>
+                          {waPreferences?.whatsapp_verified
+                            ? 'Verified & Active'
+                            : 'Pending Delivery Verification'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                        {waPreferences?.whatsapp_verified
+                          ? 'Real Twilio delivery has been confirmed. Scheduled wellbeing and academic updates are active.'
+                          : 'Number is registered. Complete verification by sending a test notification below or await your first delivery.'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSendTestWaMessage('interactive_buttons')}
-                      disabled={waTestSending}
-                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{waTestSending ? 'Sending Test...' : 'Send Test Notification'}</span>
-                    </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer mr-2">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(waPreferences?.whatsapp_enabled ?? whatsappEnabled)}
+                        onChange={(e) => handleToggleWaConsent('whatsapp_enabled', e.target.checked)}
+                        className="w-4 h-4 accent-teal-600 rounded cursor-pointer"
+                      />
+                      <span>Notifications Active</span>
+                    </label>
                     <button
                       type="button"
                       onClick={handleDisconnectWhatsApp}
                       disabled={waConnecting}
-                      className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 font-bold text-xs transition cursor-pointer border border-slate-200 dark:border-slate-700 active:scale-95"
+                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 font-bold text-xs transition cursor-pointer border border-slate-200 dark:border-slate-700 active:scale-95"
                     >
-                      Disconnect
+                      {waConnecting ? 'Disconnecting...' : 'Disconnect'}
                     </button>
                   </div>
                 </div>
 
-                {waTestResult && (
-                  <div className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 ${
-                    waTestResult.success
-                      ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                      : 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                  }`}>
-                    <span>
-                      {waTestResult.success
-                        ? `✓ WhatsApp interactive message dispatched! Message ID: ${waTestResult.wa_message_id}`
-                        : `✗ Test dispatch notice: ${waTestResult.error || 'Check credentials'}`}
+                {/* Delivery Health Diagnostic */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Last Delivery Status</span>
+                    <span className={`font-mono text-xs font-bold capitalize ${
+                      waPreferences?.whatsapp_last_delivery_status === 'delivered'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : waPreferences?.whatsapp_last_delivery_status === 'sent' || waPreferences?.whatsapp_last_delivery_status === 'queued'
+                          ? 'text-sky-600 dark:text-sky-400'
+                          : waPreferences?.whatsapp_last_delivery_status === 'failed' || waPreferences?.whatsapp_last_delivery_status === 'undelivered'
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-slate-500'
+                    }`}>
+                      {waPreferences?.whatsapp_last_delivery_status || 'None Yet'}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowSimulator(true)}
-                      className="text-[11px] font-bold underline cursor-pointer"
-                    >
-                      View in Simulator →
-                    </button>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Last Delivery Time</span>
+                    <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
+                      {waPreferences?.whatsapp_last_delivery_at
+                        ? new Date(waPreferences.whatsapp_last_delivery_at).toLocaleString()
+                        : 'No deliveries recorded'}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Consent Timestamp</span>
+                    <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
+                      {waPreferences?.whatsapp_consent_at
+                        ? new Date(waPreferences.whatsapp_consent_at).toLocaleDateString()
+                        : 'Consent Recorded'}
+                    </span>
+                  </div>
+                </div>
+
+                {waPreferences?.whatsapp_last_error && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                    <span><strong>Twilio Notice:</strong> {waPreferences.whatsapp_last_error}</span>
                   </div>
                 )}
               </div>
             ) : (
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Register Personal WhatsApp Number
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Enter your active WhatsApp number to receive genuine wellbeing check-in reminders and weekly reports.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="sm:col-span-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                      Country Code
+                    </label>
+                    <select
+                      value={whatsappCountryCode}
+                      onChange={(e) => setWhatsappCountryCode(e.target.value)}
+                      className="w-full text-xs font-bold py-2.5 px-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    >
+                      <option value="+91">India (+91)</option>
+                      <option value="+1">USA / Canada (+1)</option>
+                      <option value="+44">UK (+44)</option>
+                      <option value="+61">Australia (+61)</option>
+                      <option value="+971">UAE (+971)</option>
+                      <option value="+65">Singapore (+65)</option>
+                      <option value="+49">Germany (+49)</option>
+                      <option value="+33">France (+33)</option>
+                      <option value="+81">Japan (+81)</option>
+                    </select>
+                  </div>
+
                   <div className="sm:col-span-2">
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                      WhatsApp Phone Number (E.164 with country code)
+                      Personal Mobile Number
                     </label>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                       <input
                         type="tel"
-                        placeholder="+919876543210"
+                        placeholder="9876543210 (or E.164)"
                         value={whatsappPhone}
                         onChange={(e) => setWhatsappPhone(e.target.value)}
-                        className="w-full text-xs font-mono pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+                        className="w-full text-xs font-mono pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end sm:col-span-1">
                     <button
                       type="button"
                       onClick={handleConnectWhatsApp}
-                      disabled={waConnecting || !whatsappPhone}
-                      className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                      disabled={waConnecting || !whatsappPhone || !whatsappConsent}
+                      className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-700 hover:to-sky-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-95 disabled:opacity-40 cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>{waConnecting ? 'Connecting...' : 'Connect WhatsApp Account'}</span>
+                      <span>{waConnecting ? 'Registering...' : 'Register Number'}</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed bg-white/70 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>
-                    By connecting your number, you opt in to receive student wellbeing reminders and support from MindBridge Campus. You can reply <strong>STOP</strong> at any time on WhatsApp to immediately opt out, or <strong>HELP</strong> for crisis helplines.
-                  </span>
+                {/* Explicit Opt-in Consent Checkbox */}
+                <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="wa-explicit-consent-box"
+                    checked={whatsappConsent}
+                    onChange={(e) => setWhatsappConsent(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 accent-teal-600 rounded cursor-pointer shrink-0"
+                  />
+                  <label htmlFor="wa-explicit-consent-box" className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed cursor-pointer select-none">
+                    <strong>Explicit Opt-In:</strong> I authorize MindBridge Campus to deliver personal student wellbeing notifications, daily check-in reminders, and academic updates to my WhatsApp number via Twilio. I understand I can reply <strong>STOP</strong> at any time to opt out or disconnect my number from settings.
+                  </label>
                 </div>
               </div>
             )}
 
-            {/* Granular Category Consents */}
+            {/* Granular Notification Category Consents */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                  Granular Notification Category Consents
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Notification Category Preferences
                 </h4>
-                <span className="text-[10px] text-slate-400">You decide what messages reach your WhatsApp</span>
+                <span className="text-[10px] text-slate-400">Choose which categories to receive on WhatsApp</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1308,18 +1419,37 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                       <span>Daily Check-in Reminders</span>
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Gentle evening reminder with 1-tap mood logging buttons.
+                      Gentle prompt to record daily mood, stress, and sleep.
                     </p>
                   </div>
                   <input
                     type="checkbox"
-                    checked={waPreferences ? waPreferences.whatsapp_reminders_consent : dailyReminder}
+                    checked={waPreferences ? waPreferences.whatsapp_reminders_consent : true}
                     onChange={(e) => handleToggleWaConsent('whatsapp_reminders_consent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer mt-0.5"
+                    className="w-4 h-4 accent-teal-600 cursor-pointer mt-0.5"
                   />
                 </div>
 
-                {/* 2. Weekly Summary */}
+                {/* 2. Sudden Change & Wellbeing Alerts */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Wellbeing & Stress Alerts</span>
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Supportive notification when stress increases or sleep drops sharply.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={waPreferences ? waPreferences.whatsapp_alerts_consent : true}
+                    onChange={(e) => handleToggleWaConsent('whatsapp_alerts_consent', e.target.checked)}
+                    className="w-4 h-4 accent-teal-600 cursor-pointer mt-0.5"
+                  />
+                </div>
+
+                {/* 3. Weekly Summary */}
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
@@ -1327,290 +1457,179 @@ export default function NotificationsPage({ onNavigate, onOpenCounsellor }) {
                       <span>Weekly Wellbeing Summaries</span>
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      7-day comparative overview of stress, sleep, and mood trends.
+                      7-day comparative review of Stress Balance % and Sleep Consistency.
                     </p>
                   </div>
                   <input
                     type="checkbox"
-                    checked={waPreferences ? waPreferences.whatsapp_weekly_summary_consent : weeklySummary}
+                    checked={waPreferences ? waPreferences.whatsapp_weekly_summary_consent : true}
                     onChange={(e) => handleToggleWaConsent('whatsapp_weekly_summary_consent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer mt-0.5"
+                    className="w-4 h-4 accent-teal-600 cursor-pointer mt-0.5"
                   />
                 </div>
 
-                {/* 3. Anomaly & Sudden Change Alerts */}
+                {/* 4. Academic & Placement Reminders */}
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Sudden Change & Trend Alerts</span>
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Academic & Placement Reminders</span>
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Empathetic check-in when stress spikes or sleep drops sharply.
+                      Timely notifications for upcoming exams, study blocks, and placement prep.
                     </p>
                   </div>
                   <input
                     type="checkbox"
-                    checked={waPreferences ? waPreferences.whatsapp_alerts_consent : suddenChangeAlerts}
-                    onChange={(e) => handleToggleWaConsent('whatsapp_alerts_consent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer mt-0.5"
-                  />
-                </div>
-
-                {/* 4. Proactive Multi-Stage Follow-ups */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <HeartHandshake className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>Proactive Follow-Ups (Stages 1–4)</span>
-                    </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Gradual check-ins every {followUpFrequencyDays} days if stress remains elevated.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={waPreferences ? waPreferences.whatsapp_followup_consent : true}
-                    onChange={(e) => handleToggleWaConsent('whatsapp_followup_consent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer mt-0.5"
-                  />
-                </div>
-
-                {/* 5. Campus Counsellor Referral & Confirmation */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <UserCheck className="w-3.5 h-3.5 text-purple-500" />
-                      <span>Campus Counsellor Notifications</span>
-                    </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Direct priority referrals for Dr. Nitu Singh Bhadouria in SAC I.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={waPreferences ? waPreferences.whatsapp_counsellor_consent : counsellorReferralEnabled}
-                    onChange={(e) => handleToggleWaConsent('whatsapp_counsellor_consent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer mt-0.5"
-                  />
-                </div>
-
-                {/* 6. Mindy AI Interactive Chat */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Bot className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Mindy AI Direct Chat on WhatsApp</span>
-                    </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Message Mindy anytime for CBT reflections & placement prep.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={waPreferences ? waPreferences.whatsapp_mindy_consent : true}
-                    onChange={(e) => handleToggleWaConsent('whatsapp_mindy_consent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer mt-0.5"
+                    checked={waPreferences ? waPreferences.whatsapp_academic_consent : true}
+                    onChange={(e) => handleToggleWaConsent('whatsapp_academic_consent', e.target.checked)}
+                    className="w-4 h-4 accent-teal-600 cursor-pointer mt-0.5"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Interactive WhatsApp Simulator Drawer */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setShowSimulator(!showSimulator)}
-                  className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-2 transition cursor-pointer border border-slate-200 dark:border-slate-700"
-                >
-                  <Terminal className="w-4 h-4 text-emerald-500" />
-                  <span>{showSimulator ? 'Hide WhatsApp Simulator' : 'Open WhatsApp Live Simulator & Chat Preview'}</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    {waMessages.length} message(s)
-                  </span>
-                </button>
+            {/* Real Outbound Test Dispatcher */}
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    Send Real Test Notification
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Dispatches a genuine WhatsApp message generated from your actual profile records.
+                  </p>
+                </div>
 
-                <span className="text-[11px] text-slate-400 hidden sm:inline">
-                  Simulate incoming student WhatsApp messages and button taps
-                </span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={whatsappCategoryTest}
+                    onChange={(e) => setWhatsappCategoryTest(e.target.value)}
+                    className="text-xs font-bold py-2 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  >
+                    <option value="daily_reminder">Daily Check-in Reminder</option>
+                    <option value="weekly_summary">Weekly Wellbeing Summary</option>
+                    <option value="wellbeing_alert">Wellbeing / Stress Alert</option>
+                    <option value="academic_reminder">Academic & Placement Reminder</option>
+                    <option value="test">General Live Test</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={handleSendTestWaMessage}
+                    disabled={waTestSending || (!whatsappPhone && !waPreferences?.whatsapp_phone)}
+                    className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 disabled:opacity-40"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{waTestSending ? 'Dispatching...' : 'Send Test'}</span>
+                  </button>
+                </div>
               </div>
 
-              {showSimulator && (
-                <div className="mt-4 rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 text-white shadow-xl space-y-4 animate-fade-in">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs">
-                        🌿
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-white">Mindy AI • MindBridge Campus</span>
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        </div>
-                        <p className="text-[10px] text-slate-400">Official WhatsApp Business Account • Always Active</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={loadWhatsAppDetails}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1 cursor-pointer"
-                      title="Refresh WhatsApp message history"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* WhatsApp Messages Feed */}
-                  <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                    {waMessages.length === 0 ? (
-                      <div className="text-center py-8 text-xs text-slate-500">
-                        No WhatsApp messages logged yet. Tap a button below or send a message to start!
-                      </div>
-                    ) : (
-                      waMessages.map(msg => (
-                        <div
-                          key={msg.id}
-                          className={`flex ${msg.direction === 'inbound' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs ${
-                            msg.direction === 'inbound'
-                              ? 'bg-emerald-600 text-white rounded-br-none'
-                              : 'bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700'
-                          }`}>
-                            <p className="whitespace-pre-line leading-relaxed">{msg.body}</p>
-                            <div className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${
-                              msg.direction === 'inbound' ? 'text-emerald-200' : 'text-slate-400'
-                            }`}>
-                              <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              {msg.direction === 'outbound' && (
-                                <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-400">
-                                  ✓ {msg.status}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))
+              {waTestResult && (
+                <div className={`p-3.5 rounded-xl text-xs space-y-1 ${
+                  waTestResult.success
+                    ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
+                    : 'bg-rose-50 dark:bg-rose-950/70 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800'
+                }`}>
+                  <div className="flex items-center justify-between font-bold">
+                    <span>
+                      {waTestResult.success
+                        ? `✓ Dispatched via Twilio! Status: ${waTestResult.status}`
+                        : `✗ Twilio Dispatch Failed`}
+                    </span>
+                    {waTestResult.twilio_sid && (
+                      <span className="font-mono text-[10px]">SID: {waTestResult.twilio_sid}</span>
                     )}
                   </div>
-
-                  {/* Quick-Reply Simulation Buttons */}
-                  <div className="border-t border-slate-800 pt-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Simulate 1-Tap Student Button Replies:
+                  {waTestResult.body_preview && (
+                    <p className="text-[11px] font-mono whitespace-pre-line text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200/50 dark:border-slate-800">
+                      {waTestResult.body_preview}
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('', 'checkin_start', 'Log Check-in 🌿')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Log Check-in 🌿
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('', 'checkin_mood_great', 'Great 😊')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Mood: Great 😊
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('', 'anomaly_doing_fine', 'Doing Fine 👍')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-sky-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Doing Fine 👍
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('', 'anomaly_placements', 'Placement Stress')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Placement Stress 💼
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('', 'anomaly_sleep', 'Trouble Sleeping')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-purple-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Trouble Sleeping 🌙
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('', 'anomaly_counsellor', 'Campus Counsellor 🤝')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-teal-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Campus Counsellor 🤝
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('HELP')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Send 'HELP' 🆘
-                      </button>
-                      <button
-                        type="button"
-                        disabled={waSimulatorSending}
-                        onClick={() => handleSimulateInbound('STOP')}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-rose-300 border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-50"
-                      >
-                        Send 'STOP' 🛑
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Freeform WhatsApp Message Input */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (waSimulatorInput.trim()) {
-                        handleSimulateInbound(waSimulatorInput.trim());
-                      }
-                    }}
-                    className="flex items-center gap-2 pt-1"
-                  >
-                    <input
-                      type="text"
-                      placeholder="Type a WhatsApp message to Mindy (e.g. 'I feel anxious about tomorrow')..."
-                      value={waSimulatorInput}
-                      onChange={(e) => setWaSimulatorInput(e.target.value)}
-                      disabled={waSimulatorSending}
-                      className="flex-1 text-xs px-4 py-2.5 rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
-                    />
-                    <button
-                      type="submit"
-                      disabled={waSimulatorSending || !waSimulatorInput.trim()}
-                      className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 disabled:opacity-40 cursor-pointer"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{waSimulatorSending ? 'Sending...' : 'Send'}</span>
-                    </button>
-                  </form>
+                  )}
+                  {waTestResult.error && (
+                    <p className="text-[11px] leading-relaxed">
+                      {waTestResult.error}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Official Meta Free Tier & Privacy Disclosures */}
+            {/* Outbound Notification History Feed */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <span>Outbound WhatsApp Notification History ({waMessages.length})</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={loadWhatsAppDetails}
+                  className="text-xs text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Refresh Delivery Logs</span>
+                </button>
+              </div>
+
+              {waMessages.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800 text-center text-xs text-slate-500">
+                  No notifications logged yet. Dispatches will appear here with honest Twilio delivery statuses.
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-72 overflow-y-auto pr-1">
+                  {waMessages.map(msg => (
+                    <div key={msg.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
+                      <div className="space-y-0.5 max-w-[75%]">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] font-bold text-slate-500">
+                            {msg.phone_number}
+                          </span>
+                          {msg.conversation_context && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              {msg.conversation_context}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-slate-700 dark:text-slate-300 text-[11px] line-clamp-2 leading-relaxed">
+                          {msg.body}
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0 space-y-1">
+                        <span className={`inline-block font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                          msg.status === 'delivered'
+                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                            : msg.status === 'sent' || msg.status === 'queued'
+                              ? 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800'
+                              : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                        }`}>
+                          {msg.status}
+                        </span>
+                        <div className="text-[10px] text-slate-400">
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Privacy & Compliance Terms */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5 leading-relaxed">
               <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
-                <Lock className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Zero-Cost Guarantee & Meta Compliance Terms</span>
+                <Lock className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                <span>Privacy Protection & Messaging Compliance</span>
               </div>
               <p>
-                • <strong>1,000 Free Conversations / Month:</strong> Meta provides 1,000 free service (student-initiated) conversations each month. When you reply, a 24-hour customer service window opens with zero messaging costs.
+                • <strong>Notifications Only:</strong> Twilio Programmable Messaging handles outbound wellbeing notifications only. Mindy AI remains accessible through the web app.
               </p>
               <p>
-                • <strong>Confidentiality:</strong> Wellbeing check-ins, sleep scores, and Mindy chat transcripts are strictly end-to-end encrypted in transit and never shared with advertisers or third parties.
+                • <strong>Student Privacy:</strong> Private journal entries and sensitive counsellor chats are never transmitted over WhatsApp. All messages use supportive, non-diagnostic terminology.
+              </p>
+              <p>
+                • <strong>Opt-Out Anytime:</strong> Reply <strong>STOP</strong> at any time to immediately disable notifications and revoke consent.
               </p>
             </div>
           </div>

@@ -3,15 +3,13 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 
 class WhatsAppConnectRequest(BaseModel):
-    phone_number: str = Field(..., description="Student WhatsApp phone number in E.164 format e.g. +919876543210")
+    phone_number: str = Field(..., description="Student personal WhatsApp phone number (with or without country code)")
+    country_code: str = Field("+91", description="Country calling code, e.g. +91, +1, +44")
     consent: bool = Field(True, description="Explicit opt-in consent for WhatsApp notifications")
-
-class WhatsAppVerifyCodeRequest(BaseModel):
-    phone_number: str
-    code: str
 
 class WhatsAppPreferencesResponse(BaseModel):
     whatsapp_phone: Optional[str] = None
+    whatsapp_country_code: str = "+91"
     whatsapp_consent: bool = False
     whatsapp_consent_at: Optional[datetime] = None
     whatsapp_enabled: bool = False
@@ -21,7 +19,10 @@ class WhatsAppPreferencesResponse(BaseModel):
     whatsapp_alerts_consent: bool = True
     whatsapp_followup_consent: bool = True
     whatsapp_counsellor_consent: bool = True
-    whatsapp_mindy_consent: bool = True
+    whatsapp_academic_consent: bool = True
+    whatsapp_last_delivery_status: Optional[str] = None
+    whatsapp_last_delivery_at: Optional[datetime] = None
+    whatsapp_last_error: Optional[str] = None
     quiet_hours_start: str = "22:00"
     quiet_hours_end: str = "07:00"
     preferred_days: List[str] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -31,12 +32,13 @@ class WhatsAppPreferencesResponse(BaseModel):
 
 class WhatsAppPreferencesUpdate(BaseModel):
     whatsapp_enabled: Optional[bool] = None
+    whatsapp_country_code: Optional[str] = None
     whatsapp_reminders_consent: Optional[bool] = None
     whatsapp_weekly_summary_consent: Optional[bool] = None
     whatsapp_alerts_consent: Optional[bool] = None
     whatsapp_followup_consent: Optional[bool] = None
     whatsapp_counsellor_consent: Optional[bool] = None
-    whatsapp_mindy_consent: Optional[bool] = None
+    whatsapp_academic_consent: Optional[bool] = None
     quiet_hours_start: Optional[str] = None
     quiet_hours_end: Optional[str] = None
     preferred_days: Optional[List[str]] = None
@@ -62,12 +64,6 @@ class WhatsAppMessageResponse(BaseModel):
 
 class WhatsAppTestMessageRequest(BaseModel):
     phone_number: Optional[str] = None
-    message_type: str = "text"  # "text", "interactive_buttons", "template"
+    notification_category: str = "daily_reminder"  # "daily_reminder", "weekly_summary", "wellbeing_alert", "academic_reminder", "test"
     custom_text: Optional[str] = None
 
-class WhatsAppSimulateIncomingRequest(BaseModel):
-    phone_number: str
-    message_type: str = "text"  # "text", "button_reply", "list_reply"
-    text: Optional[str] = None
-    button_id: Optional[str] = None
-    button_title: Optional[str] = None

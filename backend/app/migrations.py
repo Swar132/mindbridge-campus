@@ -98,9 +98,13 @@ def run_migrations(engine: Engine):
                 "whatsapp_alerts_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
                 "whatsapp_followup_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
                 "whatsapp_counsellor_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
-                "whatsapp_mindy_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_academic_consent": ("BOOLEAN DEFAULT TRUE", "BOOLEAN DEFAULT 1"),
+                "whatsapp_country_code": ("VARCHAR(10) DEFAULT '+91'", "VARCHAR(10) DEFAULT '+91'"),
                 "whatsapp_verified": ("BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
                 "whatsapp_verification_code": ("VARCHAR(20)", "VARCHAR(20)"),
+                "whatsapp_last_delivery_status": ("VARCHAR(50)", "VARCHAR(50)"),
+                "whatsapp_last_delivery_at": ("TIMESTAMP", "DATETIME"),
+                "whatsapp_last_error": ("VARCHAR(255)", "VARCHAR(255)"),
             }
 
             for col_name, (pg_type, sql_type) in new_pref_cols.items():
