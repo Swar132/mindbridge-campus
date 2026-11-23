@@ -246,6 +246,25 @@ All endpoints are prefixed with `/api` and documentable via Swagger UI at `/docs
 - `PUT /api/notifications/read-all`: Mark all notifications read
 - `GET /api/notifications/preferences`: Get reminder settings
 - `PUT /api/notifications/preferences`: Update reminder settings
+- `GET /api/notifications/reports/weekly`: Retrieve weekly wellbeing reports
+- `POST /api/notifications/reports/weekly/generate`: Generate on-demand 7-day comparative report
+- `GET /api/notifications/alerts`: Retrieve anomaly and sudden-change alerts
+- `POST /api/notifications/alerts/{id}/respond`: Submit 1-tap supportive response
+- `POST /api/notifications/pause`: Pause notifications for 7 days
+- `POST /api/notifications/resume`: Resume active notifications
+
+### WhatsApp Business Cloud API & Mindy Support (`/api/whatsapp`)
+- `GET /api/whatsapp/status`: Provider connectivity, Meta Graph API v21.0 status, and free-tier allowance
+- `GET /api/whatsapp/preferences`: Granular category consents (reminders, weekly summaries, alerts, counsellor, Mindy chat)
+- `PUT /api/whatsapp/preferences`: Update category consents and quiet hours
+- `POST /api/whatsapp/connect`: Link student WhatsApp number (E.164) with instant opt-in verification
+- `POST /api/whatsapp/disconnect`: Unlink phone and revoke all messaging consents
+- `POST /api/whatsapp/send-test`: Dispatch interactive test WhatsApp message
+- `GET /api/whatsapp/messages`: Retrieve student WhatsApp conversation logs & delivery receipts (`sent`, `delivered`, `read`)
+- `POST /api/whatsapp/simulate-incoming`: Testing simulator for incoming student WhatsApp messages and quick-reply buttons
+- `POST /api/whatsapp/cron/dispatch-due`: Idempotent scheduled background sweep for daily reminders and follow-ups
+- `GET /api/whatsapp/webhook`: Meta GET challenge verification handshake (`hub.challenge`)
+- `POST /api/whatsapp/webhook`: Meta POST webhook receiver with HMAC-SHA256 signature validation (`X-Hub-Signature-256`)
 
 ### Admin Operations (`/api/admin`)
 - `GET /api/admin/stats`: Total counts for users, logs, and sessions
