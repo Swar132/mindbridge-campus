@@ -284,8 +284,8 @@ class WhatsAppService:
                 except TwilioRestException as ex:
                     last_exception = ex
                     logger.error(f"[TWILIO ERROR] Attempt {attempt} failed: Code {ex.code} - {ex.msg}")
-                    # Don't retry client/auth errors (e.g. 21608 unjoined, 21211 bad number)
-                    if ex.code in [21608, 21211, 20003, 63016]:
+                    # Don't retry client/auth errors (e.g. 21608/572002 unjoined, 21211 bad number)
+                    if ex.code in [21608, 572002, 21211, 20003, 63016]:
                         break
                 except Exception as ex:
                     last_exception = ex
@@ -330,10 +330,11 @@ class WhatsAppService:
             raw_err = str(last_exception)
             sandbox_kw = getattr(settings, "TWILIO_SANDBOX_KEYWORD", "join mindbridge")
 
-            if error_code == 21608:
+            if error_code in [21608, 572002]:
                 friendly_error = (
-                    f"Twilio Error 21608: Your WhatsApp number ({cleaned}) has not joined the Twilio Sandbox yet. "
-                    f"Please text '{sandbox_kw}' to +1 415 523 8886 on WhatsApp from your device first to receive testing messages."
+                    f"Twilio Sandbox 1-Time Join Required: Number {cleaned} has not joined your Twilio WhatsApp Sandbox yet. "
+                    f"Open WhatsApp on your device and text your sandbox join code (e.g. 'join <two-words>') to +1 415 523 8886. "
+                    f"You can find your sandbox code in Twilio Console under Messaging -> Try it out -> Send a WhatsApp message."
                 )
             elif error_code == 21211:
                 friendly_error = f"Twilio Error 21211: Invalid WhatsApp recipient number ({cleaned}). Ensure international country code is included."
